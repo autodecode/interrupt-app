@@ -21,7 +21,7 @@
   },
 
   "behaviors": {
-    "gamble": "Jouer",
+    "gamble": "Parier",
     "scroll": "Faire défiler",
     "smoke": "Fumer",
     "eat": "Manger",
@@ -44,7 +44,7 @@
   },
 
   "expectations": {
-    "money": "Argent"
+    "money": "Gagner de l'Argent"
     "relief": "Soulagement",
     "excitement": "Excitation",
     "escape": "Évasion",
