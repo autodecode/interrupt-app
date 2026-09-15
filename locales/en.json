@@ -44,6 +44,7 @@
   },
 
   "expectations": {
+    "money": "To win money"
     "relief": "Relief",
     "excitement": "Excitement",
     "escape": "Escape",
