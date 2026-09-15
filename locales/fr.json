@@ -1,1 +1,334 @@
+{
+  "common": {
+    "interrupt": "INTERRUPT",
+    "continue": "CONTINUER",
+    "back": "RETOUR",
+    "done": "TERMINÉ"
+  },
 
+  "home": {
+    "title": "Vous n'avez pas besoin de plus de volonté.",
+    "subtitle": "Vous avez besoin d'un moyen d'interrompre le moment.",
+    "button": "INTERROMPRE",
+    "privacy": "Privé. Aucun compte requis."
+  },
+
+  "behavior": {
+    "title": "Qu'êtes-vous sur le point de faire ?",
+    "subtitle": "Choisissez ce qui vous attire en ce moment.",
+    "otherLabel": "De quoi s'agit-il ?",
+    "otherPlaceholder": "Écrivez ici"
+  },
+
+  "behaviors": {
+    "gamble": "Jouer",
+    "scroll": "Faire défiler",
+    "smoke": "Fumer",
+    "eat": "Manger",
+    "buy": "Acheter quelque chose",
+    "watch": "Regarder",
+    "check": "Vérifier quelque chose",
+    "other": "Autre chose"
+  },
+
+  "intensity": {
+    "title": "Quelle est l'intensité de l'envie maintenant ?",
+    "subtitle": "0 signifie à peine présente. 10 signifie extrêmement forte."
+  },
+
+  "expectation": {
+    "title": "Qu'espérez-vous que cela vous apporte ?",
+    "subtitle": "Que cherchez-vous vraiment en ce moment ?",
+    "otherLabel": "Que recherchez-vous ?",
+    "otherPlaceholder": "Écrivez ici"
+  },
+
+  "expectations": {
+    "relief": "Soulagement",
+    "excitement": "Excitation",
+    "escape": "Évasion",
+    "pleasure": "Plaisir",
+    "comfort": "Réconfort",
+    "control": "Contrôle",
+    "somethingToDo": "Quelque chose à faire",
+    "unknown": "Je ne sais pas"
+  },
+
+  "reassess": {
+    "title": "Quelle est l'intensité de l'envie maintenant ?",
+    "subtitle": "Il n'y a pas de bonne réponse. Soyez simplement honnête."
+  },
+
+  "outcome": {
+    "title": "Que s'est-il passé ?",
+    "subtitle": "Quoi qu'il se soit passé, votre réponse aide INTERRUPT à apprendre."
+  },
+
+  "outcomes": {
+    "interrupted": {
+      "title": "Je l'ai interrompu",
+      "description": "J'ai choisi de ne pas céder à l'envie."
+    },
+    "delayed": {
+      "title": "J'ai repoussé le moment",
+      "description": "Je me suis donné un peu de temps avant d'agir."
+    },
+    "acted": {
+      "title": "Je l'ai fait quand même",
+      "description": "Cette fois, l'envie a gagné."
+    },
+    "unsure": {
+      "title": "Je ne suis pas sûr",
+      "description": "Je ne sais pas encore."
+    }
+  },
+
+  "result": {
+    "intervention": "Intervention",
+    "behavior": "Comportement",
+
+    "interruptedTitle": "Vous avez interrompu le moment.",
+    "delayedTitle": "Vous avez créé un peu de distance.",
+    "actedTitle": "Cette fois, l'envie a gagné.",
+    "unsureTitle": "Le moment est passé.",
+
+    "messages": {
+      "lower": "L'envie s'est calmée.",
+      "same": "L'envie n'a pas changé cette fois.",
+      "higher": "L'envie est devenue plus forte. C'est aussi une information utile."
+    }
+  },
+
+  "footer": {
+    "private": "Vos données restent sur cet appareil."
+  },
+
+  "interventions": {
+
+    "categories": {
+      "defusion": "PRENDRE DE LA DISTANCE",
+      "cognitive": "REGARDER AUTREMENT",
+      "urge_surfing": "OBSERVER",
+      "delay": "REPOUSSER",
+      "future": "REGARDER PLUS LOIN",
+      "environment": "CHANGER D'ENVIRONNEMENT",
+      "need": "IDENTIFIER LE BESOIN",
+      "trigger": "BRISER LA CHAÎNE",
+      "attention": "DÉPLACER L'ATTENTION",
+      "personal": "CE QUI A DÉJÀ FONCTIONNÉ"
+    },
+
+    "nameIt": {
+      "title": "NOMMEZ-LA",
+
+      "instruction": "Séparons l'envie de vous.",
+
+      "firstPrompt": "Complétez : « J'ai envie de… »",
+
+      "placeholder": "J'ai envie de...",
+
+      "secondPrompt": "Maintenant, essayez : « Mon cerveau me dit de… »",
+
+      "placeholder2": "Mon cerveau me dit de..."
+    },
+
+    "promise": {
+      "title": "LA PROMESSE",
+
+      "intro": "Votre cerveau vous fait une proposition.",
+
+      "expected": "En ce moment, vous espérez obtenir :",
+
+      "durationQuestion": "Si vous le faites, combien de temps pensez-vous que cette sensation va durer ?",
+
+      "durationPlaceholder": "Quelques minutes, une heure, la majeure partie de la journée...",
+
+      "afterQuestion": "Et que se passe-t-il généralement après ?",
+
+      "afterPlaceholder": "Que se passe-t-il ensuite ?"
+    },
+
+    "wave": {
+      "title": "LAISSEZ PASSER LA VAGUE",
+
+      "instruction": "Ne luttez pas contre l'envie. Observez-la.",
+
+      "locationPrompt": "Où la ressentez-vous ?",
+
+      "locations": {
+        "chest": "Poitrine",
+        "stomach": "Ventre",
+        "head": "Tête",
+        "hands": "Mains",
+        "everywhere": "Partout"
+      },
+
+      "timerIntro": "Restez attentif à la sensation pendant 60 secondes.",
+
+      "finished": "Quelque chose a changé ?",
+
+      "weaker": "Elle a diminué",
+      "changed": "Elle a changé",
+      "same": "Elle est restée identique",
+      "stronger": "Elle s'est intensifiée"
+    },
+
+    "delay": {
+      "title": "PAS MAINTENANT",
+
+      "instruction": "Vous n'avez pas besoin de décider pour toujours.",
+
+      "promise": "Ne le faites simplement pas pendant les 10 prochaines minutes.",
+
+      "start": "COMMENCER 10:00",
+
+      "waiting": "Vous n'avez rien à faire. Laissez simplement les dix minutes passer.",
+
+      "finished": "Les dix minutes sont écoulées.",
+
+      "stillWant": "J'en ai toujours envie",
+      "weaker": "L'envie est moins forte",
+      "gone": "Elle a disparu",
+      "alreadyDid": "Je l'ai déjà fait"
+    },
+
+    "fastForward": {
+      "title": "AVANCE RAPIDE",
+
+      "intro": "Imaginez que vous l'avez déjà fait.",
+
+      "tenMinutes": "10 minutes plus tard...",
+
+      "tenPlaceholder": "Comment vous sentez-vous ?",
+
+      "tomorrow": "Demain...",
+
+      "tomorrowPlaceholder": "Comment vous sentirez-vous demain ?",
+
+      "next": "Que se passe-t-il ensuite ?",
+
+      "nextPlaceholder": "Qu'arrive-t-il après ?"
+    },
+
+    "changeScene": {
+      "title": "CHANGEZ DE CADRE",
+
+      "step1": "Levez-vous.",
+      "step2": "Posez votre téléphone ou l'objet.",
+      "step3": "Allez dans un autre endroit.",
+      "step4": "Restez-y pendant deux minutes.",
+
+      "ready": "JE SUIS AILLEURS",
+
+      "wait": "Restez ici pendant deux minutes."
+    },
+
+    "actualNeed": {
+      "title": "DE QUOI AVEZ-VOUS VRAIMENT BESOIN ?",
+
+      "intro": "Mettez le comportement de côté un instant.",
+
+      "question": "De quoi avez-vous vraiment besoin ?",
+
+      "options": {
+        "stimulation": "Stimulation",
+        "relief": "Soulagement",
+        "comfort": "Réconfort",
+        "escape": "Évasion",
+        "connection": "Connexion",
+        "control": "Contrôle",
+        "rest": "Repos",
+        "unknown": "Je ne sais pas"
+      },
+
+      "suggestions": {
+        "stimulation": "Donnez à votre cerveau quelque chose de nouveau pendant 90 secondes.",
+        "relief": "Respirez lentement et détendez volontairement vos épaules.",
+        "comfort": "Allez dans un endroit confortable et accordez-vous deux minutes de calme.",
+        "escape": "Éloignez-vous de la situation pendant deux minutes.",
+        "connection": "Envoyez un message simple à quelqu'un en qui vous avez confiance.",
+        "control": "Choisissez une petite chose autour de vous que vous pouvez contrôler maintenant.",
+        "rest": "Posez tout pendant deux minutes et permettez-vous de vous arrêter.",
+        "unknown": "Vous n'avez pas besoin de savoir pour l'instant. Créez simplement deux minutes de distance."
+      }
+    },
+
+    "breakChain": {
+      "title": "BRISEZ LA CHAÎNE",
+
+      "question": "Que s'est-il passé juste avant l'envie ?",
+
+      "options": {
+        "boredom": "Ennui",
+        "stress": "Stress",
+        "something_seen": "J'ai vu quelque chose",
+        "argument": "Une dispute",
+        "alone": "J'étais seul",
+        "phone": "J'ai pris mon téléphone",
+        "habit": "C'était automatique",
+        "nothing_obvious": "Rien d'évident"
+      },
+
+      "result": "C'est utile. Maintenant, interrompez la chaîne ici.",
+
+      "changeScene": "CHANGEZ D'ENDROIT"
+    },
+
+    "twoFutures": {
+      "title": "DEUX FUTURS",
+
+      "intro": "Regardez les deux chemins sans juger l'un ou l'autre.",
+
+      "act": "SI J'AGIS",
+
+      "actPlaceholder": "Que se passe-t-il ?",
+
+      "dont": "SI JE N'AGIS PAS",
+
+      "dontPlaceholder": "Que se passe-t-il à la place ?"
+    },
+
+    "switch90": {
+      "title": "CHANGEMENT DE 90 SECONDES",
+
+      "instruction": "Ne réfléchissez pas. Faites simplement autre chose pendant 90 secondes.",
+
+      "task1": "Trouvez cinq objets bleus autour de vous.",
+      "task2": "Lavez une tasse.",
+      "task3": "Levez-vous et marchez un peu.",
+      "task4": "Comptez dix objets autour de vous.",
+
+      "start": "COMMENCER 90 SECONDES"
+    },
+
+    "realityCheck": {
+      "title": "VÉRIFICATION DE LA RÉALITÉ",
+
+      "question": "Que pensez-vous qu'il va se passer si vous le faites ?",
+
+      "placeholder": "Je pense que...",
+
+      "certainty": "À quel point en êtes-vous certain ?",
+
+      "past": "Est-ce que cela s'est réellement produit régulièrement dans le passé ?",
+
+      "yes": "OUI",
+      "no": "NON",
+      "sometimes": "PARFOIS"
+    },
+
+    "previousSuccess": {
+      "title": "QU'EST-CE QUI A FONCTIONNÉ LA DERNIÈRE FOIS ?",
+
+      "intro": "Vous avez déjà été dans cette situation.",
+
+      "message": "La dernière fois, cette approche a contribué à réduire l'envie.",
+
+      "try": "ESSAYEZ À NOUVEAU"
+    },
+
+    "generic": {
+      "instruction": "Créez un peu de distance entre l'envie et l'action."
+    }
+  }
+}
