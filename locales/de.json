@@ -1,1 +1,334 @@
+{
+  "common": {
+    "interrupt": "INTERRUPT",
+    "continue": "WEITER",
+    "back": "ZURÜCK",
+    "done": "FERTIG"
+  },
 
+  "home": {
+    "title": "Du brauchst nicht mehr Willenskraft.",
+    "subtitle": "Du brauchst eine Möglichkeit, den Moment zu unterbrechen.",
+    "button": "UNTERBRECHEN",
+    "privacy": "Privat. Kein Konto erforderlich."
+  },
+
+  "behavior": {
+    "title": "Was bist du gerade dabei zu tun?",
+    "subtitle": "Wähle das, wozu es dich gerade hinzieht.",
+    "otherLabel": "Worum geht es?",
+    "otherPlaceholder": "Hier eingeben"
+  },
+
+  "behaviors": {
+    "gamble": "Glücksspiel",
+    "scroll": "Scrollen",
+    "smoke": "Rauchen",
+    "eat": "Essen",
+    "buy": "Etwas kaufen",
+    "watch": "Etwas ansehen",
+    "check": "Etwas überprüfen",
+    "other": "Etwas anderes"
+  },
+
+  "intensity": {
+    "title": "Wie stark ist der Drang gerade?",
+    "subtitle": "0 bedeutet kaum vorhanden. 10 bedeutet extrem stark."
+  },
+
+  "expectation": {
+    "title": "Was erwartest du davon?",
+    "subtitle": "Wonach suchst du gerade wirklich?",
+    "otherLabel": "Wonach suchst du?",
+    "otherPlaceholder": "Hier eingeben"
+  },
+
+  "expectations": {
+    "relief": "Erleichterung",
+    "excitement": "Aufregung",
+    "escape": "Flucht",
+    "pleasure": "Vergnügen",
+    "comfort": "Trost",
+    "control": "Kontrolle",
+    "somethingToDo": "Etwas zu tun",
+    "unknown": "Ich weiß es nicht"
+  },
+
+  "reassess": {
+    "title": "Wie stark ist der Drang jetzt?",
+    "subtitle": "Es gibt keine richtige Antwort. Sei einfach ehrlich."
+  },
+
+  "outcome": {
+    "title": "Was ist passiert?",
+    "subtitle": "Was auch immer passiert ist – deine Antwort hilft INTERRUPT zu lernen."
+  },
+
+  "outcomes": {
+    "interrupted": {
+      "title": "Ich habe ihn unterbrochen",
+      "description": "Ich habe mich entschieden, nicht nach dem Drang zu handeln."
+    },
+    "delayed": {
+      "title": "Ich habe es aufgeschoben",
+      "description": "Ich habe mir etwas Zeit gegeben, bevor ich gehandelt habe."
+    },
+    "acted": {
+      "title": "Ich habe es trotzdem getan",
+      "description": "Diesmal war der Drang stärker."
+    },
+    "unsure": {
+      "title": "Ich bin mir nicht sicher",
+      "description": "Ich weiß es noch nicht."
+    }
+  },
+
+  "result": {
+    "intervention": "Intervention",
+    "behavior": "Verhalten",
+
+    "interruptedTitle": "Du hast den Moment unterbrochen.",
+    "delayedTitle": "Du hast etwas Abstand geschaffen.",
+    "actedTitle": "Diesmal war der Drang stärker.",
+    "unsureTitle": "Der Moment ist vorbei.",
+
+    "messages": {
+      "lower": "Der Drang ist schwächer geworden.",
+      "same": "Der Drang hat sich diesmal nicht verändert.",
+      "higher": "Der Drang ist stärker geworden. Auch das ist eine nützliche Information."
+    }
+  },
+
+  "footer": {
+    "private": "Deine Daten bleiben auf diesem Gerät."
+  },
+
+  "interventions": {
+
+    "categories": {
+      "defusion": "ABSTAND SCHAFFEN",
+      "cognitive": "BETRACHTE ES NEU",
+      "urge_surfing": "BEOBACHTEN",
+      "delay": "AUFSCHIEBEN",
+      "future": "BLICK NACH VORN",
+      "environment": "UMGEBUNG WECHSELN",
+      "need": "BEDÜRFNIS ERKENNEN",
+      "trigger": "KETTE DURCHBRECHEN",
+      "attention": "FOKUS WECHSELN",
+      "personal": "WAS FRÜHER FUNKTIONIERT HAT"
+    },
+
+    "nameIt": {
+      "title": "BENENNE ES",
+
+      "instruction": "Trennen wir den Drang von dir.",
+
+      "firstPrompt": "Vervollständige: „Ich habe gerade den Drang, …“",
+
+      "placeholder": "Ich habe gerade den Drang, ...",
+
+      "secondPrompt": "Versuche jetzt: „Mein Gehirn sagt mir gerade, dass ich …“",
+
+      "placeholder2": "Mein Gehirn sagt mir gerade, dass ich ..."
+    },
+
+    "promise": {
+      "title": "DAS VERSPRECHEN",
+
+      "intro": "Dein Gehirn macht dir gerade ein Angebot.",
+
+      "expected": "Du erwartest gerade:",
+
+      "durationQuestion": "Wenn du es tust, wie lange wird sich das deiner Meinung nach gut anfühlen?",
+
+      "durationPlaceholder": "Ein paar Minuten, eine Stunde, fast den ganzen Tag...",
+
+      "afterQuestion": "Und was passiert normalerweise danach?",
+
+      "afterPlaceholder": "Was passiert danach?"
+    },
+
+    "wave": {
+      "title": "LASS DIE WELLE VORÜBERGEHEN",
+
+      "instruction": "Kämpfe nicht gegen den Drang. Beobachte ihn.",
+
+      "locationPrompt": "Wo spürst du ihn?",
+
+      "locations": {
+        "chest": "Brust",
+        "stomach": "Magen",
+        "head": "Kopf",
+        "hands": "Hände",
+        "everywhere": "Überall"
+      },
+
+      "timerIntro": "Bleibe 60 Sekunden bei diesem Gefühl.",
+
+      "finished": "Hat sich etwas verändert?",
+
+      "weaker": "Schwächer geworden",
+      "changed": "Verändert",
+      "same": "Gleich geblieben",
+      "stronger": "Stärker geworden"
+    },
+
+    "delay": {
+      "title": "JETZT NICHT",
+
+      "instruction": "Du musst dich nicht für immer entscheiden.",
+
+      "promise": "Tu es einfach in den nächsten 10 Minuten nicht.",
+
+      "start": "10:00 STARTEN",
+
+      "waiting": "Du musst nichts tun. Lass einfach diese zehn Minuten verstreichen.",
+
+      "finished": "Die zehn Minuten sind vorbei.",
+
+      "stillWant": "Ich will es immer noch",
+      "weaker": "Es ist schwächer",
+      "gone": "Es ist vorbei",
+      "alreadyDid": "Ich habe es schon getan"
+    },
+
+    "fastForward": {
+      "title": "VORSPULEN",
+
+      "intro": "Stell dir vor, du hast es bereits getan.",
+
+      "tenMinutes": "10 Minuten später...",
+
+      "tenPlaceholder": "Wie fühlst du dich?",
+
+      "tomorrow": "Morgen...",
+
+      "tomorrowPlaceholder": "Wie wirst du dich morgen fühlen?",
+
+      "next": "Was passiert danach?",
+
+      "nextPlaceholder": "Was passiert danach?"
+    },
+
+    "changeScene": {
+      "title": "WECHSLE DEN ORT",
+
+      "step1": "Steh auf.",
+      "step2": "Leg dein Handy oder den Gegenstand weg.",
+      "step3": "Geh an einen anderen Ort.",
+      "step4": "Bleib dort zwei Minuten.",
+
+      "ready": "ICH BIN AN EINEM ANDEREN ORT",
+
+      "wait": "Bleib zwei Minuten hier."
+    },
+
+    "actualNeed": {
+      "title": "WAS BRAUCHST DU WIRKLICH?",
+
+      "intro": "Leg das Verhalten für einen Moment beiseite.",
+
+      "question": "Was brauchst du wirklich?",
+
+      "options": {
+        "stimulation": "Anregung",
+        "relief": "Erleichterung",
+        "comfort": "Trost",
+        "escape": "Flucht",
+        "connection": "Verbindung",
+        "control": "Kontrolle",
+        "rest": "Ruhe",
+        "unknown": "Ich weiß es nicht"
+      },
+
+      "suggestions": {
+        "stimulation": "Gib deinem Gehirn 90 Sekunden lang etwas Neues.",
+        "relief": "Atme langsam und entspanne bewusst deine Schultern.",
+        "comfort": "Geh an einen Ort, an dem du dich wohlfühlst, und gönn dir zwei Minuten Ruhe.",
+        "escape": "Entferne dich für zwei Minuten aus der Situation.",
+        "connection": "Schreib einer Person, der du vertraust, eine kurze Nachricht.",
+        "control": "Wähle eine kleine Sache um dich herum, die du jetzt kontrollieren kannst.",
+        "rest": "Leg für zwei Minuten alles beiseite und erlaube dir, einfach innezuhalten.",
+        "unknown": "Du musst es noch nicht wissen. Schaffe einfach zwei Minuten Abstand."
+      }
+    },
+
+    "breakChain": {
+      "title": "DURCHBRICH DIE KETTE",
+
+      "question": "Was ist unmittelbar vor dem Drang passiert?",
+
+      "options": {
+        "boredom": "Langeweile",
+        "stress": "Stress",
+        "something_seen": "Ich habe etwas gesehen",
+        "argument": "Ein Streit",
+        "alone": "Ich war allein",
+        "phone": "Ich habe mein Handy genommen",
+        "habit": "Es passierte automatisch",
+        "nothing_obvious": "Nichts Offensichtliches"
+      },
+
+      "result": "Das ist nützlich. Unterbrich die Kette genau hier.",
+
+      "changeScene": "ORT WECHSELN"
+    },
+
+    "twoFutures": {
+      "title": "ZWEI ZUKÜNFTE",
+
+      "intro": "Betrachte beide Wege, ohne sie zu beurteilen.",
+
+      "act": "WENN ICH ES TUE",
+
+      "actPlaceholder": "Was passiert?",
+
+      "dont": "WENN ICH ES NICHT TUE",
+
+      "dontPlaceholder": "Was passiert stattdessen?"
+    },
+
+    "switch90": {
+      "title": "90-SEKUNDEN-WECHSEL",
+
+      "instruction": "Denk nicht darüber nach. Tu einfach 90 Sekunden lang etwas anderes.",
+
+      "task1": "Finde fünf blaue Dinge in deiner Umgebung.",
+      "task2": "Spüle eine Tasse ab.",
+      "task3": "Steh auf und geh ein wenig herum.",
+      "task4": "Zähle zehn Gegenstände um dich herum.",
+
+      "start": "90 SEKUNDEN STARTEN"
+    },
+
+    "realityCheck": {
+      "title": "REALITÄTSCHECK",
+
+      "question": "Was glaubst du, wird passieren, wenn du es tust?",
+
+      "placeholder": "Ich glaube, dass...",
+
+      "certainty": "Wie sicher bist du dir?",
+
+      "past": "Ist es in der Vergangenheit tatsächlich regelmäßig so passiert?",
+
+      "yes": "JA",
+      "no": "NEIN",
+      "sometimes": "MANCHMAL"
+    },
+
+    "previousSuccess": {
+      "title": "WAS HAT BEIM LETZTEN MAL FUNKTIONIERT?",
+
+      "intro": "Du warst schon einmal an diesem Punkt.",
+
+      "message": "Beim letzten Mal hat dieser Ansatz geholfen, den Drang zu reduzieren.",
+
+      "try": "NOCH EINMAL VERSUCHEN"
+    },
+
+    "generic": {
+      "instruction": "Schaffe etwas Abstand zwischen dem Drang und der Handlung."
+    }
+  }
+}
