@@ -44,6 +44,7 @@
   },
 
   "expectations": {
+    "money": "Argent"
     "relief": "Soulagement",
     "excitement": "Excitation",
     "escape": "Évasion",
