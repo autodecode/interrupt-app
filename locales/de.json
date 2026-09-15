@@ -44,6 +44,7 @@
   },
 
   "expectations": {
+    "money": "Geld gewinnen"
     "relief": "Erleichterung",
     "excitement": "Aufregung",
     "escape": "Flucht",
