@@ -21,7 +21,7 @@
   },
 
   "behaviors": {
-    "gamble": "Jugar",
+    "gamble": "Apostar",
     "scroll": "Desplazarme",
     "smoke": "Fumar",
     "eat": "Comer",
