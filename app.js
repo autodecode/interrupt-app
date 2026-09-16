@@ -1,42 +1,31 @@
-const LANGUAGES={en:{file:“locales/en.json”,flag:“🇬🇧”,code:“EN”},ro:{file:“locales/ro.json”,flag:“🇷🇴”,code:“RO”},fr:{file:“locales/fr.json”,flag:“🇫🇷”,code:“FR”},de:{file:“locales/de.json”,flag:“🇩🇪”,code:“DE”},es:{file:“locales/es.json”,flag:“🇪🇸”,code:“ES”},it:{file:“locales/it.json”,flag:“🇮🇹”,code:“IT”}};
-const STORAGE={language:“interrupt_language”,sessions:“interrupt_sessions”};
-const INTERVENTIONS=[“nameIt”,“promise”,“wave”,“delay”,“fastForward”,“changeScene”,“actualNeed”,“breakChain”,“twoFutures”,“switch90”,“realityCheck”];
+const LANGUAGES={en:{file:"locales/en.json",flag:"🇬🇧",code:"EN"},ro:{file:"locales/ro.json",flag:"🇷🇴",code:"RO"},fr:{file:"locales/fr.json",flag:"🇫🇷",code:"FR"},de:{file:"locales/de.json",flag:"🇩🇪",code:"DE"},es:{file:"locales/es.json",flag:"🇪🇸",code:"ES"},it:{file:"locales/it.json",flag:"🇮🇹",code:"IT"}};
+const STORAGE={language:"interrupt_language",sessions:"interrupt_sessions"};
+const INTERVENTIONS=["nameIt","promise","wave","delay","fastForward","changeScene","actualNeed","breakChain","twoFutures","switch90","realityCheck"];
 
 const INTERVENTION_RULES={
-gamble:{money:[“fastForward”,“realityCheck”,“delay”,“promise”],excitement:[“delay”,“wave”,“changeScene”,“switch90”],escape:[“actualNeed”,“changeScene”,“nameIt”,“delay”],relief:[“actualNeed”,“delay”,“wave”,“changeScene”],default:[“fastForward”,“realityCheck”,“delay”,“nameIt”]},
-scroll:{something_to_do:[“switch90”,“changeScene”,“delay”],escape:[“changeScene”,“actualNeed”,“delay”,“nameIt”],excitement:[“switch90”,“changeScene”,“delay”],default:[“changeScene”,“switch90”,“delay”,“nameIt”]},
-smoke:{relief:[“delay”,“wave”,“actualNeed”,“changeScene”],comfort:[“actualNeed”,“wave”,“delay”],escape:[“changeScene”,“delay”,“actualNeed”],default:[“delay”,“wave”,“changeScene”,“nameIt”]},
-eat:{comfort:[“actualNeed”,“delay”,“wave”,“nameIt”],pleasure:[“delay”,“actualNeed”,“wave”],relief:[“actualNeed”,“delay”,“changeScene”],default:[“wave”,“delay”,“actualNeed”,“nameIt”]},
-buy:{money:[“fastForward”,“delay”,“realityCheck”,“twoFutures”],excitement:[“delay”,“fastForward”,“realityCheck”],comfort:[“actualNeed”,“delay”,“twoFutures”],default:[“delay”,“fastForward”,“realityCheck”,“nameIt”]},
-watch:{escape:[“changeScene”,“actualNeed”,“delay”,“switch90”],something_to_do:[“switch90”,“changeScene”,“delay”],default:[“delay”,“switch90”,“changeScene”,“nameIt”]},
-check:{relief:[“delay”,“nameIt”,“realityCheck”,“changeScene”],control:[“realityCheck”,“delay”,“nameIt”],default:[“nameIt”,“delay”,“realityCheck”,“changeScene”]},
-other:{default:[“nameIt”,“delay”,“changeScene”,“actualNeed”]}
+gamble:{money:["fastForward","realityCheck","delay","promise"],excitement:["delay","wave","changeScene","switch90"],escape:["actualNeed","changeScene","nameIt","delay"],relief:["actualNeed","delay","wave","changeScene"],default:["fastForward","realityCheck","delay","nameIt"]},
+scroll:{something_to_do:["switch90","changeScene","delay"],escape:["changeScene","actualNeed","delay","nameIt"],excitement:["switch90","changeScene","delay"],default:["changeScene","switch90","delay","nameIt"]},
+smoke:{relief:["delay","wave","actualNeed","changeScene"],comfort:["actualNeed","wave","delay"],escape:["changeScene","delay","actualNeed"],default:["delay","wave","changeScene","nameIt"]},
+eat:{comfort:["actualNeed","delay","wave","nameIt"],pleasure:["delay","actualNeed","wave"],relief:["actualNeed","delay","changeScene"],default:["wave","delay","actualNeed","nameIt"]},
+buy:{money:["fastForward","delay","realityCheck","twoFutures"],excitement:["delay","fastForward","realityCheck"],comfort:["actualNeed","delay","twoFutures"],default:["delay","fastForward","realityCheck","nameIt"]},
+watch:{escape:["changeScene","actualNeed","delay","switch90"],something_to_do:["switch90","changeScene","delay"],default:["delay","switch90","changeScene","nameIt"]},
+check:{relief:["delay","nameIt","realityCheck","changeScene"],control:["realityCheck","delay","nameIt"],default:["nameIt","delay","realityCheck","changeScene"]},
+other:{default:["nameIt","delay","changeScene","actualNeed"]}
 };
 
-let translations={},currentLanguage=“en”;
+let translations={},currentLanguage="en";
 
 let session={
-id:null,
-behavior:null,
-behaviorLabel:null,
-intensityBefore:5,
-intensityAfter:null,
-expectation:null,
-expectationLabel:null,
-intervention:null,
-interventionAttempts:[],
-attemptHistory:[],
-attemptIntensityBefore:5,
-attemptStartedAt:null,
-outcome:null,
-startedAt:null,
-completedAt:null
+id:null,behavior:null,behaviorLabel:null,intensityBefore:5,intensityAfter:null,
+expectation:null,expectationLabel:null,intervention:null,interventionAttempts:[],
+attemptHistory:[],attemptIntensityBefore:5,attemptStartedAt:null,outcome:null,
+trigger:null,startedAt:null,completedAt:null
 };
 
 const $=id=>document.getElementById(id);
 
 function getPath(object,path){
-return path.split(”.”).reduce((value,key)=>value?.[key],object);
+return path.split(".").reduce((value,key)=>value?.[key],object);
 }
 
 function t(key,fallback=key){
@@ -44,176 +33,150 @@ return getPath(translations,key)??fallback;
 }
 
 function getSavedSessions(){
-if(typeof INTERRUPT_STORAGE!==“undefined”&&typeof INTERRUPT_STORAGE.getSessions===“function”){
-return INTERRUPT_STORAGE.getSessions();
-}
+if(typeof INTERRUPT_STORAGE!=="undefined"&&typeof INTERRUPT_STORAGE.getSessions==="function")return INTERRUPT_STORAGE.getSessions();
 try{
-const data=JSON.parse(localStorage.getItem(STORAGE.sessions)||”[]”);
+const data=JSON.parse(localStorage.getItem(STORAGE.sessions)||"[]");
 return Array.isArray(data)?data:[];
-}catch{
-return[];
-}
+}catch{return[];}
 }
 
 function saveSessions(sessions){
-if(typeof INTERRUPT_STORAGE!==“undefined”&&typeof INTERRUPT_STORAGE.saveSessions===“function”){
-return INTERRUPT_STORAGE.saveSessions(sessions);
-}
+if(typeof INTERRUPT_STORAGE!=="undefined"&&typeof INTERRUPT_STORAGE.saveSessions==="function")return INTERRUPT_STORAGE.saveSessions(sessions);
 try{
 localStorage.setItem(STORAGE.sessions,JSON.stringify(sessions));
 return true;
-}catch{
-return false;
-}
+}catch{return false;}
 }
 
 function createSession(){
 return{
-id:${Date.now()}-${Math.random().toString(36).slice(2,8)},
-behavior:null,
-behaviorLabel:null,
-intensityBefore:5,
-intensityAfter:null,
-expectation:null,
-expectationLabel:null,
-intervention:null,
-interventionAttempts:[],
-attemptHistory:[],
-attemptIntensityBefore:5,
-attemptStartedAt:null,
-outcome:null,
-startedAt:new Date().toISOString(),
-completedAt:null
+id:`${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+behavior:null,behaviorLabel:null,intensityBefore:5,intensityAfter:null,
+expectation:null,expectationLabel:null,intervention:null,interventionAttempts:[],
+attemptHistory:[],attemptIntensityBefore:5,attemptStartedAt:null,outcome:null,
+trigger:null,startedAt:new Date().toISOString(),completedAt:null
 };
 }
 
 function resetSession(){
 session=createSession();
-$(“intensitySlider”).value=5;
-$(“intensityValue”).textContent=“5”;
-$(“reassessSlider”).value=5;
-$(“reassessValue”).textContent=“5”;
+$("intensitySlider").value=5;
+$("intensityValue").textContent="5";
+$("reassessSlider").value=5;
+$("reassessValue").textContent="5";
 clearSelections();
-$(“otherBehaviorContainer”).hidden=true;
-$(“otherExpectationContainer”).hidden=true;
-$(“otherBehaviorInput”).value=””;
-$(“otherExpectationInput”).value=””;
-$(“behaviorContinueButton”).disabled=true;
-$(“expectationContinueButton”).disabled=true;
+$("otherBehaviorContainer").hidden=true;
+$("otherExpectationContainer").hidden=true;
+$("otherBehaviorInput").value="";
+$("otherExpectationInput").value="";
+$("behaviorContinueButton").disabled=true;
+$("expectationContinueButton").disabled=true;
 }
 
 function clearSelections(){
-document.querySelectorAll(”.choice-button.selected”).forEach(button=>button.classList.remove(“selected”));
-document.querySelectorAll(”.outcome-button.selected”).forEach(button=>button.classList.remove(“selected”));
+document.querySelectorAll(".choice-button.selected").forEach(button=>button.classList.remove("selected"));
+document.querySelectorAll(".outcome-button.selected").forEach(button=>button.classList.remove("selected"));
 }
 
 function showScreen(name){
-document.querySelectorAll(”.screen”).forEach(screen=>screen.classList.remove(“screen-active”));
-const target=$(screen-${name});
+document.querySelectorAll(".screen").forEach(screen=>screen.classList.remove("screen-active"));
+const target=$(`screen-${name}`);
 if(target){
-target.classList.add(“screen-active”);
-window.scrollTo({top:0,behavior:“smooth”});
+target.classList.add("screen-active");
+window.scrollTo({top:0,behavior:"smooth"});
 }
 }
 
 async function loadLanguage(language){
-if(!LANGUAGES[language])language=“en”;
+if(!LANGUAGES[language])language="en";
 try{
-const response=await fetch(LANGUAGES[language].file,{cache:“no-store”});
-if(!response.ok)throw new Error(HTTP ${response.status});
+const response=await fetch(LANGUAGES[language].file,{cache:"no-store"});
+if(!response.ok)throw new Error(`HTTP ${response.status}`);
 translations=await response.json();
 currentLanguage=language;
 localStorage.setItem(STORAGE.language,language);
 updateLanguageUI();
 applyTranslations();
 }catch(error){
-if(language!==“en”){
-await loadLanguage(“en”);
-}else{
-console.error(“Could not load language:”,error);
-}
+if(language!=="en")await loadLanguage("en");
+else console.error("Could not load language:",error);
 }
 }
 
 function updateLanguageUI(){
 const language=LANGUAGES[currentLanguage];
-$(“currentLanguageFlag”).textContent=language.flag;
-$(“currentLanguageCode”).textContent=language.code;
-document.querySelectorAll(”.language-option”).forEach(option=>{
-option.classList.toggle(“selected”,option.dataset.language===currentLanguage);
-});
+$("currentLanguageFlag").textContent=language.flag;
+$("currentLanguageCode").textContent=language.code;
+document.querySelectorAll(".language-option").forEach(option=>option.classList.toggle("selected",option.dataset.language===currentLanguage));
 document.documentElement.lang=currentLanguage;
 }
 
 function applyTranslations(){
-document.querySelectorAll(”[data-i18n]”).forEach(element=>{
-const key=element.dataset.i18n;
-const value=t(key);
-if(value!==key)element.textContent=value;
+document.querySelectorAll("[data-i18n]").forEach(element=>{
+const value=t(element.dataset.i18n);
+if(value!==element.dataset.i18n)element.textContent=value;
 });
-document.querySelectorAll(”[data-i18n-placeholder]”).forEach(element=>{
-const key=element.dataset.i18nPlaceholder;
-const value=t(key);
-if(value!==key)element.placeholder=value;
+document.querySelectorAll("[data-i18n-placeholder]").forEach(element=>{
+const value=t(element.dataset.i18nPlaceholder);
+if(value!==element.dataset.i18nPlaceholder)element.placeholder=value;
 });
 updateDynamicIntervention();
 }
 
 function toggleLanguageMenu(force){
-const menu=$(“languageMenu”);
-const button=$(“languageButton”);
-const open=typeof force===“boolean”?force:menu.hidden;
+const menu=$("languageMenu"),button=$("languageButton");
+const open=typeof force==="boolean"?force:menu.hidden;
 menu.hidden=!open;
-button.setAttribute(“aria-expanded”,String(open));
+button.setAttribute("aria-expanded",String(open));
 }
 
 function selectBehavior(button){
-document.querySelectorAll(”#behaviorOptions .choice-button”).forEach(item=>item.classList.remove(“selected”));
-button.classList.add(“selected”);
+document.querySelectorAll("#behaviorOptions .choice-button").forEach(item=>item.classList.remove("selected"));
+button.classList.add("selected");
 const value=button.dataset.behavior;
 session.behavior=value;
-if(value===“other”){
-$(“otherBehaviorContainer”).hidden=false;
-$(“otherBehaviorInput”).focus();
-session.behaviorLabel=””;
-$(“behaviorContinueButton”).disabled=true;
+if(value==="other"){
+$("otherBehaviorContainer").hidden=false;
+$("otherBehaviorInput").focus();
+session.behaviorLabel="";
+$("behaviorContinueButton").disabled=true;
 }else{
-$(“otherBehaviorContainer”).hidden=true;
-session.behaviorLabel=button.querySelector(”[data-i18n]”)?.textContent.trim()||value;
-$(“behaviorContinueButton”).disabled=false;
+$("otherBehaviorContainer").hidden=true;
+session.behaviorLabel=button.querySelector("[data-i18n]")?.textContent.trim()||value;
+$("behaviorContinueButton").disabled=false;
 }
 }
 
 function validateOtherBehavior(){
-const value=$(“otherBehaviorInput”).value.trim();
-if(session.behavior===“other”){
+const value=$("otherBehaviorInput").value.trim();
+if(session.behavior==="other"){
 session.behaviorLabel=value;
-$(“behaviorContinueButton”).disabled=value.length===0;
+$("behaviorContinueButton").disabled=!value.length;
 }
 }
 
 function selectExpectation(button){
-document.querySelectorAll(”#expectationOptions .choice-button”).forEach(item=>item.classList.remove(“selected”));
-button.classList.add(“selected”);
+document.querySelectorAll("#expectationOptions .choice-button").forEach(item=>item.classList.remove("selected"));
+button.classList.add("selected");
 const value=button.dataset.expectation;
 session.expectation=value;
-if(value===“other”){
-$(“otherExpectationContainer”).hidden=false;
-$(“otherExpectationInput”).focus();
-session.expectationLabel=””;
-$(“expectationContinueButton”).disabled=true;
+if(value==="other"){
+$("otherExpectationContainer").hidden=false;
+$("otherExpectationInput").focus();
+session.expectationLabel="";
+$("expectationContinueButton").disabled=true;
 }else{
-$(“otherExpectationContainer”).hidden=true;
-session.expectationLabel=button.querySelector(”[data-i18n]”)?.textContent.trim()||value;
-$(“expectationContinueButton”).disabled=false;
+$("otherExpectationContainer").hidden=true;
+session.expectationLabel=button.querySelector("[data-i18n]")?.textContent.trim()||value;
+$("expectationContinueButton").disabled=false;
 }
 }
 
 function validateOtherExpectation(){
-const value=$(“otherExpectationInput”).value.trim();
-if(session.expectation===“other”){
+const value=$("otherExpectationInput").value.trim();
+if(session.expectation==="other"){
 session.expectationLabel=value;
-$(“expectationContinueButton”).disabled=value.length===0;
+$("expectationContinueButton").disabled=!value.length;
 }
 }
 
@@ -227,23 +190,28 @@ getSavedSessions().forEach(item=>{
 if(!item)return;
 if(Array.isArray(item.attemptHistory)&&item.attemptHistory.length){
 item.attemptHistory.forEach(attempt=>{
-if(attempt&&attempt.intervention&&typeof attempt.intensityBefore===“number”&&typeof attempt.intensityAfter===“number”){
-history.push({…item,…attempt,sessionId:item.id,behavior:item.behavior,behaviorLabel:item.behaviorLabel,expectation:item.expectation,expectationLabel:item.expectationLabel,trigger:item.trigger});
+if(attempt&&attempt.intervention&&typeof attempt.intensityBefore==="number"&&typeof attempt.intensityAfter==="number"){
+history.push({...item,...attempt,sessionId:item.id,behavior:item.behavior,behaviorLabel:item.behaviorLabel,expectation:item.expectation,expectationLabel:item.expectationLabel,trigger:attempt.trigger??item.trigger});
 }
 });
 return;
 }
-if(item.intervention&&typeof item.intensityBefore===“number”&&typeof item.intensityAfter===“number”){
-history.push(item);
-}
+if(item.intervention&&typeof item.intensityBefore==="number"&&typeof item.intensityAfter==="number")history.push(item);
 });
 return history;
 }
 
+function getAdaptiveContext(){
+return{
+...session,
+intensityBefore:Number(session.attemptIntensityBefore??session.intensityBefore)
+};
+}
+
 function getRelevantHistory(){
 return getEngineHistory().filter(item=>{
-if(session.behavior&&session.behavior!==“other”&&item.behavior!==session.behavior)return false;
-if(session.expectation&&session.expectation!==“unknown”&&item.expectation&&item.expectation!==session.expectation)return false;
+if(session.behavior&&session.behavior!=="other"&&item.behavior!==session.behavior)return false;
+if(session.expectation&&session.expectation!=="unknown"&&item.expectation&&item.expectation!==session.expectation)return false;
 return true;
 });
 }
@@ -253,159 +221,131 @@ return INTERRUPT_ADAPTIVE.buildStats(getRelevantHistory());
 }
 
 function getAdaptiveStats(){
-return INTERRUPT_ADAPTIVE.getAdaptiveStats(getEngineHistory(),session);
+return INTERRUPT_ADAPTIVE.getAdaptiveStats(getEngineHistory(),getAdaptiveContext());
 }
 
 function getLastSuccessful(intervention){
-return INTERRUPT_ADAPTIVE.getLastSuccessful(getEngineHistory(),session,intervention);
+return INTERRUPT_ADAPTIVE.getLastSuccessful(getEngineHistory(),getAdaptiveContext(),intervention);
 }
 
 function getRecommendation(intervention){
-return INTERRUPT_ADAPTIVE.getRecommendation(getEngineHistory(),session,intervention);
+return INTERRUPT_ADAPTIVE.getRecommendation(getEngineHistory(),getAdaptiveContext(),intervention);
 }
 
 function chooseIntervention(){
 const attempted=new Set(session.interventionAttempts);
-const adaptive=getAdaptiveStats();
-const stats=adaptive.stats;
-const behaviorRules=INTERVENTION_RULES[session.behavior]||INTERVENTION_RULES.other;
-const preferred=behaviorRules[session.expectation]||behaviorRules.default;
-let candidates=INTERVENTIONS.filter(intervention=>!attempted.has(intervention));
+const stats=getAdaptiveStats().stats;
+const rules=INTERVENTION_RULES[session.behavior]||INTERVENTION_RULES.other;
+const preferred=rules[session.expectation]||rules.default;
+let candidates=INTERVENTIONS.filter(id=>!attempted.has(id));
 if(!candidates.length){
 session.interventionAttempts=[];
-candidates=[…INTERVENTIONS];
+candidates=[...INTERVENTIONS];
 }
-candidates.sort((a,b)=>
-INTERRUPT_ADAPTIVE.scoreIntervention(b,stats,preferred,session.intensityBefore)-
-INTERRUPT_ADAPTIVE.scoreIntervention(a,stats,preferred,session.intensityBefore)
-);
+candidates.sort((a,b)=>INTERRUPT_ADAPTIVE.scoreIntervention(b,stats,preferred,session.attemptIntensityBefore??session.intensityBefore)-INTERRUPT_ADAPTIVE.scoreIntervention(a,stats,preferred,session.attemptIntensityBefore??session.intensityBefore));
 return candidates[0];
 }
 
 function interventionTitle(id){
-return t(interventions.${id}.title,id);
+return t(`interventions.${id}.title`,id);
 }
 
 function interventionCategory(id){
-const map={nameIt:“defusion”,promise:“cognitive”,wave:“urge_surfing”,delay:“delay”,fastForward:“future”,changeScene:“environment”,actualNeed:“need”,breakChain:“trigger”,twoFutures:“future”,switch90:“attention”,realityCheck:“cognitive”,previousSuccess:“personal”};
-return t(interventions.categories.${map[id]||"cognitive"},””);
+const map={nameIt:"defusion",promise:"cognitive",wave:"urge_surfing",delay:"delay",fastForward:"future",changeScene:"environment",actualNeed:"need",breakChain:"trigger",twoFutures:"future",switch90:"attention",realityCheck:"cognitive",previousSuccess:"personal"};
+return t(`interventions.categories.${map[id]||"cognitive"}`,"");
 }
 
 function updateDynamicIntervention(){
 if(!session.intervention)return;
-$(“interventionCategory”).textContent=interventionCategory(session.intervention);
-$(“interventionTitle”).textContent=interventionTitle(session.intervention);
+$("interventionCategory").textContent=interventionCategory(session.intervention);
+$("interventionTitle").textContent=interventionTitle(session.intervention);
 renderIntervention(session.intervention);
 }
 
 function renderPersonalRecommendation(container){
 const recommendation=getRecommendation(session.intervention);
 if(!recommendation)return;
-const box=document.createElement(“div”);
-box.className=“insight-section”;
-const before=recommendation.last.intensityBefore;
-const after=recommendation.last.intensityAfter;
-const confidence=recommendation.confidence;
+const box=document.createElement("div");
+box.className="insight-section";
+const before=recommendation.last.intensityBefore,after=recommendation.last.intensityAfter;
 let text;
 if(recommendation.reduction>0){
-if(recommendation.uses===1){
-text=Last time, this type of urge dropped from ${before} to ${after} with ${interventionTitle(session.intervention)}.;
-}else if(confidence===“high”){
-text=${interventionTitle(session.intervention)} has repeatedly reduced this type of urge for you.;
-}else{
-text=You have reduced a similar urge with ${interventionTitle(session.intervention)} before.;
-}
-}else{
-text=You tried ${interventionTitle(session.intervention)} before, but the urge did not decrease.;
-}
-const title=document.createElement(“h3”);
-title.textContent=“PERSONAL HISTORY”;
-const paragraph=document.createElement(“p”);
+if(recommendation.uses===1)text=`Last time, this type of urge dropped from ${before} to ${after} with ${interventionTitle(session.intervention)}.`;
+else if(recommendation.confidence==="high")text=`${interventionTitle(session.intervention)} has repeatedly reduced this type of urge for you.`;
+else text=`You have reduced a similar urge with ${interventionTitle(session.intervention)} before.`;
+}else text=`You tried ${interventionTitle(session.intervention)} before, but the urge did not decrease.`;
+const title=document.createElement("h3");
+title.textContent="PERSONAL HISTORY";
+const paragraph=document.createElement("p");
 paragraph.textContent=text;
-box.appendChild(title);
-box.appendChild(paragraph);
+box.append(title,paragraph);
 container.appendChild(box);
 }
 
 function renderIntervention(id){
-const content=$(“interventionContent”);
-const actions=$(“interventionActions”);
-content.innerHTML=””;
-actions.innerHTML=””;
+const content=$("interventionContent"),actions=$("interventionActions");
+content.innerHTML="";
+actions.innerHTML="";
 const renderers={nameIt:renderNameIt,promise:renderPromise,wave:renderWave,delay:renderDelay,fastForward:renderFastForward,changeScene:renderChangeScene,actualNeed:renderActualNeed,breakChain:renderBreakChain,twoFutures:renderTwoFutures,realityCheck:renderRealityCheck,switch90:renderSwitch90};
-if(renderers[id])renderersid;
+if(renderers[id])renderers[id](content,actions);
 else renderGeneric(content,actions);
 renderPersonalRecommendation(content);
 }
 
-function addActionButton(container,text,callback,className=“primary-button”){
-const button=document.createElement(“button”);
-button.type=“button”;
+function addActionButton(container,text,callback,className="primary-button"){
+const button=document.createElement("button");
+button.type="button";
 button.className=className;
 button.textContent=text;
-button.addEventListener(“click”,callback);
+button.addEventListener("click",callback);
 container.appendChild(button);
 return button;
 }
 
 function finishIntervention(){
-$(“reassessSlider”).value=Number(session.attemptIntensityBefore??session.intensityBefore);
-$(“reassessValue”).textContent=$(“reassessSlider”).value;
-showScreen(“reassess”);
+$("reassessSlider").value=Number(session.attemptIntensityBefore??session.intensityBefore);
+$("reassessValue").textContent=$("reassessSlider").value;
+showScreen("reassess");
 }
 
 function renderNameIt(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
 box.innerHTML=`
-
 <p>${t("interventions.nameIt.instruction")}</p>
 <p class="intervention-prompt">${t("interventions.nameIt.firstPrompt")}</p>
 <input class="intervention-input" type="text" placeholder="${t("interventions.nameIt.placeholder")}" autocomplete="off">
 <p class="intervention-prompt">${t("interventions.nameIt.secondPrompt")}</p>
-<input class="intervention-input" type="text" placeholder="${t("interventions.nameIt.placeholder2")}" autocomplete="off">
-`;
+<input class="intervention-input" type="text" placeholder="${t("interventions.nameIt.placeholder2")}" autocomplete="off">`;
 content.appendChild(box);
 addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderPromise(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
-const expected=session.expectationLabel||session.expectation||””;
+const box=document.createElement("div");
+box.className="intervention-box";
+const expected=session.expectationLabel||session.expectation||"";
 box.innerHTML=`
-
 <p>${t("interventions.promise.intro")}</p>
-<p class="intervention-highlight">${t("interventions.promise.expected")} ${expected}</p>
+<p class="intervention-highlight">${t("interventions.promise.expected")} ${escapeHTML(expected)}</p>
 <p class="intervention-prompt">${t("interventions.promise.durationQuestion")}</p>
 <input class="intervention-input" type="text" placeholder="${t("interventions.promise.durationPlaceholder")}" autocomplete="off">
 <p class="intervention-prompt">${t("interventions.promise.afterQuestion")}</p>
-<input class="intervention-input" type="text" placeholder="${t("interventions.promise.afterPlaceholder")}" autocomplete="off">
-`;
+<input class="intervention-input" type="text" placeholder="${t("interventions.promise.afterPlaceholder")}" autocomplete="off">`;
 content.appendChild(box);
 addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderWave(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
 box.innerHTML=`
-
 <p>${t("interventions.wave.instruction")}</p>
 <p class="intervention-prompt">${t("interventions.wave.locationPrompt")}</p>
-<div class="wave-locations">
-${["chest","stomach","head","hands","everywhere"].map(key=>`
-<button type="button" class="choice-button wave-location" data-location="${key}">${t(`interventions.wave.locations.${key}`)}</button>
-`).join("")}
-</div>
-<div class="wave-timer" hidden>
-<p>${t("interventions.wave.timerIntro")}</p>
-<div class="timer-value">60</div>
-</div>
-`;
+<div class="wave-locations">${["chest","stomach","head","hands","everywhere"].map(key=>`<button type="button" class="choice-button wave-location" data-location="${key}">${t(`interventions.wave.locations.${key}`)}</button>`).join("")}</div>
+<div class="wave-timer" hidden><p>${t("interventions.wave.timerIntro")}</p><div class="timer-value">60</div></div>`;
 content.appendChild(box);
-const timerBox=box.querySelector(".wave-timer");
-const timerValue=box.querySelector(".timer-value");
+const timerBox=box.querySelector(".wave-timer"),timerValue=box.querySelector(".timer-value");
 box.querySelectorAll(".wave-location").forEach(button=>{
 button.addEventListener("click",()=>{
 box.querySelectorAll(".wave-location").forEach(item=>item.classList.remove("selected"));
@@ -427,18 +367,12 @@ addWaveFinishOptions(box,actions);
 }
 
 function addWaveFinishOptions(box,actions){
-if(box.querySelector(”.wave-finish”))return;
-const finish=document.createElement(“div”);
-finish.className=“wave-finish”;
+if(box.querySelector(".wave-finish"))return;
+const finish=document.createElement("div");
+finish.className="wave-finish";
 finish.innerHTML=`
-
 <p>${t("interventions.wave.finished")}</p>
-<div class="wave-results">
-${["weaker","changed","same","stronger"].map(key=>`
-<button type="button" class="choice-button" data-wave-result="${key}">${t(`interventions.wave.${key}`)}</button>
-`).join("")}
-</div>
-`;
+<div class="wave-results">${["weaker","changed","same","stronger"].map(key=>`<button type="button" class="choice-button" data-wave-result="${key}">${t(`interventions.wave.${key}`)}</button>`).join("")}</div>`;
 box.appendChild(finish);
 finish.querySelectorAll("[data-wave-result]").forEach(button=>{
 button.addEventListener("click",()=>{
@@ -451,14 +385,12 @@ addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderDelay(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
 box.innerHTML=`
-
 <p>${t("interventions.delay.instruction")}</p>
 <p class="intervention-highlight">${t("interventions.delay.promise")}</p>
-<div class="delay-timer">10:00</div>
-`;
+<div class="delay-timer">10:00</div>`;
 content.appendChild(box);
 const timer=box.querySelector(".delay-timer");
 addActionButton(actions,t("interventions.delay.start"),()=>{
@@ -466,9 +398,7 @@ actions.innerHTML="";
 let remaining=600;
 const interval=setInterval(()=>{
 remaining--;
-const minutes=Math.floor(remaining/60);
-const seconds=remaining%60;
-timer.textContent=`${minutes}:${String(seconds).padStart(2,"0")}`;
+timer.textContent=`${Math.floor(remaining/60)}:${String(remaining%60).padStart(2,"0")}`;
 if(remaining<=0){
 clearInterval(interval);
 timer.textContent="0:00";
@@ -481,8 +411,7 @@ result.innerHTML=`
 <button type="button" class="choice-button">${t("interventions.delay.weaker")}</button>
 <button type="button" class="choice-button">${t("interventions.delay.gone")}</button>
 <button type="button" class="choice-button">${t("interventions.delay.alreadyDid")}</button>
-</div>
-`;
+</div>`;
 box.appendChild(result);
 result.querySelectorAll(".choice-button").forEach(button=>{
 button.addEventListener("click",()=>{
@@ -498,35 +427,31 @@ addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderFastForward(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
 box.innerHTML=`
-
 <p>${t("interventions.fastForward.intro")}</p>
 <p class="intervention-prompt">${t("interventions.fastForward.tenMinutes")}</p>
 <textarea class="intervention-textarea" placeholder="${t("interventions.fastForward.tenPlaceholder")}"></textarea>
 <p class="intervention-prompt">${t("interventions.fastForward.tomorrow")}</p>
 <textarea class="intervention-textarea" placeholder="${t("interventions.fastForward.tomorrowPlaceholder")}"></textarea>
 <p class="intervention-prompt">${t("interventions.fastForward.next")}</p>
-<textarea class="intervention-textarea" placeholder="${t("interventions.fastForward.nextPlaceholder")}"></textarea>
-`;
+<textarea class="intervention-textarea" placeholder="${t("interventions.fastForward.nextPlaceholder")}"></textarea>`;
 content.appendChild(box);
 addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderChangeScene(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
 box.innerHTML=`
-
 <ol class="intervention-steps">
 <li>${t("interventions.changeScene.step1")}</li>
 <li>${t("interventions.changeScene.step2")}</li>
 <li>${t("interventions.changeScene.step3")}</li>
 <li>${t("interventions.changeScene.step4")}</li>
 </ol>
-<div class="scene-timer"></div>
-`;
+<div class="scene-timer"></div>`;
 content.appendChild(box);
 const timer=box.querySelector(".scene-timer");
 addActionButton(actions,t("interventions.changeScene.ready"),()=>{
@@ -546,28 +471,23 @@ addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderActualNeed(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
+const options=t("interventions.actualNeed.options",{});
+const keys=options&&typeof options==="object"?Object.keys(options):[];
 box.innerHTML=`
-
 <p>${t("interventions.actualNeed.intro")}</p>
 <p class="intervention-prompt">${t("interventions.actualNeed.question")}</p>
-<div class="option-grid">
-${Object.keys(t("interventions.actualNeed.options",{})).map(key=>`
-<button type="button" class="choice-button" data-need="${key}">${t(`interventions.actualNeed.options.${key}`)}</button>
-`).join("")}
-</div>
-<div class="need-suggestion" hidden></div>
-`;
+<div class="option-grid">${keys.map(key=>`<button type="button" class="choice-button" data-need="${key}">${t(`interventions.actualNeed.options.${key}`)}</button>`).join("")}</div>
+<div class="need-suggestion" hidden></div>`;
 content.appendChild(box);
 const suggestion=box.querySelector(".need-suggestion");
 box.querySelectorAll("[data-need]").forEach(button=>{
 button.addEventListener("click",()=>{
 box.querySelectorAll("[data-need]").forEach(item=>item.classList.remove("selected"));
 button.classList.add("selected");
-const key=button.dataset.need;
 suggestion.hidden=false;
-suggestion.textContent=t(`interventions.actualNeed.suggestions.${key}`);
+suggestion.textContent=t(`interventions.actualNeed.suggestions.${button.dataset.need}`);
 actions.innerHTML="";
 addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 });
@@ -575,18 +495,14 @@ addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderBreakChain(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
+const options=t("interventions.breakChain.options",{});
+const keys=options&&typeof options==="object"?Object.keys(options):[];
 box.innerHTML=`
-
 <p>${t("interventions.breakChain.question")}</p>
-<div class="option-grid">
-${Object.keys(t("interventions.breakChain.options",{})).map(key=>`
-<button type="button" class="choice-button" data-trigger="${key}">${t(`interventions.breakChain.options.${key}`)}</button>
-`).join("")}
-</div>
-<p class="trigger-result" hidden></p>
-`;
+<div class="option-grid">${keys.map(key=>`<button type="button" class="choice-button" data-trigger="${key}">${t(`interventions.breakChain.options.${key}`)}</button>`).join("")}</div>
+<p class="trigger-result" hidden></p>`;
 content.appendChild(box);
 const result=box.querySelector(".trigger-result");
 box.querySelectorAll("[data-trigger]").forEach(button=>{
@@ -603,36 +519,27 @@ addActionButton(actions,t("interventions.breakChain.changeScene"),finishInterven
 }
 
 function renderTwoFutures(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
 box.innerHTML=`
-
 <p>${t("interventions.twoFutures.intro")}</p>
 <p class="intervention-prompt">${t("interventions.twoFutures.act")}</p>
 <textarea class="intervention-textarea" placeholder="${t("interventions.twoFutures.actPlaceholder")}"></textarea>
 <p class="intervention-prompt">${t("interventions.twoFutures.dont")}</p>
-<textarea class="intervention-textarea" placeholder="${t("interventions.twoFutures.dontPlaceholder")}"></textarea>
-`;
+<textarea class="intervention-textarea" placeholder="${t("interventions.twoFutures.dontPlaceholder")}"></textarea>`;
 content.appendChild(box);
 addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderSwitch90(content,actions){
-const tasks=[
-t(“interventions.switch90.task1”),
-t(“interventions.switch90.task2”),
-t(“interventions.switch90.task3”),
-t(“interventions.switch90.task4”)
-];
+const tasks=[t("interventions.switch90.task1"),t("interventions.switch90.task2"),t("interventions.switch90.task3"),t("interventions.switch90.task4")];
 const task=tasks[Math.floor(Math.random()*tasks.length)];
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
 box.innerHTML=`
-
 <p>${t("interventions.switch90.instruction")}</p>
 <p class="intervention-highlight">${task}</p>
-<div class="switch-timer">90</div>
-`;
+<div class="switch-timer">90</div>`;
 content.appendChild(box);
 const timer=box.querySelector(".switch-timer");
 addActionButton(actions,t("interventions.switch90.start"),()=>{
@@ -652,10 +559,9 @@ addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderRealityCheck(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
+const box=document.createElement("div");
+box.className="intervention-box";
 box.innerHTML=`
-
 <p>${t("interventions.realityCheck.question")}</p>
 <textarea class="intervention-textarea" placeholder="${t("interventions.realityCheck.placeholder")}"></textarea>
 <p class="intervention-prompt">${t("interventions.realityCheck.certainty")}</p>
@@ -666,11 +572,9 @@ box.innerHTML=`
 <button type="button" class="choice-button">${t("interventions.realityCheck.yes")}</button>
 <button type="button" class="choice-button">${t("interventions.realityCheck.no")}</button>
 <button type="button" class="choice-button">${t("interventions.realityCheck.sometimes")}</button>
-</div>
-`;
+</div>`;
 content.appendChild(box);
-const range=box.querySelector(".intervention-range");
-const value=box.querySelector(".certainty-value");
+const range=box.querySelector(".intervention-range"),value=box.querySelector(".certainty-value");
 range.addEventListener("input",()=>value.textContent=`${range.value}%`);
 box.querySelectorAll(".choice-button").forEach(button=>{
 button.addEventListener("click",()=>{
@@ -680,15 +584,14 @@ actions.innerHTML="";
 addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 });
 });
-addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function renderGeneric(content,actions){
-const box=document.createElement(“div”);
-box.className=“intervention-box”;
-box.innerHTML=<p>${t("interventions.generic.instruction")}</p>;
+const box=document.createElement("div");
+box.className="intervention-box";
+box.innerHTML=`<p>${t("interventions.generic.instruction")}</p>`;
 content.appendChild(box);
-addActionButton(actions,t(“common.continue”,“CONTINUE”),finishIntervention);
+addActionButton(actions,t("common.continue","CONTINUE"),finishIntervention);
 }
 
 function startIntervention(){
@@ -696,38 +599,36 @@ const intervention=chooseIntervention();
 session.intervention=intervention;
 session.attemptIntensityBefore=Number(session.intensityAfter??session.intensityBefore);
 session.attemptStartedAt=new Date().toISOString();
-if(!session.interventionAttempts.includes(intervention)){
-session.interventionAttempts.push(intervention);
-}
-$(“interventionCategory”).textContent=interventionCategory(intervention);
-$(“interventionTitle”).textContent=interventionTitle(intervention);
+if(!session.interventionAttempts.includes(intervention))session.interventionAttempts.push(intervention);
+$("interventionCategory").textContent=interventionCategory(intervention);
+$("interventionTitle").textContent=interventionTitle(intervention);
 renderIntervention(intervention);
-showScreen(“intervention”);
+showScreen("intervention");
 }
 
 function reassess(){
 const before=Number(session.attemptIntensityBefore??session.intensityBefore);
-const after=Number($(“reassessSlider”).value);
+const after=Number($("reassessSlider").value);
 const now=new Date().toISOString();
 if(!Array.isArray(session.attemptHistory))session.attemptHistory=[];
 session.attemptHistory.push({
-id:${Date.now()}-${Math.random().toString(36).slice(2,7)},
+id:`${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
 intervention:session.intervention,
-intensityBefore:before,
-intensityAfter:after,
-impact:before-after,
-startedAt:session.attemptStartedAt||now,
-completedAt:now
+intensityBefore:before,intensityAfter:after,impact:before-after,
+behavior:session.behavior,behaviorLabel:session.behaviorLabel,
+expectation:session.expectation,expectationLabel:session.expectationLabel,
+trigger:session.trigger,
+startedAt:session.attemptStartedAt||now,completedAt:now
 });
 session.intensityAfter=after;
 session.attemptIntensityBefore=after;
 session.attemptStartedAt=null;
-showScreen(“outcome”);
+showScreen("outcome");
 }
 
 function selectOutcome(button){
-document.querySelectorAll(”.outcome-button”).forEach(item=>item.classList.remove(“selected”));
-button.classList.add(“selected”);
+document.querySelectorAll(".outcome-button").forEach(item=>item.classList.remove("selected"));
+button.classList.add("selected");
 session.outcome=button.dataset.outcome;
 completeSession();
 }
@@ -735,37 +636,35 @@ completeSession();
 function completeSession(){
 session.completedAt=new Date().toISOString();
 const sessions=getSavedSessions();
-const existingIndex=sessions.findIndex(item=>item.id===session.id);
+const index=sessions.findIndex(item=>item.id===session.id);
 const snapshot=JSON.parse(JSON.stringify(session));
-if(existingIndex>=0)sessions[existingIndex]=snapshot;
+if(index>=0)sessions[index]=snapshot;
 else sessions.push(snapshot);
 saveSessions(sessions);
 showResult();
 }
 
 function showResult(){
-const before=Number(session.intensityBefore);
-const after=Number(session.intensityAfter);
-$(“resultBefore”).textContent=before;
-$(“resultAfter”).textContent=after;
+const before=Number(session.intensityBefore),after=Number(session.intensityAfter);
+$("resultBefore").textContent=before;
+$("resultAfter").textContent=after;
 const difference=before-after;
-let percentage=0;
-if(before>0)percentage=Math.round(difference/before*100);
+const percentage=before>0?Math.round(difference/before*100):0;
 if(difference>0){
-$(“resultChange”).textContent=−${percentage}%;
-$(“resultMessage”).textContent=t(“result.messages.lower”);
+$("resultChange").textContent=`−${percentage}%`;
+$("resultMessage").textContent=t("result.messages.lower");
 }else if(difference<0){
-$(“resultChange”).textContent=+${Math.abs(percentage)}%;
-$(“resultMessage”).textContent=t(“result.messages.higher”);
+$("resultChange").textContent=`+${Math.abs(percentage)}%`;
+$("resultMessage").textContent=t("result.messages.higher");
 }else{
-$(“resultChange”).textContent=“0%”;
-$(“resultMessage”).textContent=t(“result.messages.same”);
+$("resultChange").textContent="0%";
+$("resultMessage").textContent=t("result.messages.same");
 }
-const titles={interrupted:“interruptedTitle”,delayed:“delayedTitle”,acted:“actedTitle”,unsure:“unsureTitle”};
-$(“resultTitle”).textContent=t(result.${titles[session.outcome]||"interruptedTitle"});
-$(“resultIntervention”).textContent=interventionTitle(session.intervention);
-$(“resultBehavior”).textContent=session.behaviorLabel||session.behavior||”—”;
-showScreen(“result”);
+const titles={interrupted:"interruptedTitle",delayed:"delayedTitle",acted:"actedTitle",unsure:"unsureTitle"};
+$("resultTitle").textContent=t(`result.${titles[session.outcome]||"interruptedTitle"}`);
+$("resultIntervention").textContent=interventionTitle(session.intervention);
+$("resultBehavior").textContent=session.behaviorLabel||session.behavior||"—";
+showScreen("result");
 }
 
 function tryAnotherIntervention(){
@@ -774,15 +673,15 @@ session.intervention=next;
 session.attemptIntensityBefore=Number(session.intensityAfter??session.intensityBefore);
 session.attemptStartedAt=new Date().toISOString();
 if(!session.interventionAttempts.includes(next))session.interventionAttempts.push(next);
-$(“interventionCategory”).textContent=interventionCategory(next);
-$(“interventionTitle”).textContent=interventionTitle(next);
+$("interventionCategory").textContent=interventionCategory(next);
+$("interventionTitle").textContent=interventionTitle(next);
 renderIntervention(next);
-showScreen(“intervention”);
+showScreen("intervention");
 }
 
 function finishAndReset(){
 resetSession();
-showScreen(“home”);
+showScreen("home");
 }
 
 function goBack(target){
@@ -790,54 +689,58 @@ showScreen(target);
 }
 
 function renderInsights(){
-const sessions=getSavedSessions().filter(item=>typeof item.intensityBefore===“number”&&typeof item.intensityAfter===“number”).sort((a,b)=>new Date(b.completedAt||b.startedAt)-new Date(a.completedAt||a.startedAt));
+const sessions=getSavedSessions()
+.filter(item=>typeof item.intensityBefore==="number"&&typeof item.intensityAfter==="number")
+.sort((a,b)=>new Date(b.completedAt||b.startedAt)-new Date(a.completedAt||a.startedAt));
+
 const total=sessions.length;
-const interrupted=sessions.filter(item=>item.outcome===“interrupted”).length;
+const interrupted=sessions.filter(item=>item.outcome==="interrupted").length;
 let totalBefore=0,totalAfter=0;
 sessions.forEach(item=>{
 totalBefore+=item.intensityBefore;
 totalAfter+=item.intensityAfter;
 });
-let reduction=0;
-if(totalBefore>0)reduction=Math.round((totalBefore-totalAfter)/totalBefore*100);
+const reduction=totalBefore>0?Math.round((totalBefore-totalAfter)/totalBefore*100):0;
 const stats=INTERRUPT_ADAPTIVE.buildStats(getEngineHistory());
-const entries=Object.entries(stats);
+
 let best=null;
-entries.forEach(([id,data])=>{
-if(!best||data.averageImpact>best.average){
-best={id,average:data.averageImpact,uses:data.uses,successRate:data.successRate};
-}
+Object.entries(stats).forEach(([id,data])=>{
+if(!best||data.averageImpact>best.average)best={id,average:data.averageImpact,uses:data.uses,successRate:data.successRate};
 });
+
 const triggerCounts={};
 getEngineHistory().forEach(item=>{
 if(item.trigger)triggerCounts[item.trigger]=(triggerCounts[item.trigger]||0)+1;
 });
+
 let commonTrigger=null;
 Object.entries(triggerCounts).forEach(([trigger,count])=>{
 if(!commonTrigger||count>commonTrigger.count)commonTrigger={trigger,count};
 });
-$(“insightTotal”).textContent=total;
-$(“insightInterrupted”).textContent=interrupted;
-$(“insightReduction”).textContent=${reduction>0?"−":""}${Math.abs(reduction)}%;
-$(“insightBest”).textContent=best?interventionTitle(best.id):”—”;
-$(“insightTrigger”).textContent=commonTrigger?t(interventions.breakChain.options.${commonTrigger.trigger},commonTrigger.trigger):”—”;
-const recent=$(“recentSessions”);
-recent.innerHTML=””;
-sessions.slice(0,5).forEach(item=>{
-const row=document.createElement(“div”);
-row.className=“recent-session”;
-const difference=item.intensityBefore-item.intensityAfter;
-const change=difference>0?−${difference}:difference<0?+${Math.abs(difference)}:“0”;
-row.innerHTML=`
 
+$("insightTotal").textContent=total;
+$("insightInterrupted").textContent=interrupted;
+$("insightReduction").textContent=`${reduction>0?"−":""}${Math.abs(reduction)}%`;
+$("insightBest").textContent=best?interventionTitle(best.id):"—";
+$("insightTrigger").textContent=commonTrigger?t(`interventions.breakChain.options.${commonTrigger.trigger}`,commonTrigger.trigger):"—";
+
+const recent=$("recentSessions");
+recent.innerHTML="";
+
+sessions.slice(0,5).forEach(item=>{
+const row=document.createElement("div");
+row.className="recent-session";
+const difference=item.intensityBefore-item.intensityAfter;
+const change=difference>0?`−${difference}`:difference<0?`+${Math.abs(difference)}`:"0";
+row.innerHTML=`
 <div class="recent-session-main">
 <div class="recent-session-behavior">${escapeHTML(item.behaviorLabel||item.behavior||"—")}</div>
 <div class="recent-session-intervention">${escapeHTML(interventionTitle(item.intervention))}</div>
 </div>
-<div class="recent-session-change">${item.intensityBefore} → ${item.intensityAfter} (${change})</div>
-`;
+<div class="recent-session-change">${item.intensityBefore} → ${item.intensityAfter} (${change})</div>`;
 recent.appendChild(row);
 });
+
 if(!sessions.length){
 const empty=document.createElement("p");
 empty.textContent=t("insights.empty","No sessions yet.");
@@ -846,52 +749,77 @@ recent.appendChild(empty);
 }
 
 function escapeHTML(value){
-return String(value).replaceAll(”&”,”&”).replaceAll(”<”,”<”).replaceAll(”>”,”>”).replaceAll(’”’,”"”).replaceAll(”’”,”'”);
+return String(value)
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
 }
 
 function initializeEvents(){
-$(“logoButton”).addEventListener(“click”,()=>finishAndReset());
-$(“languageButton”).addEventListener(“click”,event=>{
+$("logoButton").addEventListener("click",finishAndReset);
+
+$("languageButton").addEventListener("click",event=>{
 event.stopPropagation();
 toggleLanguageMenu();
 });
-$(“insightsButton”).addEventListener(“click”,()=>{
+
+$("insightsButton").addEventListener("click",()=>{
 renderInsights();
-showScreen(“insights”);
+showScreen("insights");
 });
-$(“insightsDoneButton”).addEventListener(“click”,()=>showScreen(“home”));
-document.querySelectorAll(”.language-option”).forEach(option=>option.addEventListener(“click”,async()=>{
+
+$("insightsDoneButton").addEventListener("click",()=>showScreen("home"));
+
+document.querySelectorAll(".language-option").forEach(option=>option.addEventListener("click",async()=>{
 await loadLanguage(option.dataset.language);
 toggleLanguageMenu(false);
 }));
-document.addEventListener(“click”,event=>{
-if(!event.target.closest(”.language-wrapper”))toggleLanguageMenu(false);
+
+document.addEventListener("click",event=>{
+if(!event.target.closest(".language-wrapper"))toggleLanguageMenu(false);
 });
-$(“startButton”).addEventListener(“click”,()=>{
+
+$("startButton").addEventListener("click",()=>{
 resetSession();
-showScreen(“behavior”);
+showScreen("behavior");
 });
-document.querySelectorAll(”#behaviorOptions .choice-button”).forEach(button=>button.addEventListener(“click”,()=>selectBehavior(button)));
-$(“otherBehaviorInput”).addEventListener(“input”,validateOtherBehavior);
-$(“behaviorContinueButton”).addEventListener(“click”,()=>{
-if(session.behaviorLabel)showScreen(“intensity”);
+
+document.querySelectorAll("#behaviorOptions .choice-button").forEach(button=>button.addEventListener("click",()=>selectBehavior(button)));
+
+$("otherBehaviorInput").addEventListener("input",validateOtherBehavior);
+
+$("behaviorContinueButton").addEventListener("click",()=>{
+if(session.behaviorLabel)showScreen("intensity");
 });
-$(“intensitySlider”).addEventListener(“input”,()=>updateSliderValue($(“intensitySlider”),$(“intensityValue”)));
-$(“intensityContinueButton”).addEventListener(“click”,()=>{
-session.intensityBefore=Number($(“intensitySlider”).value);
-showScreen(“expectation”);
+
+$("intensitySlider").addEventListener("input",()=>updateSliderValue($("intensitySlider"),$("intensityValue")));
+
+$("intensityContinueButton").addEventListener("click",()=>{
+session.intensityBefore=Number($("intensitySlider").value);
+session.attemptIntensityBefore=session.intensityBefore;
+showScreen("expectation");
 });
-document.querySelectorAll(”#expectationOptions .choice-button”).forEach(button=>button.addEventListener(“click”,()=>selectExpectation(button)));
-$(“otherExpectationInput”).addEventListener(“input”,validateOtherExpectation);
-$(“expectationContinueButton”).addEventListener(“click”,()=>{
+
+document.querySelectorAll("#expectationOptions .choice-button").forEach(button=>button.addEventListener("click",()=>selectExpectation(button)));
+
+$("otherExpectationInput").addEventListener("input",validateOtherExpectation);
+
+$("expectationContinueButton").addEventListener("click",()=>{
 if(session.expectationLabel)startIntervention();
 });
-$(“reassessSlider”).addEventListener(“input”,()=>updateSliderValue($(“reassessSlider”),$(“reassessValue”)));
-$(“reassessContinueButton”).addEventListener(“click”,reassess);
-document.querySelectorAll(”.outcome-button”).forEach(button=>button.addEventListener(“click”,()=>selectOutcome(button)));
-$(“finishButton”).addEventListener(“click”,finishAndReset);
-$(“anotherInterventionButton”).addEventListener(“click”,tryAnotherIntervention);
-document.querySelectorAll(”.back-button”).forEach(button=>button.addEventListener(“click”,()=>goBack(button.dataset.back)));
+
+$("reassessSlider").addEventListener("input",()=>updateSliderValue($("reassessSlider"),$("reassessValue")));
+
+$("reassessContinueButton").addEventListener("click",reassess);
+
+document.querySelectorAll(".outcome-button").forEach(button=>button.addEventListener("click",()=>selectOutcome(button)));
+
+$("finishButton").addEventListener("click",finishAndReset);
+$("anotherInterventionButton").addEventListener("click",tryAnotherIntervention);
+
+document.querySelectorAll(".back-button").forEach(button=>button.addEventListener("click",()=>goBack(button.dataset.back)));
 }
 
 function exposeDebug(){
@@ -904,12 +832,9 @@ getAdaptiveStats,
 getRecommendation,
 band:value=>INTERRUPT_ADAPTIVE.getIntensityBand(value),
 resetData:()=>{
-if(typeof INTERRUPT_STORAGE!==“undefined”&&typeof INTERRUPT_STORAGE.clearSessions===“function”){
-INTERRUPT_STORAGE.clearSessions();
-}else{
-localStorage.removeItem(STORAGE.sessions);
-}
-console.log(“INTERRUPT session data cleared.”);
+if(typeof INTERRUPT_STORAGE!=="undefined"&&typeof INTERRUPT_STORAGE.clearSessions==="function")INTERRUPT_STORAGE.clearSessions();
+else localStorage.removeItem(STORAGE.sessions);
+console.log("INTERRUPT session data cleared.");
 },
 language:()=>currentLanguage
 };
@@ -918,9 +843,9 @@ language:()=>currentLanguage
 async function initialize(){
 initializeEvents();
 exposeDebug();
-const savedLanguage=localStorage.getItem(STORAGE.language)||“en”;
+const savedLanguage=localStorage.getItem(STORAGE.language)||"en";
 resetSession();
 await loadLanguage(savedLanguage);
 }
 
-document.addEventListener(“DOMContentLoaded”,initialize);
+document.addEventListener("DOMContentLoaded",initialize);
