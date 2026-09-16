@@ -100,6 +100,7 @@
   "result": {
     "intervention": "Intervención",
     "behavior": "Comportamiento",
+    "tryAnother": "Probar otra vez",
 
     "interruptedTitle": "Interrumpiste el momento.",
     "delayedTitle": "Creaste cierta distancia.",
