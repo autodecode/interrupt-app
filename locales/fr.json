@@ -6,11 +6,24 @@
     "done": "TERMINÉ"
   },
 
+  "insights": {
+  "title": "Vos tendances",
+  "subtitle": "INTERRUPT apprend de ce qui se passe au fil du temps.",
+  "total": "Envies enregistrées",
+  "interrupted": "Interrompues",
+  "reduction": "Réduction moyenne",
+  "best": "Approche la plus efficace",
+  "triggerTitle": "Déclencheur fréquent",
+  "recentTitle": "Sessions récentes",
+  "empty": "Aucune session pour le moment."
+},
+
   "home": {
     "title": "Vous n'avez pas besoin de plus de volonté.",
     "subtitle": "Vous avez besoin d'un moyen d'interrompre le moment.",
     "button": "INTERROMPRE",
-    "privacy": "Privé. Aucun compte requis."
+    "privacy": "Privé. Aucun compte requis.",
+    "insights": "VOIR VOS TENDANCES"
   },
 
   "behavior": {
