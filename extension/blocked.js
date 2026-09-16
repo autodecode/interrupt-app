@@ -239,7 +239,7 @@ function showReassessment() {
     initialUrge;
 }
 
-function complete(action) {
+async function complete(action) {
   if (completed) {
     return;
   }
@@ -255,31 +255,38 @@ function complete(action) {
       );
   }
 
-  saveEvent({
-    action,
+  try {
+    await saveEvent({
+      action,
 
-    intensityAfter:
-      finalUrge,
+      intensityAfter:
+        finalUrge,
 
-    completedAt:
-      new Date().toISOString()
-  }).catch(error => {
+      completedAt:
+        new Date().toISOString()
+    });
+  } catch (error) {
     console.warn(
       "INTERRUPT protection event save failed:",
       error
     );
-  });
+  }
 }
 
 async function continueOnce() {
-  complete("continue");
+  await complete("continue");
 
   try {
     await chrome.runtime.sendMessage({
       type: "allowOnce",
       host
     });
-  } catch {}
+  } catch (error) {
+    console.warn(
+      "INTERRUPT allowOnce request failed:",
+      error
+    );
+  }
 
   if (originalUrl) {
     location.href =
@@ -330,21 +337,21 @@ $("interruptButton").addEventListener(
 
 $("backButton").addEventListener(
   "click",
-  () => {
+  async () => {
     if (reassessing) {
       finalUrge =
         Number(
           $("urgeSlider").value
         );
 
-      complete("back");
+      await complete("back");
 
       history.back();
 
       return;
     }
 
-    complete("back");
+    await complete("back");
 
     history.back();
   }
@@ -352,15 +359,15 @@ $("backButton").addEventListener(
 
 $("continueButton").addEventListener(
   "click",
-  () => {
+  async () => {
     if (reassessing) {
-      continueOnce();
+      await continueOnce();
 
       return;
     }
 
     if (protection.allowContinue) {
-      continueOnce();
+      await continueOnce();
     }
   }
 );
