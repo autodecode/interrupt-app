@@ -858,6 +858,10 @@ const INTERRUPT_PROTECTION = (() => {
 
         getDomains,
 
+        getSettings: readSettings,
+        addDomain: addCustomDomain,
+        removeDomain: removeCustomDomain,
+
 
         createEvent,
 
