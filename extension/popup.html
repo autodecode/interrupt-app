@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>INTERRUPT Protection</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <div class="brand">INTERRUPT</div>
+        <div class="subtitle">Protection</div>
+      </div>
+  <label class="switch">
+    <input id="enabled" type="checkbox">
+    <span></span>
+  </label>
+</header>
+<section class="status">
+  <div class="status-dot" id="statusDot"></div>
+  <span id="statusText">Protection is off</span>
+</section>
+<section>
+  <div class="section-title">PROTECT FROM</div>
+  <label class="option">
+    <span>
+      <strong>Gambling</strong>
+      <small>Betting, casinos and gambling sites</small>
+    </span>
+    <input id="gambling" type="checkbox">
+  </label>
+  <label class="option">
+    <span>
+      <strong>Pornography</strong>
+      <small>Adult content and related sites</small>
+    </span>
+    <input id="pornography" type="checkbox">
+  </label>
+  <label class="option">
+    <span>
+      <strong>Social media</strong>
+      <small>Social platforms and feeds</small>
+    </span>
+    <input id="socialMedia" type="checkbox">
+  </label>
+</section>
+<section>
+  <div class="section-title">PROTECTION LEVEL</div>
+  <select id="mode">
+    <option value="light">Light — 15 seconds</option>
+    <option value="medium">Medium — 60 seconds</option>
+    <option value="strong">Strong — 5 minutes</option>
+  </select>
+</section>
+<button id="save">SAVE SETTINGS</button>
+<div class="message" id="message"></div>
+<footer>
+  <span id="eventCount">0 interruptions recorded</span>
+</footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
