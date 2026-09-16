@@ -1,7 +1,7 @@
 (() => {
 let lastUrl=location.href;
 
-function checkUrl(){
+function reportNavigation(){
 const url=location.href;
 
 if(url===lastUrl)return;
@@ -9,14 +9,6 @@ lastUrl=url;
 chrome.runtime.sendMessage({
   type:"checkUrl",
   url
-}).then(result=>{
-  if(!result)return;
-  const target=chrome.runtime.getURL(
-    `blocked.html?category=${encodeURIComponent(result.category)}&host=${encodeURIComponent(result.host)}&url=${encodeURIComponent(result.url)}&mode=${encodeURIComponent(result.mode)}`
-  );
-  if(location.href!==target){
-    location.replace(target);
-  }
 }).catch(()=>{});
 
 }
@@ -26,18 +18,26 @@ const originalReplaceState=history.replaceState;
 
 history.pushState=function(…args){
 const result=originalPushState.apply(this,args);
-checkUrl();
+reportNavigation();
 return result;
 };
 
 history.replaceState=function(…args){
 const result=originalReplaceState.apply(this,args);
-checkUrl();
+reportNavigation();
 return result;
 };
 
-window.addEventListener(“popstate”,checkUrl);
-window.addEventListener(“hashchange”,checkUrl);
+window.addEventListener(“popstate”,reportNavigation);
+window.addEventListener(“hashchange”,reportNavigation);
 
-setInterval(checkUrl,1000);
+let lastCheck=Date.now();
+
+setInterval(()=>{
+if(Date.now()-lastCheck<800)return;
+
+lastCheck=Date.now();
+reportNavigation();
+
+},800);
 })();
