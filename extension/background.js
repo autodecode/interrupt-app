@@ -1,4 +1,7 @@
-importScripts(”../core/protection.js”);
+importScriptsimportScripts(
+“../core/protection.js”,
+“../core/events.js”
+);
 
 const BLOCK_PAGE=chrome.runtime.getURL(“blocked.html”);
 const pendingBlocks=new Map();
@@ -6,12 +9,16 @@ const allowedOnce=new Map();
 
 async function getSettings(){
 const result=await chrome.storage.local.get(“settings”);
-const settings=INTERRUPT_PROTECTION.normalizeSettings(
+
+const settings=
+INTERRUPT_PROTECTION.normalizeSettings(
 result.settings
 );
 
 if(!result.settings){
-await chrome.storage.local.set({settings});
+await chrome.storage.local.set({
+settings
+});
 }
 
 return settings;
@@ -84,16 +91,13 @@ await chrome.storage.local.get(
 );
 
 const events=
-Array.isArray(result.protectionEvents)
-?result.protectionEvents
-:[];
-
-events.push(
-INTERRUPT_PROTECTION.createEvent(data)
+INTERRUPT_EVENTS.append(
+result.protectionEvents,
+data
 );
 
 await chrome.storage.local.set({
-protectionEvents:events.slice(-500)
+protectionEvents:events
 });
 }
 
@@ -116,6 +120,7 @@ timestamp:Date.now()
 
 await recordEvent({
 type:“blocked”,
+source:“protection”,
 category:result.category,
 host:result.host,
 url:result.url,
@@ -242,7 +247,9 @@ if(message?.type==="checkUrl"){
 if(message?.type==="spaNavigation"){
   const tabId=sender.tab?.id;
   if(typeof tabId!=="number"){
-    sendResponse({ok:false});
+    sendResponse({
+      ok:false
+    });
     return false;
   }
   inspect(
@@ -273,7 +280,9 @@ if(message?.type==="allowOnce"){
       message.host
     );
   }
-  sendResponse({ok:true});
+  sendResponse({
+    ok:true
+  });
   return false;
 }
 if(message?.type==="getProtectionEvents"){
@@ -297,7 +306,9 @@ if(message?.type==="clearProtectionEvents"){
       protectionEvents:[]
     })
     .then(()=>{
-      sendResponse({ok:true});
+      sendResponse({
+        ok:true
+      });
     });
   return true;
 }
