@@ -1,269 +1,880 @@
-const INTERRUPT_PROTECTION=(()=>{
+const INTERRUPT_PROTECTION = (() => {
 
-const DEFAULT_SETTINGS={
-enabled:true,
-categories:{
-gambling:true,
-pornography:true,
-socialMedia:true,
-custom:true
-},
-mode:“medium”,
-customDomains:[]
-};
+    const STORAGE_KEY = "interrupt_protection";
+    const EVENT_STORAGE_KEY = "interrupt_protection_events";
+    const MAX_EVENTS = 500;
 
-const MODES={
-light:{
-seconds:15,
-allowContinue:true
-},
-medium:{
-seconds:60,
-allowContinue:true
-},
-strong:{
-seconds:300,
-allowContinue:false
-}
-};
+    const DEFAULT_SETTINGS = {
+        enabled: true,
+        categories: {
+            gambling: true,
+            pornography: true,
+            socialMedia: true,
+            custom: true
+        },
+        mode: "medium",
+        customDomains: []
+    };
 
-const DOMAINS={
-gambling:[
-“bet365.com”,
-“betfair.com”,
-“pokerstars.com”,
-“williamhill.com”,
-“888.com”,
-“betway.com”,
-“bwin.com”,
-“unibet.com”,
-“draftkings.com”,
-“fanduel.com”
-],
+    const CATEGORY_BEHAVIOR = {
+        gambling: "gamble",
+        pornography: "watch",
+        socialMedia: "scroll",
+        custom: "other"
+    };
 
-pornography:[
-  "pornhub.com",
-  "xvideos.com",
-  "xnxx.com",
-  "xhamster.com",
-  "redtube.com",
-  "youporn.com",
-  "spankbang.com",
-  "onlyfans.com"
-],
-socialMedia:[
-  "facebook.com",
-  "instagram.com",
-  "tiktok.com",
-  "x.com",
-  "twitter.com",
-  "reddit.com",
-  "snapchat.com",
-  "pinterest.com",
-  "threads.net"
-]
+    const MODES = {
+        light: {
+            seconds: 15,
+            allowContinue: true
+        },
 
-};
+        medium: {
+            seconds: 60,
+            allowContinue: true
+        },
 
-function normalizeDomain(domain){
-return String(domain||””)
-.toLowerCase()
-.replace(/^https?:///,””)
-.replace(/^www./,””)
-.split(”/”)[0]
-.split(”?”)[0]
-.split(”#”)[0]
-.replace(/.$/,””)
-.trim();
-}
+        strong: {
+            seconds: 300,
+            allowContinue: false
+        }
+    };
 
-function normalizeSettings(settings){
-const source=settings||{};
+    const DOMAINS = {
+        gambling: [
+            "bet365.com",
+            "betfair.com",
+            "pokerstars.com",
+            "williamhill.com",
+            "888.com",
+            "betway.com",
+            "bwin.com",
+            "unibet.com",
+            "draftkings.com",
+            "fanduel.com"
+        ],
 
-return{
-  ...DEFAULT_SETTINGS,
-  ...source,
-  categories:{
-    ...DEFAULT_SETTINGS.categories,
-    ...(source.categories||{})
-  },
-  customDomains:Array.isArray(source.customDomains)
-    ?source.customDomains
-      .map(normalizeDomain)
-      .filter(Boolean)
-    :[],
-  mode:MODES[source.mode]
-    ?source.mode
-    :"medium"
-};
+        pornography: [
+            "pornhub.com",
+            "xvideos.com",
+            "xnxx.com",
+            "xhamster.com",
+            "redtube.com",
+            "youporn.com",
+            "spankbang.com",
+            "onlyfans.com"
+        ],
 
-}
+        socialMedia: [
+            "facebook.com",
+            "instagram.com",
+            "tiktok.com",
+            "x.com",
+            "twitter.com",
+            "reddit.com",
+            "snapchat.com",
+            "pinterest.com",
+            "threads.net"
+        ]
+    };
 
-function domainMatches(host,domain){
-host=normalizeDomain(host);
-domain=normalizeDomain(domain);
 
-if(!host||!domain)return false;
-return host===domain||host.endsWith(`.${domain}`);
+    /* =========================================================
+       DOMAIN NORMALIZATION
+       ========================================================= */
 
-}
+    function normalizeDomain(domain) {
+        return String(domain || "")
+            .trim()
+            .toLowerCase()
+            .replace(/^https?:\/\//, "")
+            .replace(/^www\./, "")
+            .split("/")[0]
+            .split("?")[0]
+            .split("#")[0]
+            .replace(/\.$/, "");
+    }
 
-function getCategory(host,settings){
-const normalized=normalizeSettings(settings);
 
-for(const category of Object.keys(DOMAINS)){
-  if(!normalized.categories[category])continue;
-  if(
-    DOMAINS[category].some(
-      domain=>domainMatches(host,domain)
-    )
-  ){
-    return category;
-  }
-}
-if(
-  normalized.categories.custom&&
-  normalized.customDomains.some(
-    domain=>domainMatches(host,domain)
-  )
-){
-  return "custom";
-}
-return null;
+    /* =========================================================
+       SETTINGS
+       ========================================================= */
 
-}
+    function normalizeSettings(settings) {
+        const source = settings || {};
 
-function inspectUrl(url,settings){
-if(!url)return null;
+        return {
+            enabled: source.enabled !== false,
 
-let parsed;
-try{
-  parsed=new URL(url);
-}catch{
-  return null;
-}
-if(
-  parsed.protocol!=="http:"&&
-  parsed.protocol!=="https:"
-){
-  return null;
-}
-const normalizedSettings=normalizeSettings(settings);
-if(!normalizedSettings.enabled)return null;
-const host=normalizeDomain(parsed.hostname);
-const category=getCategory(host,normalizedSettings);
-if(!category)return null;
-return{
-  blocked:true,
-  category,
-  host,
-  url:parsed.href,
-  mode:normalizedSettings.mode,
-  seconds:MODES[normalizedSettings.mode].seconds,
-  allowContinue:MODES[normalizedSettings.mode].allowContinue
-};
+            categories: {
+                ...DEFAULT_SETTINGS.categories,
+                ...(source.categories || {})
+            },
 
-}
+            mode: MODES[source.mode]
+                ? source.mode
+                : DEFAULT_SETTINGS.mode,
 
-function createEvent(data={}){
-const now=new Date().toISOString();
+            customDomains: Array.isArray(source.customDomains)
+                ? [
+                    ...new Set(
+                        source.customDomains
+                            .map(normalizeDomain)
+                            .filter(Boolean)
+                    )
+                ]
+                : []
+        };
+    }
 
-return{
-  id:`${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
-  type:data.type||"protection",
-  category:data.category||null,
-  host:data.host||null,
-  url:data.url||null,
-  mode:data.mode||"medium",
-  action:data.action||null,
-  intensityBefore:
-    typeof data.intensityBefore==="number"
-      ?data.intensityBefore
-      :null,
-  intensityAfter:
-    typeof data.intensityAfter==="number"
-      ?data.intensityAfter
-      :null,
-  startedAt:data.startedAt||now,
-  completedAt:data.completedAt||now,
-  timestamp:now
-};
 
-}
+    function readSettings() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
 
-function calculateReduction(intensityBefore,intensityAfter){
-if(
-typeof intensityBefore!==“number”||
-typeof intensityAfter!==“number”
-){
-return null;
-}
+            return normalizeSettings(
+                raw
+                    ? JSON.parse(raw)
+                    : DEFAULT_SETTINGS
+            );
 
-return intensityBefore-intensityAfter;
+        } catch (error) {
+            console.warn(
+                "INTERRUPT protection settings read failed:",
+                error
+            );
 
-}
+            return normalizeSettings(DEFAULT_SETTINGS);
+        }
+    }
 
-function isSuccessful(intensityBefore,intensityAfter){
-const reduction=calculateReduction(
-intensityBefore,
-intensityAfter
-);
 
-return reduction!==null&&reduction>0;
+    function saveSettings(settings) {
+        const normalized = normalizeSettings(settings);
 
-}
+        try {
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(normalized)
+            );
 
-function getMode(mode){
-return MODES[mode]||MODES.medium;
-}
+            return true;
 
-function getDomains(category){
-return Array.isArray(DOMAINS[category])
-?[…DOMAINS[category]]
-:[];
-}
+        } catch (error) {
+            console.warn(
+                "INTERRUPT protection settings save failed:",
+                error
+            );
 
-function addDomain(category,domain){
-const normalized=normalizeDomain(domain);
+            return false;
+        }
+    }
 
-if(!normalized)return false;
-if(!DOMAINS[category]){
-  DOMAINS[category]=[];
-}
-if(!DOMAINS[category].includes(normalized)){
-  DOMAINS[category].push(normalized);
-}
-return true;
 
-}
+    function updateSettings(patch) {
+        const current = readSettings();
 
-function removeDomain(category,domain){
-if(!DOMAINS[category])return false;
+        return saveSettings({
+            ...current,
+            ...(patch || {}),
 
-const normalized=normalizeDomain(domain);
-const index=DOMAINS[category].indexOf(normalized);
-if(index===-1)return false;
-DOMAINS[category].splice(index,1);
-return true;
+            categories: {
+                ...current.categories,
+                ...(
+                    patch &&
+                    patch.categories
+                        ? patch.categories
+                        : {}
+                )
+            }
+        });
+    }
 
-}
 
-return{
-DEFAULT_SETTINGS,
-MODES,
-DOMAINS,
-normalizeDomain,
-normalizeSettings,
-domainMatches,
-getCategory,
-inspectUrl,
-createEvent,
-calculateReduction,
-isSuccessful,
-getMode,
-getDomains,
-addDomain,
-removeDomain
-};
+    function resetSettings() {
+        return saveSettings(DEFAULT_SETTINGS);
+    }
+
+
+    function setEnabled(enabled) {
+        return updateSettings({
+            enabled: enabled !== false
+        });
+    }
+
+
+    function setMode(mode) {
+        if (!MODES[mode]) {
+            return false;
+        }
+
+        return updateSettings({
+            mode
+        });
+    }
+
+
+    function setCategoryEnabled(category, enabled) {
+        if (
+            !Object.prototype.hasOwnProperty.call(
+                DEFAULT_SETTINGS.categories,
+                category
+            )
+        ) {
+            return false;
+        }
+
+        const settings = readSettings();
+
+        settings.categories[category] =
+            enabled !== false;
+
+        return saveSettings(settings);
+    }
+
+
+    /* =========================================================
+       CATEGORY / BEHAVIOR MAPPING
+       ========================================================= */
+
+    function getBehavior(category) {
+        return CATEGORY_BEHAVIOR[category] || "other";
+    }
+
+
+    function getCategoryMapping() {
+        return {
+            ...CATEGORY_BEHAVIOR
+        };
+    }
+
+
+    /* =========================================================
+       DOMAIN MATCHING
+       ========================================================= */
+
+    function domainMatches(host, domain) {
+        const normalizedHost =
+            normalizeDomain(host);
+
+        const normalizedDomain =
+            normalizeDomain(domain);
+
+        if (
+            !normalizedHost ||
+            !normalizedDomain
+        ) {
+            return false;
+        }
+
+        return (
+            normalizedHost === normalizedDomain ||
+            normalizedHost.endsWith(
+                `.${normalizedDomain}`
+            )
+        );
+    }
+
+
+    function getCategory(host, settings) {
+        const normalizedSettings =
+            normalizeSettings(
+                settings || readSettings()
+            );
+
+
+        /*
+         * Built-in categories
+         */
+
+        for (const category of Object.keys(DOMAINS)) {
+
+            if (
+                !normalizedSettings
+                    .categories[category]
+            ) {
+                continue;
+            }
+
+            if (
+                DOMAINS[category].some(
+                    domain =>
+                        domainMatches(
+                            host,
+                            domain
+                        )
+                )
+            ) {
+                return category;
+            }
+        }
+
+
+        /*
+         * Custom domains
+         */
+
+        if (
+            normalizedSettings.categories.custom &&
+            normalizedSettings.customDomains.some(
+                domain =>
+                    domainMatches(
+                        host,
+                        domain
+                    )
+            )
+        ) {
+            return "custom";
+        }
+
+
+        return null;
+    }
+
+
+    /* =========================================================
+       URL / HOST INSPECTION
+       ========================================================= */
+
+    function inspectUrl(url, settings) {
+        if (!url) {
+            return null;
+        }
+
+        let parsed;
+
+        try {
+            parsed = new URL(url);
+
+        } catch {
+            return null;
+        }
+
+
+        if (
+            parsed.protocol !== "http:" &&
+            parsed.protocol !== "https:"
+        ) {
+            return null;
+        }
+
+
+        const normalizedSettings =
+            normalizeSettings(
+                settings || readSettings()
+            );
+
+
+        if (!normalizedSettings.enabled) {
+            return null;
+        }
+
+
+        const host =
+            normalizeDomain(
+                parsed.hostname
+            );
+
+
+        const category =
+            getCategory(
+                host,
+                normalizedSettings
+            );
+
+
+        if (!category) {
+            return null;
+        }
+
+
+        const mode =
+            MODES[
+                normalizedSettings.mode
+            ];
+
+
+        return {
+            blocked: true,
+
+            category,
+
+            behavior:
+                getBehavior(category),
+
+            host,
+
+            url:
+                parsed.href,
+
+            mode:
+                normalizedSettings.mode,
+
+            seconds:
+                mode.seconds,
+
+            allowContinue:
+                mode.allowContinue
+        };
+    }
+
+
+    function inspectHost(host, settings) {
+        const normalizedHost =
+            normalizeDomain(host);
+
+        if (!normalizedHost) {
+            return null;
+        }
+
+
+        const normalizedSettings =
+            normalizeSettings(
+                settings || readSettings()
+            );
+
+
+        if (!normalizedSettings.enabled) {
+            return null;
+        }
+
+
+        const category =
+            getCategory(
+                normalizedHost,
+                normalizedSettings
+            );
+
+
+        if (!category) {
+            return null;
+        }
+
+
+        const mode =
+            MODES[
+                normalizedSettings.mode
+            ];
+
+
+        return {
+            blocked: true,
+
+            category,
+
+            behavior:
+                getBehavior(category),
+
+            host:
+                normalizedHost,
+
+            mode:
+                normalizedSettings.mode,
+
+            seconds:
+                mode.seconds,
+
+            allowContinue:
+                mode.allowContinue
+        };
+    }
+
+
+    /* =========================================================
+       CUSTOM DOMAINS
+       ========================================================= */
+
+    function addCustomDomain(domain) {
+        const normalized =
+            normalizeDomain(domain);
+
+        if (!normalized) {
+            return false;
+        }
+
+
+        const settings =
+            readSettings();
+
+
+        if (
+            !settings.customDomains.includes(
+                normalized
+            )
+        ) {
+            settings.customDomains.push(
+                normalized
+            );
+        }
+
+
+        settings.categories.custom = true;
+
+
+        return saveSettings(settings);
+    }
+
+
+    function removeCustomDomain(domain) {
+        const normalized =
+            normalizeDomain(domain);
+
+        if (!normalized) {
+            return false;
+        }
+
+
+        const settings =
+            readSettings();
+
+
+        const next =
+            settings.customDomains.filter(
+                item =>
+                    item !== normalized
+            );
+
+
+        if (
+            next.length ===
+            settings.customDomains.length
+        ) {
+            return false;
+        }
+
+
+        settings.customDomains =
+            next;
+
+
+        return saveSettings(settings);
+    }
+
+
+    function getCustomDomains() {
+        return [
+            ...readSettings()
+                .customDomains
+        ];
+    }
+
+
+    function getDomains(category) {
+
+        if (category === "custom") {
+            return getCustomDomains();
+        }
+
+
+        if (
+            !Array.isArray(
+                DOMAINS[category]
+            )
+        ) {
+            return [];
+        }
+
+
+        return [
+            ...DOMAINS[category]
+        ];
+    }
+
+
+    /* =========================================================
+       PROTECTION EVENTS
+       ========================================================= */
+
+    function createEvent(data = {}) {
+        const now =
+            new Date().toISOString();
+
+
+        return {
+            id:
+                data.id ||
+                `${Date.now()}-${Math.random()
+                    .toString(36)
+                    .slice(2, 8)}`,
+
+            type:
+                data.type ||
+                "protection",
+
+            category:
+                data.category ||
+                null,
+
+            behavior:
+                data.behavior ||
+                getBehavior(
+                    data.category
+                ),
+
+            host:
+                data.host ||
+                null,
+
+            url:
+                data.url ||
+                null,
+
+            mode:
+                data.mode ||
+                readSettings().mode,
+
+            action:
+                data.action ||
+                null,
+
+            intensityBefore:
+                typeof data.intensityBefore === "number"
+                    ? data.intensityBefore
+                    : null,
+
+            intensityAfter:
+                typeof data.intensityAfter === "number"
+                    ? data.intensityAfter
+                    : null,
+
+            startedAt:
+                data.startedAt ||
+                now,
+
+            completedAt:
+                data.completedAt ||
+                now,
+
+            timestamp:
+                data.timestamp ||
+                now
+        };
+    }
+
+
+    function getEvents() {
+        try {
+            const raw =
+                localStorage.getItem(
+                    EVENT_STORAGE_KEY
+                );
+
+
+            const events =
+                raw
+                    ? JSON.parse(raw)
+                    : [];
+
+
+            if (!Array.isArray(events)) {
+                return [];
+            }
+
+
+            return events.slice(
+                -MAX_EVENTS
+            );
+
+        } catch (error) {
+            console.warn(
+                "INTERRUPT protection events read failed:",
+                error
+            );
+
+            return [];
+        }
+    }
+
+
+    function saveEvents(events) {
+        if (!Array.isArray(events)) {
+            return false;
+        }
+
+
+        try {
+            localStorage.setItem(
+                EVENT_STORAGE_KEY,
+                JSON.stringify(
+                    events.slice(
+                        -MAX_EVENTS
+                    )
+                )
+            );
+
+            return true;
+
+        } catch (error) {
+            console.warn(
+                "INTERRUPT protection events save failed:",
+                error
+            );
+
+            return false;
+        }
+    }
+
+
+    function appendEvent(data) {
+        const events =
+            getEvents();
+
+
+        events.push(
+            createEvent(data)
+        );
+
+
+        return saveEvents(events);
+    }
+
+
+    function clearEvents() {
+        try {
+            localStorage.removeItem(
+                EVENT_STORAGE_KEY
+            );
+
+            return true;
+
+        } catch (error) {
+            console.warn(
+                "INTERRUPT protection events clear failed:",
+                error
+            );
+
+            return false;
+        }
+    }
+
+
+    /* =========================================================
+       OUTCOME HELPERS
+       ========================================================= */
+
+    function calculateReduction(
+        intensityBefore,
+        intensityAfter
+    ) {
+        if (
+            typeof intensityBefore !== "number" ||
+            typeof intensityAfter !== "number"
+        ) {
+            return null;
+        }
+
+
+        return (
+            intensityBefore -
+            intensityAfter
+        );
+    }
+
+
+    function isSuccessful(
+        intensityBefore,
+        intensityAfter
+    ) {
+        const reduction =
+            calculateReduction(
+                intensityBefore,
+                intensityAfter
+            );
+
+
+        return (
+            reduction !== null &&
+            reduction > 0
+        );
+    }
+
+
+    function getMode(mode) {
+        return (
+            MODES[mode] ||
+            MODES.medium
+        );
+    }
+
+
+    /* =========================================================
+       PUBLIC API
+       ========================================================= */
+
+    return {
+
+        STORAGE_KEY,
+
+        EVENT_STORAGE_KEY,
+
+        DEFAULT_SETTINGS,
+
+        MODES,
+
+        DOMAINS,
+
+        CATEGORY_BEHAVIOR,
+
+
+        normalizeDomain,
+
+        normalizeSettings,
+
+
+        readSettings,
+
+        saveSettings,
+
+        updateSettings,
+
+        resetSettings,
+
+        setEnabled,
+
+        setMode,
+
+        setCategoryEnabled,
+
+
+        domainMatches,
+
+        getCategory,
+
+        getBehavior,
+
+        getCategoryMapping,
+
+
+        inspectUrl,
+
+        inspectHost,
+
+
+        addCustomDomain,
+
+        removeCustomDomain,
+
+        getCustomDomains,
+
+        getDomains,
+
+
+        createEvent,
+
+        getEvents,
+
+        saveEvents,
+
+        appendEvent,
+
+        clearEvents,
+
+
+        calculateReduction,
+
+        isSuccessful,
+
+        getMode
+    };
 
 })();
