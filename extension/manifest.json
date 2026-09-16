@@ -1,0 +1,31 @@
+{
+“manifest_version”: 3,
+“name”: “INTERRUPT Protection”,
+“version”: “0.1.0”,
+“description”: “A browser protection layer that creates a moment of interruption before selected activities.”,
+“permissions”: [
+“storage”,
+“tabs”,
+“webNavigation”
+],
+“host_permissions”: [
+“<all_urls>”
+],
+“background”: {
+“service_worker”: “background.js”
+},
+“action”: {
+“default_title”: “INTERRUPT Protection”
+},
+“content_scripts”: [
+{
+“matches”: [
+“<all_urls>”
+],
+“js”: [
+“content.js”
+],
+“run_at”: “document_start”
+}
+]
+}
