@@ -1,269 +1,258 @@
 {
-“common”: {
-“continue”: “CONTINUER”,
-“back”: “RETOUR”,
-“start”: “COMMENCER”,
-“done”: “TERMINÉ”,
-“cancel”: “ANNULER”,
-“yes”: “OUI”,
-“no”: “NON”
-},
-
-“home”: {
-“title”: “INTERRUPT”,
-“subtitle”: “Interrompez l’impulsion. Changez la suite.”,
-“description”: “Une impulsion n’est pas une décision. Faites une pause, comprenez ce qui se passe et choisissez ce qui vient ensuite.”,
-“start”: “COMMENCER”,
-“insights”: “MES DONNÉES”
-},
-
-“behavior”: {
-“title”: “Que ressentez-vous l’envie de faire ?”,
-“subtitle”: “Choisissez ce qui correspond le mieux à ce qui se passe maintenant.”,
-“gamble”: “Jouer de l’argent”,
-“scroll”: “Faire défiler”,
-“smoke”: “Fumer”,
-“eat”: “Manger”,
-“buy”: “Acheter quelque chose”,
-“watch”: “Regarder quelque chose”,
-“check”: “Vérifier quelque chose”,
-“other”: “Autre”,
-“otherPlaceholder”: “Décrivez ce que vous avez envie de faire…”
-},
-
-“intensity”: {
-“title”: “Quelle est l’intensité de l’impulsion ?”,
-“subtitle”: “Donnez-lui une note de 0 à 10, où 10 signifie la plus forte possible.”,
-“low”: “FAIBLE”,
-“high”: “TRÈS FORTE”,
-“continue”: “CONTINUER”
-},
-
-“expectation”: {
-“title”: “Qu’espérez-vous obtenir en faisant cela ?”,
-“subtitle”: “Il n’y a pas de bonne ou de mauvaise réponse.”,
-“relief”: “Soulagement”,
-“excitement”: “Excitation”,
-“escape”: “Évasion”,
-“pleasure”: “Plaisir”,
-“comfort”: “Confort”,
-“control”: “Contrôle”,
-“money”: “Argent”,
-“something_to_do”: “Quelque chose à faire”,
-“unknown”: “Je ne sais pas”,
-“other”: “Autre”,
-“otherPlaceholder”: “Décrivez ce que vous recherchez…”
-},
-
-“interventions”: {
-“categories”: {
-“defusion”: “PRISE DE DISTANCE”,
-“cognitive”: “RÉFLEXION”,
-“urge_surfing”: “OBSERVATION DE L’IMPULSION”,
-“delay”: “DÉLAI”,
-“future”: “PROJECTION”,
-“environment”: “ENVIRONNEMENT”,
-“need”: “BESOIN”,
-“trigger”: “DÉCLENCHEUR”,
-“attention”: “ATTENTION”,
-“personal”: “PERSONNEL”
-},
-
-"nameIt": {
-  "title": "Nommez l'impulsion",
-  "instruction": "Mettez des mots sur ce qui se passe, au lieu de simplement agir.",
-  "firstPrompt": "Qu'est-ce que votre esprit vous dit de faire ?",
-  "placeholder": "Ex. « Je dois le faire maintenant. »",
-  "secondPrompt": "Maintenant, terminez cette phrase : « Je remarque que j'ai envie de... »",
-  "placeholder2": "Je remarque que j'ai envie de..."
-},
-"promise": {
-  "title": "Faites-vous une promesse",
-  "intro": "Vous n'avez pas besoin de dire non pour toujours. Décidez simplement de ne pas agir pendant un certain temps.",
-  "expected": "Pendant combien de temps pouvez-vous attendre ?",
-  "durationQuestion": "Combien de temps voulez-vous attendre ?",
-  "durationPlaceholder": "Ex. 10 minutes",
-  "afterQuestion": "Que ferez-vous pendant ce temps ?",
-  "afterPlaceholder": "Ex. Je vais prendre une douche..."
-},
-"wave": {
-  "title": "Laissez passer la vague",
-  "instruction": "Une impulsion monte, atteint un sommet et redescend. Observez-la sans agir.",
-  "locationPrompt": "Où ressentez-vous l'impulsion dans votre corps ?",
-  "locations": {
-    "chest": "Poitrine",
-    "stomach": "Ventre",
-    "head": "Tête",
-    "hands": "Mains",
-    "everywhere": "Partout"
+  "common": {
+    "continue": "CONTINUER",
+    "back": "RETOUR",
+    "start": "COMMENCER",
+    "done": "TERMINÉ",
+    "cancel": "ANNULER",
+    "yes": "OUI",
+    "no": "NON"
   },
-  "timerIntro": "Observez simplement les sensations pendant quelques instants.",
-  "finished": "Que s'est-il passé avec l'impulsion ?",
-  "weaker": "Elle est devenue plus faible",
-  "changed": "Elle a changé",
-  "same": "Elle est restée la même",
-  "stronger": "Elle est devenue plus forte"
-},
-"delay": {
-  "title": "Retardez l'action",
-  "instruction": "Vous n'avez pas besoin de décider maintenant. Créez simplement un espace entre l'impulsion et l'action.",
-  "promise": "Je ne vais pas agir pendant les prochaines...",
-  "start": "COMMENCER LE DÉLAI",
-  "finished": "Le délai est terminé. Que se passe-t-il maintenant ?",
-  "stillWant": "J'en ai toujours envie",
-  "weaker": "L'envie est plus faible",
-  "gone": "L'envie a disparu",
-  "alreadyDid": "J'ai déjà agi"
-},
-"fastForward": {
-  "title": "Avancez rapidement dans le temps",
-  "intro": "Imaginez que vous avez suivi l'impulsion. Ne vous arrêtez pas au premier instant agréable. Continuez l'histoire.",
-  "tenMinutes": "Dans 10 minutes...",
-  "tenPlaceholder": "Que se passe-t-il ?",
-  "tomorrow": "Demain...",
-  "tomorrowPlaceholder": "Comment vous sentez-vous ?",
-  "next": "Et ensuite...",
-  "nextPlaceholder": "Que se passe-t-il après ?"
-},
-"changeScene": {
-  "title": "Changez de scène",
-  "step1": "Le contexte dans lequel vous vous trouvez fait partie de l'impulsion.",
-  "step2": "Levez-vous et changez physiquement d'endroit.",
-  "step3": "Allez dans un endroit où l'action devient moins facile.",
-  "step4": "Restez-y pendant quelques minutes.",
-  "ready": "JE CHANGE D'ENDROIT"
-},
-"actualNeed": {
-  "title": "Trouvez le vrai besoin",
-  "intro": "L'impulsion peut être une tentative de répondre à un autre besoin.",
-  "question": "De quoi avez-vous réellement besoin en ce moment ?",
-  "options": {
-    "rest": "Repos",
-    "connection": "Connexion",
-    "stimulation": "Stimulation",
-    "comfort": "Réconfort",
+  "home": {
+    "title": "INTERRUPT",
+    "subtitle": "Interrompez l'impulsion. Changez la suite.",
+    "description": "Une impulsion n'est pas une décision. Faites une pause, comprenez ce qui se passe et choisissez ce qui vient ensuite.",
+    "start": "COMMENCER",
+    "insights": "MES DONNÉES"
+  },
+  "behavior": {
+    "title": "Que ressentez-vous l'envie de faire ?",
+    "subtitle": "Choisissez ce qui correspond le mieux à ce qui se passe maintenant.",
+    "gamble": "Jouer de l'argent",
+    "scroll": "Faire défiler",
+    "smoke": "Fumer",
+    "eat": "Manger",
+    "buy": "Acheter quelque chose",
+    "watch": "Regarder quelque chose",
+    "check": "Vérifier quelque chose",
+    "other": "Autre",
+    "otherPlaceholder": "Décrivez ce que vous avez envie de faire..."
+  },
+  "intensity": {
+    "title": "Quelle est l'intensité de l'impulsion ?",
+    "subtitle": "Donnez-lui une note de 0 à 10, où 10 signifie la plus forte possible.",
+    "low": "FAIBLE",
+    "high": "TRÈS FORTE",
+    "continue": "CONTINUER"
+  },
+  "expectation": {
+    "title": "Qu'espérez-vous obtenir en faisant cela ?",
+    "subtitle": "Il n'y a pas de bonne ou de mauvaise réponse.",
     "relief": "Soulagement",
-    "control": "Contrôle",
+    "excitement": "Excitation",
     "escape": "Évasion",
-    "food": "Nourriture",
+    "pleasure": "Plaisir",
+    "comfort": "Confort",
+    "control": "Contrôle",
     "money": "Argent",
-    "other": "Autre"
+    "something_to_do": "Quelque chose à faire",
+    "unknown": "Je ne sais pas",
+    "other": "Autre",
+    "otherPlaceholder": "Décrivez ce que vous recherchez..."
   },
-  "suggestions": {
-    "rest": "Faites une vraie pause pendant quelques minutes.",
-    "connection": "Contactez quelqu'un ou rapprochez-vous d'une personne.",
-    "stimulation": "Choisissez une activité qui vous stimule sans alimenter l'impulsion.",
-    "comfort": "Donnez-vous volontairement quelque chose de réconfortant.",
-    "relief": "Cherchez à réduire la pression directement, plutôt que par l'action impulsive.",
-    "control": "Faites une petite chose que vous pouvez réellement contrôler.",
-    "escape": "Changez de contexte sans suivre l'impulsion.",
-    "food": "Vérifiez si vous avez réellement faim.",
-    "money": "Identifiez ce que vous cherchez à résoudre avec l'argent.",
-    "other": "Identifiez une action concrète qui répond à ce besoin."
+  "interventions": {
+    "categories": {
+      "defusion": "PRISE DE DISTANCE",
+      "cognitive": "RÉFLEXION",
+      "urge_surfing": "OBSERVATION DE L'IMPULSION",
+      "delay": "DÉLAI",
+      "future": "PROJECTION",
+      "environment": "ENVIRONNEMENT",
+      "need": "BESOIN",
+      "trigger": "DÉCLENCHEUR",
+      "attention": "ATTENTION",
+      "personal": "PERSONNEL"
+    },
+    "nameIt": {
+      "title": "Nommez l'impulsion",
+      "instruction": "Mettez des mots sur ce qui se passe, au lieu de simplement agir.",
+      "firstPrompt": "Qu'est-ce que votre esprit vous dit de faire ?",
+      "placeholder": "Ex. « Je dois le faire maintenant. »",
+      "secondPrompt": "Maintenant, terminez cette phrase : « Je remarque que j'ai envie de... »",
+      "placeholder2": "Je remarque que j'ai envie de..."
+    },
+    "promise": {
+      "title": "Faites-vous une promesse",
+      "intro": "Vous n'avez pas besoin de dire non pour toujours. Décidez simplement de ne pas agir pendant un certain temps.",
+      "expected": "Pendant combien de temps pouvez-vous attendre ?",
+      "durationQuestion": "Combien de temps voulez-vous attendre ?",
+      "durationPlaceholder": "Ex. 10 minutes",
+      "afterQuestion": "Que ferez-vous pendant ce temps ?",
+      "afterPlaceholder": "Ex. Je vais prendre une douche..."
+    },
+    "wave": {
+      "title": "Laissez passer la vague",
+      "instruction": "Une impulsion monte, atteint un sommet et redescend. Observez-la sans agir.",
+      "locationPrompt": "Où ressentez-vous l'impulsion dans votre corps ?",
+      "locations": {
+        "chest": "Poitrine",
+        "stomach": "Ventre",
+        "head": "Tête",
+        "hands": "Mains",
+        "everywhere": "Partout"
+      },
+      "timerIntro": "Observez simplement les sensations pendant quelques instants.",
+      "finished": "Que s'est-il passé avec l'impulsion ?",
+      "weaker": "Elle est devenue plus faible",
+      "changed": "Elle a changé",
+      "same": "Elle est restée la même",
+      "stronger": "Elle est devenue plus forte"
+    },
+    "delay": {
+      "title": "Retardez l'action",
+      "instruction": "Vous n'avez pas besoin de décider maintenant. Créez simplement un espace entre l'impulsion et l'action.",
+      "promise": "Je ne vais pas agir pendant les prochaines...",
+      "start": "COMMENCER LE DÉLAI",
+      "finished": "Le délai est terminé. Que se passe-t-il maintenant ?",
+      "stillWant": "J'en ai toujours envie",
+      "weaker": "L'envie est plus faible",
+      "gone": "L'envie a disparu",
+      "alreadyDid": "J'ai déjà agi"
+    },
+    "fastForward": {
+      "title": "Avancez rapidement dans le temps",
+      "intro": "Imaginez que vous avez suivi l'impulsion. Ne vous arrêtez pas au premier instant agréable. Continuez l'histoire.",
+      "tenMinutes": "Dans 10 minutes...",
+      "tenPlaceholder": "Que se passe-t-il ?",
+      "tomorrow": "Demain...",
+      "tomorrowPlaceholder": "Comment vous sentez-vous ?",
+      "next": "Et ensuite...",
+      "nextPlaceholder": "Que se passe-t-il après ?"
+    },
+    "changeScene": {
+      "title": "Changez de scène",
+      "step1": "Le contexte dans lequel vous vous trouvez fait partie de l'impulsion.",
+      "step2": "Levez-vous et changez physiquement d'endroit.",
+      "step3": "Allez dans un endroit où l'action devient moins facile.",
+      "step4": "Restez-y pendant quelques minutes.",
+      "ready": "JE CHANGE D'ENDROIT"
+    },
+    "actualNeed": {
+      "title": "Trouvez le vrai besoin",
+      "intro": "L'impulsion peut être une tentative de répondre à un autre besoin.",
+      "question": "De quoi avez-vous réellement besoin en ce moment ?",
+      "options": {
+        "rest": "Repos",
+        "connection": "Connexion",
+        "stimulation": "Stimulation",
+        "comfort": "Réconfort",
+        "relief": "Soulagement",
+        "control": "Contrôle",
+        "escape": "Évasion",
+        "food": "Nourriture",
+        "money": "Argent",
+        "other": "Autre"
+      },
+      "suggestions": {
+        "rest": "Faites une vraie pause pendant quelques minutes.",
+        "connection": "Contactez quelqu'un ou rapprochez-vous d'une personne.",
+        "stimulation": "Choisissez une activité qui vous stimule sans alimenter l'impulsion.",
+        "comfort": "Donnez-vous volontairement quelque chose de réconfortant.",
+        "relief": "Cherchez à réduire la pression directement, plutôt que par l'action impulsive.",
+        "control": "Faites une petite chose que vous pouvez réellement contrôler.",
+        "escape": "Changez de contexte sans suivre l'impulsion.",
+        "food": "Vérifiez si vous avez réellement faim.",
+        "money": "Identifiez ce que vous cherchez à résoudre avec l'argent.",
+        "other": "Identifiez une action concrète qui répond à ce besoin."
+      }
+    },
+    "breakChain": {
+      "title": "Brisez la chaîne",
+      "question": "Qu'est-ce qui a probablement déclenché cette impulsion ?",
+      "options": {
+        "boredom": "Ennui",
+        "stress": "Stress",
+        "loneliness": "Solitude",
+        "conflict": "Conflit",
+        "fatigue": "Fatigue",
+        "routine": "Routine",
+        "thought": "Pensée",
+        "place": "Lieu",
+        "time": "Moment de la journée",
+        "other": "Autre"
+      },
+      "result": "Vous avez identifié un déclencheur. Changez un élément de la chaîne avant que l'impulsion ne vous entraîne.",
+      "changeScene": "CHANGER UN ÉLÉMENT"
+    },
+    "twoFutures": {
+      "title": "Deux futurs",
+      "intro": "Comparez honnêtement les deux chemins. Pas seulement le premier instant, mais ce qui vient après.",
+      "act": "Si j'agis...",
+      "actPlaceholder": "Que se passe-t-il ensuite ?",
+      "dont": "Si je n'agis pas...",
+      "dontPlaceholder": "Que se passe-t-il ensuite ?"
+    },
+    "switch90": {
+      "title": "Interrupteur de 90 secondes",
+      "instruction": "Pendant 90 secondes, faites quelque chose qui mobilise réellement votre attention.",
+      "task1": "Regardez autour de vous et nommez 5 choses que vous voyez.",
+      "task2": "Touchez 4 choses et remarquez leur texture.",
+      "task3": "Écoutez 3 sons.",
+      "task4": "Prenez 2 respirations lentes et profondes.",
+      "start": "COMMENCER"
+    },
+    "realityCheck": {
+      "title": "Vérification de la réalité",
+      "question": "Si vous saviez avec certitude que cette action ne vous apporterait pas ce que vous espérez, la feriez-vous quand même ?",
+      "placeholder": "Pourquoi ?",
+      "certainty": "À quel point êtes-vous certain que cela vous donnera ce que vous recherchez ?",
+      "past": "Dans le passé, est-ce que cela vous a réellement donné ce que vous recherchiez ?",
+      "yes": "Oui",
+      "no": "Non",
+      "sometimes": "Parfois"
+    },
+    "generic": {
+      "title": "Faites une pause",
+      "instruction": "Prenez quelques instants avant de décider quoi faire ensuite."
+    }
+  },
+  "reassess": {
+    "title": "Quelle est l'intensité maintenant ?",
+    "subtitle": "Notez à nouveau l'impulsion de 0 à 10.",
+    "low": "FAIBLE",
+    "high": "TRÈS FORTE",
+    "continue": "CONTINUER"
+  },
+  "outcome": {
+    "title": "Qu'avez-vous finalement fait ?",
+    "subtitle": "Soyez honnête. Il n'y a aucune mauvaise réponse.",
+    "interrupted": "J'ai interrompu l'impulsion",
+    "delayed": "J'ai retardé l'action",
+    "acted": "J'ai agi",
+    "unsure": "Je ne sais pas"
+  },
+  "result": {
+    "interruptedTitle": "Vous avez interrompu l'impulsion.",
+    "delayedTitle": "Vous avez créé un délai.",
+    "actedTitle": "Vous avez agi malgré l'impulsion.",
+    "unsureTitle": "Vous n'êtes pas sûr de ce qui s'est passé.",
+    "messages": {
+      "lower": "L'impulsion a diminué.",
+      "higher": "L'impulsion est devenue plus forte.",
+      "same": "L'impulsion est restée au même niveau."
+    },
+    "before": "Avant",
+    "after": "Après",
+    "change": "Variation",
+    "intervention": "Intervention",
+    "behavior": "Comportement",
+    "finish": "TERMINER",
+    "another": "ESSAYER UNE AUTRE INTERVENTION"
+  },
+  "insights": {
+    "title": "VOS DONNÉES",
+    "subtitle": "Ce que vos sessions montrent au fil du temps.",
+    "total": "Sessions",
+    "interrupted": "Impulsions interrompues",
+    "reduction": "Réduction moyenne",
+    "best": "Intervention la plus efficace",
+    "triggerTitle": "Déclencheurs fréquents",
+    "recentTitle": "Sessions récentes",
+    "empty": "Pas encore assez de données. Vos sessions apparaîtront ici.",
+    "personalHistory": "HISTORIQUE PERSONNEL",
+    "lastTime": "La dernière fois, ce type d'impulsion est passé de {before} à {after} avec {intervention}.",
+    "repeatedly": "{intervention} a réduit à plusieurs reprises ce type d'impulsion pour vous.",
+    "similar": "Vous avez déjà réussi à réduire une impulsion similaire avec {intervention}.",
+    "noDecrease": "Vous avez déjà essayé {intervention}, mais l'impulsion n'a pas diminué."
   }
-},
-"breakChain": {
-  "title": "Brisez la chaîne",
-  "question": "Qu'est-ce qui a probablement déclenché cette impulsion ?",
-  "options": {
-    "boredom": "Ennui",
-    "stress": "Stress",
-    "loneliness": "Solitude",
-    "conflict": "Conflit",
-    "fatigue": "Fatigue",
-    "routine": "Routine",
-    "thought": "Pensée",
-    "place": "Lieu",
-    "time": "Moment de la journée",
-    "other": "Autre"
-  },
-  "result": "Vous avez identifié un déclencheur. Changez un élément de la chaîne avant que l'impulsion ne vous entraîne.",
-  "changeScene": "CHANGER UN ÉLÉMENT"
-},
-"twoFutures": {
-  "title": "Deux futurs",
-  "intro": "Comparez honnêtement les deux chemins. Pas seulement le premier instant, mais ce qui vient après.",
-  "act": "Si j'agis...",
-  "actPlaceholder": "Que se passe-t-il ensuite ?",
-  "dont": "Si je n'agis pas...",
-  "dontPlaceholder": "Que se passe-t-il ensuite ?"
-},
-"switch90": {
-  "title": "Interrupteur de 90 secondes",
-  "instruction": "Pendant 90 secondes, faites quelque chose qui mobilise réellement votre attention.",
-  "task1": "Regardez autour de vous et nommez 5 choses que vous voyez.",
-  "task2": "Touchez 4 choses et remarquez leur texture.",
-  "task3": "Écoutez 3 sons.",
-  "task4": "Prenez 2 respirations lentes et profondes.",
-  "start": "COMMENCER"
-},
-"realityCheck": {
-  "title": "Vérification de la réalité",
-  "question": "Si vous saviez avec certitude que cette action ne vous apporterait pas ce que vous espérez, la feriez-vous quand même ?",
-  "placeholder": "Pourquoi ?",
-  "certainty": "À quel point êtes-vous certain que cela vous donnera ce que vous recherchez ?",
-  "past": "Dans le passé, est-ce que cela vous a réellement donné ce que vous recherchiez ?",
-  "yes": "Oui",
-  "no": "Non",
-  "sometimes": "Parfois"
-},
-"generic": {
-  "title": "Faites une pause",
-  "instruction": "Prenez quelques instants avant de décider quoi faire ensuite."
-}
-
-},
-
-“reassess”: {
-“title”: “Quelle est l’intensité maintenant ?”,
-“subtitle”: “Notez à nouveau l’impulsion de 0 à 10.”,
-“low”: “FAIBLE”,
-“high”: “TRÈS FORTE”,
-“continue”: “CONTINUER”
-},
-
-“outcome”: {
-“title”: “Qu’avez-vous finalement fait ?”,
-“subtitle”: “Soyez honnête. Il n’y a aucune mauvaise réponse.”,
-“interrupted”: “J’ai interrompu l’impulsion”,
-“delayed”: “J’ai retardé l’action”,
-“acted”: “J’ai agi”,
-“unsure”: “Je ne sais pas”
-},
-
-“result”: {
-“interruptedTitle”: “Vous avez interrompu l’impulsion.”,
-“delayedTitle”: “Vous avez créé un délai.”,
-“actedTitle”: “Vous avez agi malgré l’impulsion.”,
-“unsureTitle”: “Vous n’êtes pas sûr de ce qui s’est passé.”,
-“messages”: {
-“lower”: “L’impulsion a diminué.”,
-“higher”: “L’impulsion est devenue plus forte.”,
-“same”: “L’impulsion est restée au même niveau.”
-},
-“before”: “Avant”,
-“after”: “Après”,
-“change”: “Variation”,
-“intervention”: “Intervention”,
-“behavior”: “Comportement”,
-“finish”: “TERMINER”,
-“another”: “ESSAYER UNE AUTRE INTERVENTION”
-},
-
-“insights”: {
-“title”: “VOS DONNÉES”,
-“subtitle”: “Ce que vos sessions montrent au fil du temps.”,
-“total”: “Sessions”,
-“interrupted”: “Impulsions interrompues”,
-“reduction”: “Réduction moyenne”,
-“best”: “Intervention la plus efficace”,
-“triggerTitle”: “Déclencheurs fréquents”,
-“recentTitle”: “Sessions récentes”,
-“empty”: “Pas encore assez de données. Vos sessions apparaîtront ici.”,
-“personalHistory”: “HISTORIQUE PERSONNEL”,
-“lastTime”: “La dernière fois, ce type d’impulsion est passé de {before} à {after} avec {intervention}.”,
-“repeatedly”: “{intervention} a réduit à plusieurs reprises ce type d’impulsion pour vous.”,
-“similar”: “Vous avez déjà réussi à réduire une impulsion similaire avec {intervention}.”,
-“noDecrease”: “Vous avez déjà essayé {intervention}, mais l’impulsion n’a pas diminué.”
-}
 }
