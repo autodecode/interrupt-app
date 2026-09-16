@@ -1218,6 +1218,168 @@ function goBack(target) {
     showScreen(target);
 }
 
+function renderInsights() {
+    const sessions = getSavedSessions()
+        .filter(item =>
+            typeof item.intensityBefore === "number" &&
+            typeof item.intensityAfter === "number"
+        )
+        .sort((a, b) =>
+            new Date(b.completedAt || b.startedAt) -
+            new Date(a.completedAt || a.startedAt)
+        );
+
+    const total = sessions.length;
+
+    const interrupted = sessions.filter(item =>
+        item.outcome === "interrupted"
+    ).length;
+
+    let totalBefore = 0;
+    let totalAfter = 0;
+
+    sessions.forEach(item => {
+        totalBefore += item.intensityBefore;
+        totalAfter += item.intensityAfter;
+    });
+
+    let reduction = 0;
+
+    if (totalBefore > 0) {
+        reduction = Math.round(
+            ((totalBefore - totalAfter) / totalBefore) * 100
+        );
+    }
+
+    const stats = {};
+
+    sessions.forEach(item => {
+        if (!item.intervention) {
+            return;
+        }
+
+        if (!stats[item.intervention]) {
+            stats[item.intervention] = {
+                uses: 0,
+                impact: 0
+            };
+        }
+
+        stats[item.intervention].uses++;
+        stats[item.intervention].impact +=
+            item.intensityBefore - item.intensityAfter;
+    });
+
+    let best = null;
+
+    Object.entries(stats).forEach(([id, data]) => {
+        const average = data.impact / data.uses;
+
+        if (
+            !best ||
+            average > best.average
+        ) {
+            best = {
+                id,
+                average,
+                uses: data.uses
+            };
+        }
+    });
+
+    const triggerCounts = {};
+
+    sessions.forEach(item => {
+        if (!item.trigger) {
+            return;
+        }
+
+        triggerCounts[item.trigger] =
+            (triggerCounts[item.trigger] || 0) + 1;
+    });
+
+    let commonTrigger = null;
+
+    Object.entries(triggerCounts).forEach(([trigger, count]) => {
+        if (!commonTrigger || count > commonTrigger.count) {
+            commonTrigger = {
+                trigger,
+                count
+            };
+        }
+    });
+
+    $("insightTotal").textContent = total;
+    $("insightInterrupted").textContent = interrupted;
+    $("insightReduction").textContent =
+        `${reduction > 0 ? "−" : ""}${Math.abs(reduction)}%`;
+
+    $("insightBest").textContent =
+        best
+            ? interventionTitle(best.id)
+            : "—";
+
+    $("insightTrigger").textContent =
+        commonTrigger
+            ? t(
+                `interventions.breakChain.options.${commonTrigger.trigger}`,
+                commonTrigger.trigger
+            )
+            : "—";
+
+    const recent = $("recentSessions");
+
+    recent.innerHTML = "";
+
+    sessions.slice(0, 5).forEach(item => {
+        const row = document.createElement("div");
+        row.className = "recent-session";
+
+        const difference =
+            item.intensityBefore - item.intensityAfter;
+
+        const change =
+            difference > 0
+                ? `−${difference}`
+                : difference < 0
+                    ? `+${Math.abs(difference)}`
+                    : "0";
+
+        row.innerHTML = `
+            <div class="recent-session-main">
+                <div class="recent-session-behavior">
+                    ${escapeHTML(item.behaviorLabel || item.behavior || "—")}
+                </div>
+                <div class="recent-session-intervention">
+                    ${escapeHTML(interventionTitle(item.intervention))}
+                </div>
+            </div>
+            <div class="recent-session-change">
+                ${item.intensityBefore} → ${item.intensityAfter}
+                (${change})
+            </div>
+        `;
+
+        recent.appendChild(row);
+    });
+
+    if (!sessions.length) {
+        const empty = document.createElement("p");
+        empty.textContent =
+            t("insights.empty", "No sessions yet.");
+        recent.appendChild(empty);
+    }
+}
+
+function escapeHTML(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
 function initializeEvents() {
     $("logoButton").addEventListener("click", () => {
         finishAndReset();
