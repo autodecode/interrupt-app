@@ -20,7 +20,7 @@
   "behavior": {
     "title": "Ce urmează să faci?",
     "subtitle": "Alege ce descrie cel mai bine impulsul.",
-    "gamble": "Să joc la noroc",
+    "gamble": "Să joc jocuri de noroc",
     "scroll": "Să derulez",
     "smoke": "Să fumez",
     "eat": "Să mănânc",
@@ -48,7 +48,7 @@
     "pleasure": "Plăcere",
     "comfort": "Confort",
     "control": "Control",
-    "money": "Bani",
+    "money": "Să câștig bani",
     "something_to_do": "Ceva de făcut",
     "unknown": "Nu știu",
     "other": "Altceva",
