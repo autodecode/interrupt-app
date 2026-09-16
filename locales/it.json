@@ -6,11 +6,24 @@
     "done": "FATTO"
   },
 
+  "insights": {
+  "title": "I tuoi schemi",
+  "subtitle": "INTERRUPT impara da ciò che accade nel tempo.",
+  "total": "Impulsi registrati",
+  "interrupted": "Interrotti",
+  "reduction": "Riduzione media",
+  "best": "Approccio più efficace",
+  "triggerTitle": "Trigger più comune",
+  "recentTitle": "Sessioni recenti",
+  "empty": "Nessuna sessione ancora."
+},
+
   "home": {
     "title": "Non hai bisogno di più forza di volontà.",
     "subtitle": "Hai bisogno di un modo per interrompere il momento.",
     "button": "INTERROMPI",
-    "privacy": "Privato. Nessun account."
+    "privacy": "Privato. Nessun account.",
+    "insights": "VEDI I TUOI SCHEMI"
   },
 
   "behavior": {
