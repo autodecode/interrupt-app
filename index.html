@@ -2,294 +2,195 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0d">
 <meta name="description" content="Interrupt the moment before the impulse becomes an action.">
-<title>INTERRUPT</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="INTERRUPT">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="stylesheet" href="style.css">
+<title>INTERRUPT</title>
 </head>
 <body>
 <div id="app">
 <header class="app-header">
-    <button id="logoButton" class="logo" type="button" aria-label="INTERRUPT Home">INTERRUPT</button>
-    <div class="language-wrapper">
-        <button id="languageButton" class="language-button" type="button" aria-haspopup="true" aria-expanded="false">
-            <span id="currentLanguageFlag">🇬🇧</span>
-            <span id="currentLanguageCode">EN</span>
-            <span class="language-chevron">⌄</span>
-        </button>
-        <div id="languageMenu" class="language-menu" role="menu" hidden>
-            <button class="language-option" type="button" data-language="en" role="menuitem">🇬🇧 <span>English</span></button>
-            <button class="language-option" type="button" data-language="ro" role="menuitem">🇷🇴 <span>Română</span></button>
-            <button class="language-option" type="button" data-language="fr" role="menuitem">🇫🇷 <span>Français</span></button>
-            <button class="language-option" type="button" data-language="de" role="menuitem">🇩🇪 <span>Deutsch</span></button>
-            <button class="language-option" type="button" data-language="es" role="menuitem">🇪🇸 <span>Español</span></button>
-            <button class="language-option" type="button" data-language="it" role="menuitem">🇮🇹 <span>Italiano</span></button>
-        </div>
-    </div>
+<button id="logoButton" class="logo" type="button" aria-label="INTERRUPT Home">INTERRUPT</button>
+<div class="language-wrapper">
+<button id="languageButton" class="language-button" type="button" aria-haspopup="true" aria-expanded="false"><span id="currentLanguageFlag">🇬🇧</span><span id="currentLanguageCode">EN</span><span class="language-chevron">⌄</span></button>
+<div id="languageMenu" class="language-menu" role="menu" hidden>
+<button class="language-option" type="button" data-language="en" role="menuitem">🇬🇧 <span>English</span></button>
+<button class="language-option" type="button" data-language="ro" role="menuitem">🇷🇴 <span>Română</span></button>
+<button class="language-option" type="button" data-language="fr" role="menuitem">🇫🇷 <span>Français</span></button>
+<button class="language-option" type="button" data-language="de" role="menuitem">🇩🇪 <span>Deutsch</span></button>
+<button class="language-option" type="button" data-language="es" role="menuitem">🇪🇸 <span>Español</span></button>
+<button class="language-option" type="button" data-language="it" role="menuitem">🇮🇹 <span>Italiano</span></button>
+</div>
+</div>
 </header>
+
 <main id="mainContent">
+
 <section id="screen-home" class="screen screen-active" data-screen="home">
-    <div class="screen-content home-content">
-        <div class="home-eyebrow">INTERRUPT</div>
-        <h1 class="home-title" data-i18n="home.title">You don't need more willpower.</h1>
-        <p class="home-subtitle" data-i18n="home.subtitle">You need a way to interrupt the moment.</p>
-        <button id="startButton" class="primary-button primary-button-large" type="button">
-            <span data-i18n="common.interrupt">INTERRUPT</span>
-        </button>
-        <button id="insightsButton" class="secondary-button" type="button">
-            <span data-i18n="home.insights">VIEW YOUR PATTERNS</span>
-        </button>
-        <p class="privacy-note" data-i18n="home.privacy">Private. No account required.</p>
-    </div>
+<div class="screen-content home-content">
+<div class="home-eyebrow">INTERRUPT</div>
+<h1 class="home-title" data-i18n="home.title">You don't need more willpower.</h1>
+<p class="home-subtitle" data-i18n="home.subtitle">You need a way to interrupt the moment.</p>
+<button id="startButton" class="primary-button primary-button-large" type="button"><span data-i18n="common.interrupt">INTERRUPT</span></button>
+<button id="insightsButton" class="secondary-button" type="button"><span data-i18n="home.insights">VIEW YOUR PATTERNS</span></button>
+<p class="privacy-note" data-i18n="home.privacy">Private. No account required.</p>
+</div>
 </section>
+
 <section id="screen-behavior" class="screen" data-screen="behavior">
-    <div class="screen-content">
-        <div class="progress-indicator"><span>1</span><span class="progress-line"></span><span>6</span></div>
-        <h2 class="screen-title" data-i18n="behavior.title">What are you about to do?</h2>
-        <p class="screen-description" data-i18n="behavior.subtitle">Choose what is pulling you right now.</p>
-        <div id="behaviorOptions" class="option-grid">
-            <button class="choice-button" type="button" data-behavior="gamble">
-                <span class="choice-icon">🎰</span>
-                <span data-i18n="behaviors.gamble">Gamble</span>
-            </button>
-            <button class="choice-button" type="button" data-behavior="scroll">
-                <span class="choice-icon">📱</span>
-                <span data-i18n="behaviors.scroll">Scroll</span>
-            </button>
-            <button class="choice-button" type="button" data-behavior="smoke">
-                <span class="choice-icon">🚬</span>
-                <span data-i18n="behaviors.smoke">Smoke</span>
-            </button>
-            <button class="choice-button" type="button" data-behavior="eat">
-                <span class="choice-icon">🍔</span>
-                <span data-i18n="behaviors.eat">Eat</span>
-            </button>
-            <button class="choice-button" type="button" data-behavior="buy">
-                <span class="choice-icon">🛒</span>
-                <span data-i18n="behaviors.buy">Buy something</span>
-            </button>
-            <button class="choice-button" type="button" data-behavior="watch">
-                <span class="choice-icon">▶️</span>
-                <span data-i18n="behaviors.watch">Watch</span>
-            </button>
-            <button class="choice-button" type="button" data-behavior="check">
-                <span class="choice-icon">🔎</span>
-                <span data-i18n="behaviors.check">Check something</span>
-            </button>
-            <button class="choice-button" type="button" data-behavior="other">
-                <span class="choice-icon">＋</span>
-                <span data-i18n="behaviors.other">Something else</span>
-            </button>
-        </div>
-        <div id="otherBehaviorContainer" class="custom-input-container" hidden>
-            <label for="otherBehaviorInput" data-i18n="behavior.otherLabel">What is it?</label>
-            <input id="otherBehaviorInput" type="text" maxlength="100" autocomplete="off" data-i18n-placeholder="behavior.otherPlaceholder" placeholder="Type it here">
-        </div>
-        <button id="behaviorContinueButton" class="primary-button" type="button" disabled>
-            <span data-i18n="common.continue">CONTINUE</span>
-        </button>
-        <button class="back-button" type="button" data-back="home">
-            <span data-i18n="common.back">BACK</span>
-        </button>
-    </div>
+<div class="screen-content">
+<div class="progress-indicator"><span>1</span><span class="progress-line"></span><span>6</span></div>
+<h2 class="screen-title" data-i18n="behavior.title">What are you about to do?</h2>
+<p class="screen-description" data-i18n="behavior.subtitle">Choose what is pulling you right now.</p>
+<div id="behaviorOptions" class="option-grid">
+<button class="choice-button" type="button" data-behavior="gamble"><span class="choice-icon">🎰</span><span data-i18n="behaviors.gamble">Gamble</span></button>
+<button class="choice-button" type="button" data-behavior="scroll"><span class="choice-icon">📱</span><span data-i18n="behaviors.scroll">Scroll</span></button>
+<button class="choice-button" type="button" data-behavior="smoke"><span class="choice-icon">🚬</span><span data-i18n="behaviors.smoke">Smoke</span></button>
+<button class="choice-button" type="button" data-behavior="eat"><span class="choice-icon">🍔</span><span data-i18n="behaviors.eat">Eat</span></button>
+<button class="choice-button" type="button" data-behavior="buy"><span class="choice-icon">🛒</span><span data-i18n="behaviors.buy">Buy something</span></button>
+<button class="choice-button" type="button" data-behavior="watch"><span class="choice-icon">▶️</span><span data-i18n="behaviors.watch">Watch</span></button>
+<button class="choice-button" type="button" data-behavior="check"><span class="choice-icon">🔎</span><span data-i18n="behaviors.check">Check something</span></button>
+<button class="choice-button" type="button" data-behavior="other"><span class="choice-icon">＋</span><span data-i18n="behaviors.other">Something else</span></button>
+</div>
+<div id="otherBehaviorContainer" class="custom-input-container" hidden>
+<label for="otherBehaviorInput" data-i18n="behavior.otherLabel">What is it?</label>
+<input id="otherBehaviorInput" type="text" maxlength="100" autocomplete="off" data-i18n-placeholder="behavior.otherPlaceholder" placeholder="Type it here">
+</div>
+<button id="behaviorContinueButton" class="primary-button" type="button" disabled><span data-i18n="common.continue">CONTINUE</span></button>
+<button class="back-button" type="button" data-back="home"><span data-i18n="common.back">BACK</span></button>
+</div>
 </section>
+
 <section id="screen-intensity" class="screen" data-screen="intensity">
-    <div class="screen-content">
-        <div class="progress-indicator"><span>2</span><span class="progress-line"></span><span>6</span></div>
-        <h2 class="screen-title" data-i18n="intensity.title">How strong is the urge right now?</h2>
-        <p class="screen-description" data-i18n="intensity.subtitle">0 means barely there. 10 means extremely strong.</p>
-        <div class="intensity-display">
-            <span id="intensityValue">5</span>
-            <span class="intensity-max">/10</span>
-        </div>
-        <div class="range-container">
-            <input id="intensitySlider" type="range" min="0" max="10" step="1" value="5" aria-label="Urge intensity">
-            <div class="range-labels"><span>0</span><span>5</span><span>10</span></div>
-        </div>
-        <button id="intensityContinueButton" class="primary-button" type="button">
-            <span data-i18n="common.continue">CONTINUE</span>
-        </button>
-        <button class="back-button" type="button" data-back="behavior">
-            <span data-i18n="common.back">BACK</span>
-        </button>
-    </div>
+<div class="screen-content">
+<div class="progress-indicator"><span>2</span><span class="progress-line"></span><span>6</span></div>
+<h2 class="screen-title" data-i18n="intensity.title">How strong is the urge right now?</h2>
+<p class="screen-description" data-i18n="intensity.subtitle">0 means barely there. 10 means extremely strong.</p>
+<div class="intensity-display"><span id="intensityValue">5</span><span class="intensity-max">/10</span></div>
+<div class="range-container">
+<input id="intensitySlider" type="range" min="0" max="10" step="1" value="5" aria-label="Urge intensity">
+<div class="range-labels"><span>0</span><span>5</span><span>10</span></div>
+</div>
+<button id="intensityContinueButton" class="primary-button" type="button"><span data-i18n="common.continue">CONTINUE</span></button>
+<button class="back-button" type="button" data-back="behavior"><span data-i18n="common.back">BACK</span></button>
+</div>
 </section>
+
 <section id="screen-expectation" class="screen" data-screen="expectation">
-    <div class="screen-content">
-        <div class="progress-indicator"><span>3</span><span class="progress-line"></span><span>6</span></div>
-        <h2 class="screen-title" data-i18n="expectation.title">What do you expect it to give you?</h2>
-        <p class="screen-description" data-i18n="expectation.subtitle">What are you really looking for right now?</p>
-        <div id="expectationOptions" class="option-grid option-grid-two">
-            <button class="choice-button" type="button" data-expectation="relief">
-                <span data-i18n="expectations.relief">Relief</span>
-            </button>
-            <button class="choice-button" type="button" data-expectation="excitement">
-                <span data-i18n="expectations.excitement">Excitement</span>
-            </button>
-            <button class="choice-button" type="button" data-expectation="escape">
-                <span data-i18n="expectations.escape">Escape</span>
-            </button>
-            <button class="choice-button" type="button" data-expectation="pleasure">
-                <span data-i18n="expectations.pleasure">Pleasure</span>
-            </button>
-            <button class="choice-button" type="button" data-expectation="comfort">
-                <span data-i18n="expectations.comfort">Comfort</span>
-            </button>
-            <button class="choice-button" type="button" data-expectation="control">
-                <span data-i18n="expectations.control">Control</span>
-            </button>
-            <button class="choice-button" type="button" data-expectation="money">
-                <span data-i18n="expectations.money">To win money</span>
-            </button>
-            <button class="choice-button" type="button" data-expectation="something_to_do">
-                <span data-i18n="expectations.somethingToDo">Something to do</span>
-            </button>
-            <button class="choice-button" type="button" data-expectation="unknown">
-                <span data-i18n="expectations.unknown">I don't know</span>
-            </button>
-        </div>
-        <div id="otherExpectationContainer" class="custom-input-container" hidden>
-            <label for="otherExpectationInput" data-i18n="expectation.otherLabel">What are you looking for?</label>
-            <input id="otherExpectationInput" type="text" maxlength="100" autocomplete="off" data-i18n-placeholder="expectation.otherPlaceholder" placeholder="Type it here">
-        </div>
-        <button id="expectationContinueButton" class="primary-button" type="button" disabled>
-            <span data-i18n="common.continue">CONTINUE</span>
-        </button>
-        <button class="back-button" type="button" data-back="intensity">
-            <span data-i18n="common.back">BACK</span>
-        </button>
-    </div>
+<div class="screen-content">
+<div class="progress-indicator"><span>3</span><span class="progress-line"></span><span>6</span></div>
+<h2 class="screen-title" data-i18n="expectation.title">What do you expect it to give you?</h2>
+<p class="screen-description" data-i18n="expectation.subtitle">What are you really looking for right now?</p>
+<div id="expectationOptions" class="option-grid option-grid-two">
+<button class="choice-button" type="button" data-expectation="relief"><span data-i18n="expectations.relief">Relief</span></button>
+<button class="choice-button" type="button" data-expectation="excitement"><span data-i18n="expectations.excitement">Excitement</span></button>
+<button class="choice-button" type="button" data-expectation="escape"><span data-i18n="expectations.escape">Escape</span></button>
+<button class="choice-button" type="button" data-expectation="pleasure"><span data-i18n="expectations.pleasure">Pleasure</span></button>
+<button class="choice-button" type="button" data-expectation="comfort"><span data-i18n="expectations.comfort">Comfort</span></button>
+<button class="choice-button" type="button" data-expectation="control"><span data-i18n="expectations.control">Control</span></button>
+<button class="choice-button" type="button" data-expectation="money"><span data-i18n="expectations.money">To win money</span></button>
+<button class="choice-button" type="button" data-expectation="something_to_do"><span data-i18n="expectations.somethingToDo">Something to do</span></button>
+<button class="choice-button" type="button" data-expectation="unknown"><span data-i18n="expectations.unknown">I don't know</span></button>
+</div>
+<div id="otherExpectationContainer" class="custom-input-container" hidden>
+<label for="otherExpectationInput" data-i18n="expectation.otherLabel">What are you looking for?</label>
+<input id="otherExpectationInput" type="text" maxlength="100" autocomplete="off" data-i18n-placeholder="expectation.otherPlaceholder" placeholder="Type it here">
+</div>
+<button id="expectationContinueButton" class="primary-button" type="button" disabled><span data-i18n="common.continue">CONTINUE</span></button>
+<button class="back-button" type="button" data-back="intensity"><span data-i18n="common.back">BACK</span></button>
+</div>
 </section>
+
 <section id="screen-intervention" class="screen" data-screen="intervention">
-    <div class="screen-content">
-        <div class="intervention-meta">
-            <span id="interventionCategory" class="intervention-category">—</span>
-        </div>
-        <h2 id="interventionTitle" class="screen-title">—</h2>
-        <div id="interventionContent" class="intervention-content"></div>
-        <div id="interventionActions" class="intervention-actions"></div>
-    </div>
+<div class="screen-content">
+<div class="intervention-meta"><span id="interventionCategory" class="intervention-category">—</span></div>
+<h2 id="interventionTitle" class="screen-title">—</h2>
+<div id="interventionContent" class="intervention-content"></div>
+<div id="interventionActions" class="intervention-actions"></div>
+</div>
 </section>
+
 <section id="screen-reassess" class="screen" data-screen="reassess">
-    <div class="screen-content">
-        <div class="progress-indicator progress-final"><span>5</span><span class="progress-line"></span><span>6</span></div>
-        <h2 class="screen-title" data-i18n="reassess.title">How strong is the urge now?</h2>
-        <p class="screen-description" data-i18n="reassess.subtitle">There is no right answer. Just be honest.</p>
-        <div class="intensity-display">
-            <span id="reassessValue">5</span>
-            <span class="intensity-max">/10</span>
-        </div>
-        <div class="range-container">
-            <input id="reassessSlider" type="range" min="0" max="10" step="1" value="5" aria-label="Current urge intensity">
-            <div class="range-labels"><span>0</span><span>5</span><span>10</span></div>
-        </div>
-        <button id="reassessContinueButton" class="primary-button" type="button">
-            <span data-i18n="common.continue">CONTINUE</span>
-        </button>
-    </div>
+<div class="screen-content">
+<div class="progress-indicator progress-final"><span>5</span><span class="progress-line"></span><span>6</span></div>
+<h2 class="screen-title" data-i18n="reassess.title">How strong is the urge now?</h2>
+<p class="screen-description" data-i18n="reassess.subtitle">There is no right answer. Just be honest.</p>
+<div class="intensity-display"><span id="reassessValue">5</span><span class="intensity-max">/10</span></div>
+<div class="range-container">
+<input id="reassessSlider" type="range" min="0" max="10" step="1" value="5" aria-label="Current urge intensity">
+<div class="range-labels"><span>0</span><span>5</span><span>10</span></div>
+</div>
+<button id="reassessContinueButton" class="primary-button" type="button"><span data-i18n="common.continue">CONTINUE</span></button>
+</div>
 </section>
+
 <section id="screen-outcome" class="screen" data-screen="outcome">
-    <div class="screen-content">
-        <div class="progress-indicator progress-final"><span>6</span><span class="progress-line"></span><span>6</span></div>
-        <h2 class="screen-title" data-i18n="outcome.title">What happened?</h2>
-        <p class="screen-description" data-i18n="outcome.subtitle">Whatever happened, your answer helps INTERRUPT learn.</p>
-        <div id="outcomeOptions" class="outcome-options">
-            <button class="outcome-button" type="button" data-outcome="interrupted">
-                <span class="outcome-title" data-i18n="outcomes.interrupted.title">I interrupted it</span>
-                <span class="outcome-description" data-i18n="outcomes.interrupted.description">I chose not to act on the urge.</span>
-            </button>
-            <button class="outcome-button" type="button" data-outcome="delayed">
-                <span class="outcome-title" data-i18n="outcomes.delayed.title">I delayed it</span>
-                <span class="outcome-description" data-i18n="outcomes.delayed.description">I gave myself some time before acting.</span>
-            </button>
-            <button class="outcome-button" type="button" data-outcome="acted">
-                <span class="outcome-title" data-i18n="outcomes.acted.title">I did it anyway</span>
-                <span class="outcome-description" data-i18n="outcomes.acted.description">The urge won this time.</span>
-            </button>
-            <button class="outcome-button" type="button" data-outcome="unsure">
-                <span class="outcome-title" data-i18n="outcomes.unsure.title">I'm not sure</span>
-                <span class="outcome-description" data-i18n="outcomes.unsure.description">I don't know yet.</span>
-            </button>
-        </div>
-    </div>
+<div class="screen-content">
+<div class="progress-indicator progress-final"><span>6</span><span class="progress-line"></span><span>6</span></div>
+<h2 class="screen-title" data-i18n="outcome.title">What happened?</h2>
+<p class="screen-description" data-i18n="outcome.subtitle">Whatever happened, your answer helps INTERRUPT learn.</p>
+<div id="outcomeOptions" class="outcome-options">
+<button class="outcome-button" type="button" data-outcome="interrupted"><span class="outcome-title" data-i18n="outcomes.interrupted.title">I interrupted it</span><span class="outcome-description" data-i18n="outcomes.interrupted.description">I chose not to act on the urge.</span></button>
+<button class="outcome-button" type="button" data-outcome="delayed"><span class="outcome-title" data-i18n="outcomes.delayed.title">I delayed it</span><span class="outcome-description" data-i18n="outcomes.delayed.description">I gave myself some time before acting.</span></button>
+<button class="outcome-button" type="button" data-outcome="acted"><span class="outcome-title" data-i18n="outcomes.acted.title">I did it anyway</span><span class="outcome-description" data-i18n="outcomes.acted.description">The urge won this time.</span></button>
+<button class="outcome-button" type="button" data-outcome="unsure"><span class="outcome-title" data-i18n="outcomes.unsure.title">I'm not sure</span><span class="outcome-description" data-i18n="outcomes.unsure.description">I don't know yet.</span></button>
+</div>
+</div>
 </section>
+
 <section id="screen-insights" class="screen" data-screen="insights">
-    <div class="screen-content">
-        <h2 class="screen-title" data-i18n="insights.title">Your patterns</h2>
-        <p class="screen-description" data-i18n="insights.subtitle">
-            INTERRUPT learns from what happens over time.
-        </p>
-        <div class="insights-grid">
-            <div class="insight-card">
-                <span id="insightTotal" class="insight-value">0</span>
-                <span class="insight-label" data-i18n="insights.total">Urges recorded</span>
-            </div>
-            <div class="insight-card">
-                <span id="insightInterrupted" class="insight-value">0</span>
-                <span class="insight-label" data-i18n="insights.interrupted">Interrupted</span>
-            </div>
-            <div class="insight-card">
-                <span id="insightReduction" class="insight-value">0%</span>
-                <span class="insight-label" data-i18n="insights.reduction">Average reduction</span>
-            </div>
-            <div class="insight-card">
-                <span id="insightBest" class="insight-value">—</span>
-                <span class="insight-label" data-i18n="insights.best">Most effective approach</span>
-            </div>
-        </div>
-        <div class="insight-section">
-            <h3 data-i18n="insights.triggerTitle">Common trigger</h3>
-            <p id="insightTrigger">—</p>
-        </div>
-        <div class="insight-section">
-            <h3 data-i18n="insights.recentTitle">Recent sessions</h3>
-            <div id="recentSessions" class="recent-sessions"></div>
-        </div>
-        <button id="insightsDoneButton" class="primary-button" type="button">
-            <span data-i18n="common.done">DONE</span>
-        </button>
-    </div>
+<div class="screen-content">
+<h2 class="screen-title" data-i18n="insights.title">Your patterns</h2>
+<p class="screen-description" data-i18n="insights.subtitle">INTERRUPT learns from what happens over time.</p>
+<div class="insights-grid">
+<div class="insight-card"><span id="insightTotal" class="insight-value">0</span><span class="insight-label" data-i18n="insights.total">Urges recorded</span></div>
+<div class="insight-card"><span id="insightInterrupted" class="insight-value">0</span><span class="insight-label" data-i18n="insights.interrupted">Interrupted</span></div>
+<div class="insight-card"><span id="insightReduction" class="insight-value">0%</span><span class="insight-label" data-i18n="insights.reduction">Average reduction</span></div>
+<div class="insight-card"><span id="insightBest" class="insight-value">—</span><span class="insight-label" data-i18n="insights.best">Most effective approach</span></div>
+</div>
+<div class="insight-section"><h3 data-i18n="insights.triggerTitle">Common trigger</h3><p id="insightTrigger">—</p></div>
+<div class="insight-section"><h3 data-i18n="insights.recentTitle">Recent sessions</h3><div id="recentSessions" class="recent-sessions"></div></div>
+<button id="insightsDoneButton" class="primary-button" type="button"><span data-i18n="common.done">DONE</span></button>
+</div>
 </section>
+
 <section id="screen-result" class="screen" data-screen="result">
-    <div class="screen-content result-content">
-        <div class="result-symbol" aria-hidden="true">—</div>
-        <h2 id="resultTitle" class="screen-title">You interrupted the moment.</h2>
-        <div class="result-intensity">
-            <div class="result-number">
-                <span id="resultBefore">8</span>
-                <span class="result-arrow">→</span>
-                <span id="resultAfter">4</span>
-            </div>
-            <div id="resultChange" class="result-change">−50%</div>
-        </div>
-        <p id="resultMessage" class="result-message">The urge got quieter.</p>
-        <div class="result-details">
-            <div class="result-detail">
-                <span class="result-detail-label" data-i18n="result.intervention">Intervention</span>
-                <span id="resultIntervention" class="result-detail-value">—</span>
-            </div>
-            <div class="result-detail">
-                <span class="result-detail-label" data-i18n="result.behavior">Behavior</span>
-                <span id="resultBehavior" class="result-detail-value">—</span>
-            </div>
-        </div>
-        <button id="finishButton" class="primary-button" type="button">
-            <span data-i18n="common.done">DONE</span>
-        </button>
-        <button id="anotherInterventionButton" class="secondary-button" type="button">
-            <span data-i18n="result.tryAnother">TRY ANOTHER APPROACH</span>
-        </button>
-    </div>
+<div class="screen-content result-content">
+<div class="result-symbol" aria-hidden="true">—</div>
+<h2 id="resultTitle" class="screen-title">You interrupted the moment.</h2>
+<div class="result-intensity">
+<div class="result-number"><span id="resultBefore">8</span><span class="result-arrow">→</span><span id="resultAfter">4</span></div>
+<div id="resultChange" class="result-change">−50%</div>
+</div>
+<p id="resultMessage" class="result-message">The urge got quieter.</p>
+<div class="result-details">
+<div class="result-detail"><span class="result-detail-label" data-i18n="result.intervention">Intervention</span><span id="resultIntervention" class="result-detail-value">—</span></div>
+<div class="result-detail"><span class="result-detail-label" data-i18n="result.behavior">Behavior</span><span id="resultBehavior" class="result-detail-value">—</span></div>
+</div>
+<button id="finishButton" class="primary-button" type="button"><span data-i18n="common.done">DONE</span></button>
+<button id="anotherInterventionButton" class="secondary-button" type="button"><span data-i18n="result.tryAnother">TRY ANOTHER APPROACH</span></button>
+</div>
 </section>
+
 </main>
+
 <footer class="app-footer">
-    <span data-i18n="footer.private">Your data stays on this device.</span>
+<span data-i18n="footer.private">Your data stays on this device.</span>
 </footer>
 </div>
-<script src="core/adaptive.js"></script>
-<script src="core/storage.js"></script>
-<script src="core/events.js"></script>
-<script src="core/protection.js"></script>
-<script src="app.js"></script>
+
+<script src="core/adaptive.js" defer></script>
+<script src="core/storage.js" defer></script>
+<script src="core/events.js" defer></script>
+<script src="core/protection.js" defer></script>
+<script src="app.js" defer></script>
+</body>
 </html>
