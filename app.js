@@ -1390,6 +1390,15 @@ function initializeEvents() {
         toggleLanguageMenu();
     });
 
+    $("insightsButton").addEventListener("click", () => {
+    renderInsights();
+    showScreen("insights");
+});
+
+    $("insightsDoneButton").addEventListener("click", () => {
+    showScreen("home");
+});
+
     document.querySelectorAll(".language-option").forEach(option => {
         option.addEventListener("click", async () => {
             await loadLanguage(option.dataset.language);
