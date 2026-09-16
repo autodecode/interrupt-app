@@ -65,6 +65,7 @@ let startedAt =
 
 let timer = null;
 let reassessing = false;
+let completed = false;
 
 $("categoryLabel").textContent =
   CATEGORY_LABELS[category] ||
@@ -78,7 +79,7 @@ $("domainLabel").textContent =
   host;
 
 function saveEvent(data) {
-  chrome.storage.local
+  return chrome.storage.local
     .get("protectionEvents")
     .then(result => {
       const events =
@@ -97,18 +98,34 @@ function saveEvent(data) {
             .toString(36)
             .slice(2, 8)}`,
 
-        type: "intervention",
-        source: "protection",
+        type: "reassess",
+
+        source:
+          "protection",
 
         category,
+
+        behavior:
+          category === "gambling"
+            ? "gamble"
+            : category === "socialMedia"
+              ? "scroll"
+              : category === "pornography"
+                ? "watch"
+                : "other",
+
         host,
-        url: originalUrl,
+
+        url:
+          originalUrl,
+
         mode,
 
         action:
           data.action || null,
 
-        intervention: "pause",
+        intervention:
+          "pause",
 
         intensityBefore:
           initialUrge,
@@ -118,12 +135,19 @@ function saveEvent(data) {
             ? data.intensityAfter
             : null,
 
+        impact:
+          typeof data.intensityAfter === "number"
+            ? initialUrge -
+              data.intensityAfter
+            : null,
+
         startedAt,
 
         completedAt:
           data.completedAt || now,
 
-        timestamp: now
+        timestamp:
+          now
       };
 
       events.push(event);
@@ -140,7 +164,8 @@ function updateTimer() {
     seconds;
 
   if (seconds <= 0) {
-    $("timer").textContent = "✓";
+    $("timer").textContent =
+      "✓";
 
     setPrompt(
       "The pause is over. Check the urge again before deciding."
@@ -162,16 +187,17 @@ function setPrompt(text) {
 function startTimer() {
   updateTimer();
 
-  timer = setInterval(() => {
-    if (seconds <= 0) {
-      clearInterval(timer);
-      return;
-    }
+  timer =
+    setInterval(() => {
+      if (seconds <= 0) {
+        clearInterval(timer);
+        return;
+      }
 
-    seconds--;
+      seconds--;
 
-    updateTimer();
-  }, 1000);
+      updateTimer();
+    }, 1000);
 }
 
 function showReassessment() {
@@ -211,38 +237,22 @@ function showReassessment() {
 
   value.textContent =
     initialUrge;
-
-  slider.addEventListener(
-    "input",
-    () => {
-      value.textContent =
-        slider.value;
-    }
-  );
-
-  $("backButton").onclick = () => {
-    finalUrge =
-      Number(slider.value);
-
-    complete("back");
-
-    history.back();
-  };
-
-  $("continueButton").onclick = () => {
-    finalUrge =
-      Number(slider.value);
-
-    complete("continue");
-  };
 }
 
 function complete(action) {
+  if (completed) {
+    return;
+  }
+
+  completed = true;
+
   if (
     typeof finalUrge !== "number"
   ) {
     finalUrge =
-      initialUrge;
+      Number(
+        $("urgeSlider").value
+      );
   }
 
   saveEvent({
@@ -253,6 +263,11 @@ function complete(action) {
 
     completedAt:
       new Date().toISOString()
+  }).catch(error => {
+    console.warn(
+      "INTERRUPT protection event save failed:",
+      error
+    );
   });
 }
 
@@ -291,6 +306,13 @@ function interrupt() {
 $("urgeSlider").addEventListener(
   "input",
   () => {
+    if (reassessing) {
+      $("urgeValue").textContent =
+        $("urgeSlider").value;
+
+      return;
+    }
+
     initialUrge =
       Number(
         $("urgeSlider").value
