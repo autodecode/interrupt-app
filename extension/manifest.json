@@ -15,7 +15,8 @@
 “service_worker”: “background.js”
 },
 “action”: {
-“default_title”: “INTERRUPT Protection”
+“default_title”: “INTERRUPT Protection”,
+“default_popup”: “popup.html”
 },
 “content_scripts”: [
 {
