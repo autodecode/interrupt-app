@@ -6,11 +6,24 @@
     "done": "DONE"
   },
 
+  "insights": {
+  "title": "Your patterns",
+  "subtitle": "INTERRUPT learns from what happens over time.",
+  "total": "Urges recorded",
+  "interrupted": "Interrupted",
+  "reduction": "Average reduction",
+  "best": "Most effective approach",
+  "triggerTitle": "Common trigger",
+  "recentTitle": "Recent sessions",
+  "empty": "No sessions yet."
+}
+
   "home": {
     "title": "You don't need more willpower.",
     "subtitle": "You need a way to interrupt the moment.",
     "button": "INTERRUPT",
-    "privacy": "Private. No account required."
+    "privacy": "Private. No account required.",
+    "insights": "VIEW YOUR PATTERNS"
   },
 
   "behavior": {
