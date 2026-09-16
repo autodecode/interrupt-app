@@ -1,3277 +1,1355 @@
-/* =========================================================
-   INTERRUPT — v0.1
-   Application logic
-   ========================================================= */
+const LANGUAGES = {
+    en: { file: "locales/en.json", flag: "🇬🇧", code: "EN" },
+    ro: { file: "locales/ro.json", flag: "🇷🇴", code: "RO" },
+    fr: { file: "locales/fr.json", flag: "🇫🇷", code: "FR" },
+    de: { file: "locales/de.json", flag: "🇩🇪", code: "DE" },
+    es: { file: "locales/es.json", flag: "🇪🇸", code: "ES" },
+    it: { file: "locales/it.json", flag: "🇮🇹", code: "IT" }
+};
 
-"use strict";
+const STORAGE = {
+    language: "interrupt_language",
+    sessions: "interrupt_sessions"
+};
 
-/* =========================================================
-   CONFIGURATION
-   ========================================================= */
+const INTERVENTIONS = [
+    "nameIt",
+    "promise",
+    "wave",
+    "delay",
+    "fastForward",
+    "changeScene",
+    "actualNeed",
+    "breakChain",
+    "twoFutures",
+    "switch90",
+    "realityCheck"
+];
 
-const SUPPORTED_LANGUAGES = {
-    en: {
-        code: "EN",
-        flag: "🇬🇧",
-        file: "locales/en.json"
+const INTERVENTION_RULES = {
+    gamble: {
+        money: ["fastForward", "realityCheck", "delay", "promise"],
+        excitement: ["delay", "wave", "changeScene", "switch90"],
+        escape: ["actualNeed", "changeScene", "nameIt", "delay"],
+        relief: ["actualNeed", "delay", "wave", "changeScene"],
+        default: ["fastForward", "realityCheck", "delay", "nameIt"]
     },
-    ro: {
-        code: "RO",
-        flag: "🇷🇴",
-        file: "locales/ro.json"
+
+    scroll: {
+        something_to_do: ["switch90", "changeScene", "delay"],
+        escape: ["changeScene", "actualNeed", "delay", "nameIt"],
+        excitement: ["switch90", "changeScene", "delay"],
+        default: ["changeScene", "switch90", "delay", "nameIt"]
     },
-    fr: {
-        code: "FR",
-        flag: "🇫🇷",
-        file: "locales/fr.json"
+
+    smoke: {
+        relief: ["delay", "wave", "actualNeed", "changeScene"],
+        comfort: ["actualNeed", "wave", "delay"],
+        escape: ["changeScene", "delay", "actualNeed"],
+        default: ["delay", "wave", "changeScene", "nameIt"]
     },
-    de: {
-        code: "DE",
-        flag: "🇩🇪",
-        file: "locales/de.json"
+
+    eat: {
+        comfort: ["actualNeed", "delay", "wave", "nameIt"],
+        pleasure: ["delay", "actualNeed", "wave"],
+        relief: ["actualNeed", "delay", "changeScene"],
+        default: ["wave", "delay", "actualNeed", "nameIt"]
     },
-    es: {
-        code: "ES",
-        flag: "🇪🇸",
-        file: "locales/es.json"
+
+    buy: {
+        money: ["fastForward", "delay", "realityCheck", "twoFutures"],
+        excitement: ["delay", "fastForward", "realityCheck"],
+        comfort: ["actualNeed", "delay", "twoFutures"],
+        default: ["delay", "fastForward", "realityCheck", "nameIt"]
     },
-    it: {
-        code: "IT",
-        flag: "🇮🇹",
-        file: "locales/it.json"
+
+    watch: {
+        escape: ["changeScene", "actualNeed", "delay", "switch90"],
+        something_to_do: ["switch90", "changeScene", "delay"],
+        default: ["delay", "switch90", "changeScene", "nameIt"]
+    },
+
+    check: {
+        relief: ["delay", "nameIt", "realityCheck", "changeScene"],
+        control: ["realityCheck", "delay", "nameIt"],
+        default: ["nameIt", "delay", "realityCheck", "changeScene"]
+    },
+
+    other: {
+        default: ["nameIt", "delay", "changeScene", "actualNeed"]
     }
 };
 
-const DEFAULT_LANGUAGE = "en";
-const LANGUAGE_STORAGE_KEY = "interrupt_language";
-const SESSION_STORAGE_KEY = "interrupt_sessions";
+let translations = {};
+let currentLanguage = "en";
 
+let session = {
+    id: null,
+    behavior: null,
+    behaviorLabel: null,
+    intensityBefore: 5,
+    intensityAfter: null,
+    expectation: null,
+    expectationLabel: null,
+    intervention: null,
+    interventionAttempts: [],
+    outcome: null,
+    startedAt: null,
+    completedAt: null
+};
 
-/* =========================================================
-   APPLICATION STATE
-   ========================================================= */
+const $ = id => document.getElementById(id);
 
-const state = {
+function getPath(object, path) {
+    return path.split(".").reduce((value, key) => value?.[key], object);
+}
 
-    language: DEFAULT_LANGUAGE,
+function t(key, fallback = key) {
+    return getPath(translations, key) ?? fallback;
+}
 
-    translations: {},
+function getSavedSessions() {
+    try {
+        const data = JSON.parse(localStorage.getItem(STORAGE.sessions) || "[]");
+        return Array.isArray(data) ? data : [];
+    } catch {
+        return [];
+    }
+}
 
-    currentScreen: "home",
+function saveSessions(sessions) {
+    localStorage.setItem(STORAGE.sessions, JSON.stringify(sessions));
+}
 
-    session: {
-        id: null,
-
+function createSession() {
+    return {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         behavior: null,
         behaviorLabel: null,
-
-        intensityBefore: null,
+        intensityBefore: 5,
         intensityAfter: null,
-
         expectation: null,
         expectationLabel: null,
-
-        trigger: null,
-
         intervention: null,
         interventionAttempts: [],
-
         outcome: null,
-
-        startedAt: null,
+        startedAt: new Date().toISOString(),
         completedAt: null
-    },
-
-    timer: {
-        interval: null,
-        remaining: 0
-    }
-};
-
-
-/* =========================================================
-   DOM HELPERS
-   ========================================================= */
-
-const $ = (selector) => document.querySelector(selector);
-
-const $$ = (selector) => Array.from(
-    document.querySelectorAll(selector)
-);
-
-
-/* =========================================================
-   INITIALIZATION
-   ========================================================= */
-
-document.addEventListener("DOMContentLoaded", init);
-
-async function init() {
-
-    setupEventListeners();
-
-    loadSavedLanguage();
-
-    await loadTranslations(state.language);
-
-    updateLanguageUI();
-
-    showScreen("home");
+    };
 }
 
+function resetSession() {
+    session = createSession();
 
-/* =========================================================
-   EVENT LISTENERS
-   ========================================================= */
+    $("intensitySlider").value = 5;
+    $("intensityValue").textContent = "5";
 
-function setupEventListeners() {
+    $("reassessSlider").value = 5;
+    $("reassessValue").textContent = "5";
 
-    /* Home */
+    clearSelections();
 
-    $("#startButton").addEventListener("click", startSession);
+    $("otherBehaviorContainer").hidden = true;
+    $("otherExpectationContainer").hidden = true;
 
-    $("#logoButton").addEventListener("click", () => {
-        resetSession();
-        showScreen("home");
+    $("otherBehaviorInput").value = "";
+    $("otherExpectationInput").value = "";
+
+    $("behaviorContinueButton").disabled = true;
+    $("expectationContinueButton").disabled = true;
+}
+
+function clearSelections() {
+    document.querySelectorAll(".choice-button.selected").forEach(button => {
+        button.classList.remove("selected");
     });
 
-
-    /* Language */
-
-    $("#languageButton").addEventListener(
-        "click",
-        toggleLanguageMenu
-    );
-
-    $$(".language-option").forEach(button => {
-
-        button.addEventListener("click", async () => {
-
-            const language = button.dataset.language;
-
-            await changeLanguage(language);
-
-            closeLanguageMenu();
-        });
-    });
-
-
-    document.addEventListener("click", (event) => {
-
-        const wrapper = $(".language-wrapper");
-
-        if (
-            wrapper &&
-            !wrapper.contains(event.target)
-        ) {
-            closeLanguageMenu();
-        }
-    });
-
-
-    /* Behavior */
-
-    $$(".choice-button[data-behavior]").forEach(button => {
-
-        button.addEventListener("click", () => {
-
-            selectBehavior(button.dataset.behavior);
-
-        });
-
-    });
-
-
-    $("#behaviorContinueButton").addEventListener(
-        "click",
-        continueFromBehavior
-    );
-
-
-    /* Intensity */
-
-    $("#intensitySlider").addEventListener(
-        "input",
-        updateIntensityDisplay
-    );
-
-    $("#intensityContinueButton").addEventListener(
-        "click",
-        continueFromIntensity
-    );
-
-
-    /* Expectation */
-
-    $$(".choice-button[data-expectation]").forEach(button => {
-
-        button.addEventListener("click", () => {
-
-            selectExpectation(
-                button.dataset.expectation
-            );
-
-        });
-
-    });
-
-
-    $("#expectationContinueButton").addEventListener(
-        "click",
-        continueFromExpectation
-    );
-
-
-    /* Reassessment */
-
-    $("#reassessSlider").addEventListener(
-        "input",
-        updateReassessDisplay
-    );
-
-    $("#reassessContinueButton").addEventListener(
-        "click",
-        completeReassessment
-    );
-
-
-    /* Outcomes */
-
-    $$(".outcome-button").forEach(button => {
-
-        button.addEventListener("click", () => {
-
-            selectOutcome(button.dataset.outcome);
-
-        });
-
-    });
-
-
-    /* Result */
-
-    $("#finishButton").addEventListener(
-        "click",
-        finishSession
-    );
-
-    $("#anotherInterventionButton").addEventListener(
-        "click",
-        tryAnotherIntervention
-    );
-
-
-    /* Back buttons */
-
-    $$("[data-back]").forEach(button => {
-
-        button.addEventListener("click", () => {
-
-            const target = button.dataset.back;
-
-            showScreen(target);
-
-        });
-
+    document.querySelectorAll(".outcome-button.selected").forEach(button => {
+        button.classList.remove("selected");
     });
 }
 
+function showScreen(name) {
+    document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.remove("screen-active");
+    });
 
-/* =========================================================
-   LANGUAGE SYSTEM
-   ========================================================= */
+    const target = $(`screen-${name}`);
 
-function loadSavedLanguage() {
-
-    const saved = localStorage.getItem(
-        LANGUAGE_STORAGE_KEY
-    );
-
-    if (
-        saved &&
-        SUPPORTED_LANGUAGES[saved]
-    ) {
-        state.language = saved;
-        return;
+    if (target) {
+        target.classList.add("screen-active");
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
-
-    const browserLanguage =
-        navigator.language
-            ? navigator.language
-                .substring(0, 2)
-                .toLowerCase()
-            : null;
-
-    if (
-        browserLanguage &&
-        SUPPORTED_LANGUAGES[browserLanguage]
-    ) {
-        state.language = browserLanguage;
-        return;
-    }
-
-    state.language = DEFAULT_LANGUAGE;
 }
 
-
-async function loadTranslations(language) {
-
-    const languageConfig =
-        SUPPORTED_LANGUAGES[language] ||
-        SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+async function loadLanguage(language) {
+    if (!LANGUAGES[language]) {
+        language = "en";
+    }
 
     try {
-
-        const response = await fetch(
-            languageConfig.file,
-            {
-                cache: "no-cache"
-            }
-        );
+        const response = await fetch(LANGUAGES[language].file, {
+            cache: "no-store"
+        });
 
         if (!response.ok) {
-            throw new Error(
-                `Translation file failed: ${response.status}`
-            );
+            throw new Error(`HTTP ${response.status}`);
         }
 
-        state.translations = await response.json();
+        translations = await response.json();
+        currentLanguage = language;
 
+        localStorage.setItem(STORAGE.language, language);
+
+        updateLanguageUI();
+        applyTranslations();
     } catch (error) {
-
-        console.error(
-            "Could not load translations:",
-            error
-        );
-
-        /*
-         * If the selected language fails,
-         * try English as the final fallback.
-         */
-
-        if (language !== DEFAULT_LANGUAGE) {
-
-            try {
-
-                const response = await fetch(
-                    SUPPORTED_LANGUAGES.en.file,
-                    {
-                        cache: "no-cache"
-                    }
-                );
-
-                state.translations =
-                    await response.json();
-
-            } catch (fallbackError) {
-
-                console.error(
-                    "English fallback failed:",
-                    fallbackError
-                );
-
-                state.translations = {};
-
-            }
-
+        if (language !== "en") {
+            await loadLanguage("en");
         } else {
-
-            state.translations = {};
-
+            console.error("Could not load language:", error);
         }
     }
-
-    applyTranslations();
 }
 
+function updateLanguageUI() {
+    const language = LANGUAGES[currentLanguage];
 
-async function changeLanguage(language) {
+    $("currentLanguageFlag").textContent = language.flag;
+    $("currentLanguageCode").textContent = language.code;
 
-    if (!SUPPORTED_LANGUAGES[language]) {
-        return;
-    }
-
-    state.language = language;
-
-    localStorage.setItem(
-        LANGUAGE_STORAGE_KEY,
-        language
-    );
-
-    await loadTranslations(language);
-
-    updateLanguageUI();
-
-    /*
-     * If the user is currently inside an intervention,
-     * rebuild it in the new language.
-     */
-
-    if (
-        state.currentScreen === "intervention" &&
-        state.session.intervention
-    ) {
-        renderIntervention(
-            state.session.intervention
+    document.querySelectorAll(".language-option").forEach(option => {
+        option.classList.toggle(
+            "selected",
+            option.dataset.language === currentLanguage
         );
-    }
-}
+    });
 
+    document.documentElement.lang = currentLanguage;
+}
 
 function applyTranslations() {
-
-    $$("[data-i18n]").forEach(element => {
-
+    document.querySelectorAll("[data-i18n]").forEach(element => {
         const key = element.dataset.i18n;
+        const value = t(key);
 
-        const value = translate(key);
-
-        if (value !== null) {
+        if (value !== key) {
             element.textContent = value;
         }
     });
 
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
+        const key = element.dataset.i18nPlaceholder;
+        const value = t(key);
 
-    $$("[data-i18n-placeholder]").forEach(
-        element => {
-
-            const key =
-                element.dataset.i18nPlaceholder;
-
-            const value = translate(key);
-
-            if (value !== null) {
-                element.placeholder = value;
-            }
-
+        if (value !== key) {
+            element.placeholder = value;
         }
-    );
+    });
+
+    updateDynamicIntervention();
 }
 
+function toggleLanguageMenu(force) {
+    const menu = $("languageMenu");
+    const button = $("languageButton");
 
-function translate(key, fallback = null) {
+    const open = typeof force === "boolean"
+        ? force
+        : menu.hidden;
 
-    const parts = key.split(".");
+    menu.hidden = !open;
+    button.setAttribute("aria-expanded", String(open));
+}
 
-    let value = state.translations;
+function selectBehavior(button) {
+    document.querySelectorAll("#behaviorOptions .choice-button").forEach(item => {
+        item.classList.remove("selected");
+    });
 
-    for (const part of parts) {
+    button.classList.add("selected");
+
+    const value = button.dataset.behavior;
+
+    session.behavior = value;
+
+    if (value === "other") {
+        $("otherBehaviorContainer").hidden = false;
+        $("otherBehaviorInput").focus();
+        session.behaviorLabel = "";
+        $("behaviorContinueButton").disabled = true;
+    } else {
+        $("otherBehaviorContainer").hidden = true;
+        session.behaviorLabel = button.querySelector("[data-i18n]")?.textContent.trim() || value;
+        $("behaviorContinueButton").disabled = false;
+    }
+}
+
+function validateOtherBehavior() {
+    const value = $("otherBehaviorInput").value.trim();
+
+    if (session.behavior === "other") {
+        session.behaviorLabel = value;
+        $("behaviorContinueButton").disabled = value.length === 0;
+    }
+}
+
+function selectExpectation(button) {
+    document.querySelectorAll("#expectationOptions .choice-button").forEach(item => {
+        item.classList.remove("selected");
+    });
+
+    button.classList.add("selected");
+
+    const value = button.dataset.expectation;
+
+    session.expectation = value;
+
+    if (value === "other") {
+        $("otherExpectationContainer").hidden = false;
+        $("otherExpectationInput").focus();
+        session.expectationLabel = "";
+        $("expectationContinueButton").disabled = true;
+    } else {
+        $("otherExpectationContainer").hidden = true;
+        session.expectationLabel =
+            button.querySelector("[data-i18n]")?.textContent.trim() || value;
+
+        $("expectationContinueButton").disabled = false;
+    }
+}
+
+function validateOtherExpectation() {
+    const value = $("otherExpectationInput").value.trim();
+
+    if (session.expectation === "other") {
+        session.expectationLabel = value;
+        $("expectationContinueButton").disabled = value.length === 0;
+    }
+}
+
+function updateSliderValue(slider, output) {
+    output.textContent = slider.value;
+}
+
+function getRelevantHistory() {
+    const sessions = getSavedSessions();
+
+    return sessions.filter(item => {
+        if (!item || !item.intervention) {
+            return false;
+        }
 
         if (
-            value === null ||
-            value === undefined ||
-            typeof value !== "object" ||
-            !(part in value)
+            session.behavior &&
+            session.behavior !== "other" &&
+            item.behavior !== session.behavior
         ) {
-            return fallback !== null
-                ? fallback
-                : key;
+            return false;
         }
 
-        value = value[part];
-    }
+        if (
+            session.expectation &&
+            session.expectation !== "unknown" &&
+            item.expectation &&
+            item.expectation !== session.expectation
+        ) {
+            return false;
+        }
 
-    return typeof value === "string"
-        ? value
-        : fallback !== null
-            ? fallback
-            : key;
-}
-
-
-function updateLanguageUI() {
-
-    const config =
-        SUPPORTED_LANGUAGES[state.language];
-
-    if (!config) return;
-
-    $("#currentLanguageFlag").textContent =
-        config.flag;
-
-    $("#currentLanguageCode").textContent =
-        config.code;
-
-    document.documentElement.lang =
-        state.language;
-}
-
-
-function toggleLanguageMenu() {
-
-    const menu = $("#languageMenu");
-    const button = $("#languageButton");
-
-    const isHidden = menu.hasAttribute("hidden");
-
-    if (isHidden) {
-
-        menu.removeAttribute("hidden");
-
-        button.setAttribute(
-            "aria-expanded",
-            "true"
-        );
-
-    } else {
-
-        closeLanguageMenu();
-    }
-}
-
-
-function closeLanguageMenu() {
-
-    const menu = $("#languageMenu");
-    const button = $("#languageButton");
-
-    menu.setAttribute("hidden", "");
-
-    button.setAttribute(
-        "aria-expanded",
-        "false"
-    );
-}
-
-
-/* =========================================================
-   SCREEN NAVIGATION
-   ========================================================= */
-
-function showScreen(screenName) {
-
-    $$(".screen").forEach(screen => {
-
-        screen.classList.remove(
-            "screen-active"
-        );
-
-    });
-
-
-    const target =
-        $(`#screen-${screenName}`);
-
-    if (!target) {
-        console.error(
-            `Screen not found: ${screenName}`
-        );
-        return;
-    }
-
-
-    target.classList.add("screen-active");
-
-    state.currentScreen = screenName;
-
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+        return typeof item.intensityBefore === "number" &&
+            typeof item.intensityAfter === "number";
     });
 }
 
+function calculateInterventionStats() {
+    const history = getRelevantHistory();
+    const stats = {};
 
-/* =========================================================
-   SESSION MANAGEMENT
-   ========================================================= */
-
-function startSession() {
-
-    stopTimer();
-
-    state.session = {
-
-        id:
-            Date.now().toString() +
-            "-" +
-            Math.random()
-                .toString(36)
-                .substring(2, 9),
-
-        behavior: null,
-        behaviorLabel: null,
-
-        intensityBefore: null,
-        intensityAfter: null,
-
-        expectation: null,
-        expectationLabel: null,
-
-        trigger: null,
-
-        intervention: null,
-        interventionAttempts: [],
-
-        outcome: null,
-
-        startedAt:
-            new Date().toISOString(),
-
-        completedAt: null
-    };
-
-
-    clearBehaviorSelection();
-
-    showScreen("behavior");
-}
-
-
-function resetSession() {
-
-    stopTimer();
-
-    state.session = {
-
-        id: null,
-
-        behavior: null,
-        behaviorLabel: null,
-
-        intensityBefore: null,
-        intensityAfter: null,
-
-        expectation: null,
-        expectationLabel: null,
-
-        trigger: null,
-
-        intervention: null,
-        interventionAttempts: [],
-
-        outcome: null,
-
-        startedAt: null,
-        completedAt: null
-    };
-
-
-    clearBehaviorSelection();
-    clearExpectationSelection();
-
-    $("#intensitySlider").value = 5;
-    $("#intensityValue").textContent = "5";
-
-    $("#reassessSlider").value = 5;
-    $("#reassessValue").textContent = "5";
-
-    showScreen("home");
-}
-
-
-/* =========================================================
-   BEHAVIOR
-   ========================================================= */
-
-function selectBehavior(behavior) {
-
-    $$(".choice-button[data-behavior]").forEach(
-        button => {
-
-            button.classList.toggle(
-                "selected",
-                button.dataset.behavior === behavior
-            );
-
+    history.forEach(item => {
+        if (!stats[item.intervention]) {
+            stats[item.intervention] = {
+                uses: 0,
+                totalImpact: 0,
+                positive: 0
+            };
         }
-    );
 
+        const impact = item.intensityBefore - item.intensityAfter;
 
-    state.session.behavior = behavior;
+        stats[item.intervention].uses++;
+        stats[item.intervention].totalImpact += impact;
 
+        if (impact > 0) {
+            stats[item.intervention].positive++;
+        }
+    });
 
-    if (behavior === "other") {
+    Object.values(stats).forEach(stat => {
+        stat.averageImpact = stat.totalImpact / stat.uses;
+        stat.successRate = stat.positive / stat.uses;
+    });
 
-        $("#otherBehaviorContainer")
-            .removeAttribute("hidden");
+    return stats;
+}
 
-        $("#otherBehaviorInput").focus();
+function scoreIntervention(intervention, stats, preferredOrder, intensity) {
+    let score = 0;
 
-    } else {
+    const preferredIndex = preferredOrder.indexOf(intervention);
 
-        $("#otherBehaviorContainer")
-            .setAttribute("hidden", "");
-
-        const button =
-            $(
-                `.choice-button[data-behavior="${behavior}"]`
-            );
-
-        state.session.behaviorLabel =
-            button
-                ?.querySelector("span:last-child")
-                ?.textContent
-                ?.trim() || behavior;
+    if (preferredIndex !== -1) {
+        score += (preferredOrder.length - preferredIndex) * 3;
     }
 
-
-    updateBehaviorContinueState();
-}
-
-
-function updateBehaviorContinueState() {
-
-    const button =
-        $("#behaviorContinueButton");
-
-    if (!state.session.behavior) {
-
-        button.disabled = true;
-        return;
+    if (stats[intervention]) {
+        score += stats[intervention].averageImpact * 5;
+        score += stats[intervention].successRate * 3;
+        score += Math.min(stats[intervention].uses, 5);
     }
 
-
-    if (
-        state.session.behavior === "other"
-    ) {
-
-        const value =
-            $("#otherBehaviorInput")
-                .value
-                .trim();
-
-        button.disabled =
-            value.length === 0;
-
-    } else {
-
-        button.disabled = false;
-    }
-}
-
-
-$("#otherBehaviorInput")?.addEventListener(
-    "input",
-    updateBehaviorContinueState
-);
-
-
-function continueFromBehavior() {
-
-    if (!state.session.behavior) {
-        return;
+    if (intensity >= 8) {
+        if (["delay", "fastForward", "realityCheck", "changeScene"].includes(intervention)) {
+            score += 2;
+        }
     }
 
-
-    if (
-        state.session.behavior === "other"
-    ) {
-
-        const value =
-            $("#otherBehaviorInput")
-                .value
-                .trim();
-
-        if (!value) return;
-
-        state.session.behaviorLabel =
-            value;
+    if (intensity <= 3) {
+        if (["nameIt", "wave", "actualNeed"].includes(intervention)) {
+            score += 1;
+        }
     }
 
-
-    showScreen("intensity");
+    return score;
 }
-
-
-function clearBehaviorSelection() {
-
-    $$(".choice-button[data-behavior]")
-        .forEach(button => {
-
-            button.classList.remove(
-                "selected"
-            );
-
-        });
-
-
-    $("#otherBehaviorContainer")
-        .setAttribute("hidden", "");
-
-    $("#otherBehaviorInput").value = "";
-
-    $("#behaviorContinueButton")
-        .disabled = true;
-}
-
-
-/* =========================================================
-   INTENSITY
-   ========================================================= */
-
-function updateIntensityDisplay() {
-
-    const value =
-        Number($("#intensitySlider").value);
-
-    $("#intensityValue").textContent =
-        value;
-}
-
-
-function continueFromIntensity() {
-
-    const value =
-        Number($("#intensitySlider").value);
-
-    state.session.intensityBefore =
-        value;
-
-    showScreen("expectation");
-}
-
-
-/* =========================================================
-   EXPECTATION
-   ========================================================= */
-
-function selectExpectation(expectation) {
-
-    $$(".choice-button[data-expectation]")
-        .forEach(button => {
-
-            button.classList.toggle(
-                "selected",
-                button.dataset.expectation ===
-                    expectation
-            );
-
-        });
-
-
-    state.session.expectation =
-        expectation;
-
-
-    const button =
-        $(
-            `.choice-button[data-expectation="${expectation}"]`
-        );
-
-
-    state.session.expectationLabel =
-        button
-            ?.querySelector("span")
-            ?.textContent
-            ?.trim() || expectation;
-
-
-    updateExpectationContinueState();
-}
-
-
-function updateExpectationContinueState() {
-
-    $("#expectationContinueButton")
-        .disabled =
-        !state.session.expectation;
-}
-
-
-function continueFromExpectation() {
-
-    if (!state.session.expectation) {
-        return;
-    }
-
-
-    /*
-     * The intervention engine chooses
-     * an intervention based on the
-     * current session data.
-     */
-
-    const intervention =
-        chooseIntervention();
-
-
-    state.session.intervention =
-        intervention.id;
-
-
-    renderIntervention(intervention.id);
-
-    showScreen("intervention");
-}
-
-
-function clearExpectationSelection() {
-
-    $$(".choice-button[data-expectation]")
-        .forEach(button => {
-
-            button.classList.remove(
-                "selected"
-            );
-
-        });
-
-
-    state.session.expectation = null;
-    state.session.expectationLabel = null;
-
-    $("#expectationContinueButton")
-        .disabled = true;
-}
-
-
-/* =========================================================
-   INTERVENTION ENGINE
-   ========================================================= */
-
-const INTERVENTIONS = {
-
-    name_it: {
-        id: "name_it",
-        category: "defusion",
-        titleKey: "interventions.nameIt.title"
-    },
-
-    promise: {
-        id: "promise",
-        category: "cognitive",
-        titleKey: "interventions.promise.title"
-    },
-
-    wave: {
-        id: "wave",
-        category: "urge_surfing",
-        titleKey: "interventions.wave.title"
-    },
-
-    delay: {
-        id: "delay",
-        category: "delay",
-        titleKey: "interventions.delay.title"
-    },
-
-    fast_forward: {
-        id: "fast_forward",
-        category: "future",
-        titleKey: "interventions.fastForward.title"
-    },
-
-    change_scene: {
-        id: "change_scene",
-        category: "environment",
-        titleKey: "interventions.changeScene.title"
-    },
-
-    actual_need: {
-        id: "actual_need",
-        category: "need",
-        titleKey: "interventions.actualNeed.title"
-    },
-
-    break_chain: {
-        id: "break_chain",
-        category: "trigger",
-        titleKey: "interventions.breakChain.title"
-    },
-
-    two_futures: {
-        id: "two_futures",
-        category: "future",
-        titleKey: "interventions.twoFutures.title"
-    },
-
-    switch_90: {
-        id: "switch_90",
-        category: "attention",
-        titleKey: "interventions.switch90.title"
-    },
-
-    reality_check: {
-        id: "reality_check",
-        category: "cognitive",
-        titleKey: "interventions.realityCheck.title"
-    },
-
-    previous_success: {
-        id: "previous_success",
-        category: "personal",
-        titleKey: "interventions.previousSuccess.title"
-    }
-};
-
-
-/*
- * Initial rule-based engine.
- *
- * This is intentionally NOT AI.
- *
- * Later we can replace this function
- * with a personalized scoring system.
- */
 
 function chooseIntervention() {
+    const attempted = new Set(session.interventionAttempts);
+    const stats = calculateInterventionStats();
 
-    const session =
-        state.session;
+    const behaviorRules =
+        INTERVENTION_RULES[session.behavior] ||
+        INTERVENTION_RULES.other;
 
+    const preferred =
+        behaviorRules[session.expectation] ||
+        behaviorRules.default;
 
-    /*
-     * If the user has successfully used
-     * an intervention before for a similar
-     * situation, prioritize it.
-     */
+    let candidates = INTERVENTIONS.filter(
+        intervention => !attempted.has(intervention)
+    );
 
-    const personal =
-        findBestPreviousIntervention();
-
-
-    if (personal) {
-        return INTERVENTIONS[personal];
+    if (!candidates.length) {
+        session.interventionAttempts = [];
+        candidates = [...INTERVENTIONS];
     }
 
+    candidates.sort((a, b) => {
+        const scoreA = scoreIntervention(
+            a,
+            stats,
+            preferred,
+            session.intensityBefore
+        );
 
-    /*
-     * High-intensity urges:
-     * first break automaticity.
-     */
+        const scoreB = scoreIntervention(
+            b,
+            stats,
+            preferred,
+            session.intensityBefore
+        );
 
-    if (
-        session.intensityBefore >= 8
-    ) {
-
-        return INTERVENTIONS.change_scene;
-    }
-
-
-    /*
-     * Gambling / shopping / behavior
-     * associated with reward expectations.
-     */
-
-    if (
-        session.expectation === "reward" ||
-        session.expectation === "excitement" ||
-        session.expectation === "control"
-    ) {
-
-        return INTERVENTIONS.promise;
-    }
-
-
-    /*
-     * Relief / escape:
-     * explore what is actually needed.
-     */
-
-    if (
-        session.expectation === "relief" ||
-        session.expectation === "escape" ||
-        session.expectation === "comfort"
-    ) {
-
-        return INTERVENTIONS.actual_need;
-    }
-
-
-    /*
-     * Pleasure / stimulation:
-     * switch attention or break the scene.
-     */
-
-    if (
-        session.expectation === "pleasure" ||
-        session.expectation === "something_to_do"
-    ) {
-
-        return INTERVENTIONS.switch_90;
-    }
-
-
-    /*
-     * Unknown:
-     * start with defusion.
-     */
-
-    if (
-        session.expectation === "unknown"
-    ) {
-
-        return INTERVENTIONS.name_it;
-    }
-
-
-    return INTERVENTIONS.delay;
-}
-
-
-/* =========================================================
-   PERSONALIZATION
-   ========================================================= */
-
-function findBestPreviousIntervention() {
-
-    const sessions =
-        getStoredSessions();
-
-    if (!sessions.length) {
-        return null;
-    }
-
-
-    const relevant =
-        sessions.filter(session => {
-
-            if (
-                !session.interventionAttempts ||
-                !session.interventionAttempts.length
-            ) {
-                return false;
-            }
-
-            if (
-                session.behavior !==
-                state.session.behavior
-            ) {
-                return false;
-            }
-
-            return true;
-        });
-
-
-    if (!relevant.length) {
-        return null;
-    }
-
-
-    const scores = {};
-
-
-    relevant.forEach(session => {
-
-        session.interventionAttempts
-            .forEach(attempt => {
-
-                if (
-                    typeof attempt.before !==
-                        "number" ||
-                    typeof attempt.after !==
-                        "number"
-                ) {
-                    return;
-                }
-
-
-                const improvement =
-                    attempt.before -
-                    attempt.after;
-
-
-                if (
-                    !scores[attempt.id]
-                ) {
-
-                    scores[attempt.id] = {
-                        total: 0,
-                        count: 0
-                    };
-
-                }
-
-
-                scores[attempt.id].total +=
-                    improvement;
-
-                scores[attempt.id].count +=
-                    1;
-
-            });
-
+        return scoreB - scoreA;
     });
 
-
-    let bestId = null;
-    let bestAverage = 0;
-
-
-    Object.entries(scores)
-        .forEach(([id, score]) => {
-
-            if (score.count < 1) {
-                return;
-            }
-
-            const average =
-                score.total /
-                score.count;
-
-
-            if (
-                average > bestAverage
-            ) {
-
-                bestAverage = average;
-                bestId = id;
-
-            }
-
-        });
-
-
-    return bestId;
+    return candidates[0];
 }
 
+function interventionTitle(id) {
+    return t(`interventions.${id}.title`, id);
+}
 
-/* =========================================================
-   INTERVENTION RENDERING
-   ========================================================= */
+function interventionCategory(id) {
+    const map = {
+        nameIt: "defusion",
+        promise: "cognitive",
+        wave: "urge_surfing",
+        delay: "delay",
+        fastForward: "future",
+        changeScene: "environment",
+        actualNeed: "need",
+        breakChain: "trigger",
+        twoFutures: "future",
+        switch90: "attention",
+        realityCheck: "cognitive",
+        previousSuccess: "personal"
+    };
 
-function renderIntervention(id) {
+    return t(
+        `interventions.categories.${map[id] || "cognitive"}`,
+        ""
+    );
+}
 
-    const intervention =
-        INTERVENTIONS[id];
-
-    if (!intervention) {
+function updateDynamicIntervention() {
+    if (!session.intervention) {
         return;
     }
 
+    $("interventionCategory").textContent =
+        interventionCategory(session.intervention);
 
-    $("#interventionTitle")
-        .textContent =
-        translate(
-            intervention.titleKey,
-            id
-        );
+    $("interventionTitle").textContent =
+        interventionTitle(session.intervention);
 
+    renderIntervention(session.intervention);
+}
 
-    $("#interventionCategory")
-        .textContent =
-        translate(
-            `interventions.categories.${intervention.category}`,
-            intervention.category
-        );
-
-
-    const content =
-        $("#interventionContent");
-
-    const actions =
-        $("#interventionActions");
-
+function renderIntervention(id) {
+    const content = $("interventionContent");
+    const actions = $("interventionActions");
 
     content.innerHTML = "";
     actions.innerHTML = "";
 
+    const renderers = {
+        nameIt: renderNameIt,
+        promise: renderPromise,
+        wave: renderWave,
+        delay: renderDelay,
+        fastForward: renderFastForward,
+        changeScene: renderChangeScene,
+        actualNeed: renderActualNeed,
+        breakChain: renderBreakChain,
+        twoFutures: renderTwoFutures,
+        switch90: renderSwitch90,
+        realityCheck: renderRealityCheck
+    };
 
-    switch (id) {
-
-        case "name_it":
-            renderNameIt(content, actions);
-            break;
-
-        case "promise":
-            renderPromise(content, actions);
-            break;
-
-        case "wave":
-            renderWave(content, actions);
-            break;
-
-        case "delay":
-            renderDelay(content, actions);
-            break;
-
-        case "fast_forward":
-            renderFastForward(content, actions);
-            break;
-
-        case "change_scene":
-            renderChangeScene(content, actions);
-            break;
-
-        case "actual_need":
-            renderActualNeed(content, actions);
-            break;
-
-        case "break_chain":
-            renderBreakChain(content, actions);
-            break;
-
-        case "two_futures":
-            renderTwoFutures(content, actions);
-            break;
-
-        case "switch_90":
-            renderSwitch90(content, actions);
-            break;
-
-        case "reality_check":
-            renderRealityCheck(content, actions);
-            break;
-
-        case "previous_success":
-            renderPreviousSuccess(content, actions);
-            break;
-
-        default:
-            renderGenericIntervention(
-                content,
-                actions
-            );
+    if (renderers[id]) {
+        renderers[id](content, actions);
+    } else {
+        renderGeneric(content, actions);
     }
 }
 
-
-/* =========================================================
-   INTERVENTION HELPERS
-   ========================================================= */
-
-function createParagraph(
-    parent,
-    text
-) {
-
-    const p =
-        document.createElement("p");
-
-    p.textContent = text;
-
-    parent.appendChild(p);
-
-    return p;
-}
-
-
-function createInput(
-    parent,
-    placeholder = "",
-    multiline = true
-) {
-
-    const input =
-        document.createElement(
-            multiline
-                ? "textarea"
-                : "input"
-        );
-
-    input.className =
-        "intervention-input";
-
-    if (placeholder) {
-        input.placeholder = placeholder;
-    }
-
-    parent.appendChild(input);
-
-    return input;
-}
-
-
-function createAction(
-    parent,
-    label,
-    callback,
-    primary = true
-) {
-
-    const button =
-        document.createElement("button");
+function addActionButton(container, text, callback, className = "primary-button") {
+    const button = document.createElement("button");
 
     button.type = "button";
+    button.className = className;
+    button.textContent = text;
+    button.addEventListener("click", callback);
 
-    button.className =
-        "intervention-action-button" +
-        (primary ? " primary" : "");
-
-    button.textContent = label;
-
-    button.addEventListener(
-        "click",
-        callback
-    );
-
-    parent.appendChild(button);
+    container.appendChild(button);
 
     return button;
 }
 
+function finishIntervention() {
+    $("reassessSlider").value = session.intensityBefore;
+    $("reassessValue").textContent = session.intensityBefore;
 
-function interventionText(
-    key,
-    fallback
-) {
+    showScreen("reassess");
+}
 
-    return translate(
-        `interventions.${key}`,
-        fallback
+function renderNameIt(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
+
+    box.innerHTML = `
+        <p>${t("interventions.nameIt.instruction")}</p>
+        <p class="intervention-prompt">${t("interventions.nameIt.firstPrompt")}</p>
+        <input class="intervention-input" type="text"
+            placeholder="${t("interventions.nameIt.placeholder")}"
+            autocomplete="off">
+        <p class="intervention-prompt">${t("interventions.nameIt.secondPrompt")}</p>
+        <input class="intervention-input" type="text"
+            placeholder="${t("interventions.nameIt.placeholder2")}"
+            autocomplete="off">
+    `;
+
+    content.appendChild(box);
+
+    addActionButton(
+        actions,
+        t("common.continue", "CONTINUE"),
+        finishIntervention
     );
 }
 
+function renderPromise(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
 
-/* =========================================================
-   01 — NAME IT
-   ========================================================= */
+    const expected = session.expectationLabel || session.expectation || "";
 
-function renderNameIt(
-    content,
-    actions
-) {
+    box.innerHTML = `
+        <p>${t("interventions.promise.intro")}</p>
+        <p class="intervention-highlight">${t("interventions.promise.expected")} ${expected}</p>
+        <p class="intervention-prompt">${t("interventions.promise.durationQuestion")}</p>
+        <input class="intervention-input"
+            type="text"
+            placeholder="${t("interventions.promise.durationPlaceholder")}"
+            autocomplete="off">
+        <p class="intervention-prompt">${t("interventions.promise.afterQuestion")}</p>
+        <input class="intervention-input"
+            type="text"
+            placeholder="${t("interventions.promise.afterPlaceholder")}"
+            autocomplete="off">
+    `;
 
-    createParagraph(
-        content,
-        interventionText(
-            "nameIt.instruction",
-            "Let's separate the urge from you."
-        )
-    );
+    content.appendChild(box);
 
-
-    createParagraph(
-        content,
-        interventionText(
-            "nameIt.firstPrompt",
-            "Complete this: “I am having the urge to…”"
-        )
-    );
-
-
-    const first =
-        createInput(
-            content,
-            interventionText(
-                "nameIt.placeholder",
-                "I am having the urge to..."
-            )
-        );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "nameIt.secondPrompt",
-            "Now try this: “My brain is telling me to…”"
-        )
-    );
-
-
-    const second =
-        createInput(
-            content,
-            interventionText(
-                "nameIt.placeholder2",
-                "My brain is telling me to..."
-            )
-        );
-
-
-    createAction(
+    addActionButton(
         actions,
-        translate(
-            "common.done",
-            "DONE"
-        ),
-        () => {
-
-            if (
-                !first.value.trim() ||
-                !second.value.trim()
-            ) {
-                first.focus();
-                return;
-            }
-
-            completeIntervention();
-
-        }
+        t("common.continue", "CONTINUE"),
+        finishIntervention
     );
 }
 
+function renderWave(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
 
-/* =========================================================
-   02 — THE PROMISE
-   ========================================================= */
+    box.innerHTML = `
+        <p>${t("interventions.wave.instruction")}</p>
+        <p class="intervention-prompt">${t("interventions.wave.locationPrompt")}</p>
+        <div class="wave-locations">
+            ${["chest", "stomach", "head", "hands", "everywhere"].map(
+                key => `<button type="button" class="choice-button wave-location" data-location="${key}">
+                    ${t(`interventions.wave.locations.${key}`)}
+                </button>`
+            ).join("")}
+        </div>
+        <div class="wave-timer" hidden>
+            <p>${t("interventions.wave.timerIntro")}</p>
+            <div class="timer-value">60</div>
+        </div>
+    `;
 
-function renderPromise(
-    content,
-    actions
-) {
+    content.appendChild(box);
 
-    const expectation =
-        state.session.expectationLabel ||
-        "";
+    const timerBox = box.querySelector(".wave-timer");
+    const timerValue = box.querySelector(".timer-value");
 
+    box.querySelectorAll(".wave-location").forEach(button => {
+        button.addEventListener("click", () => {
+            box.querySelectorAll(".wave-location").forEach(item => {
+                item.classList.remove("selected");
+            });
 
-    createParagraph(
-        content,
-        interventionText(
-            "promise.intro",
-            "Your brain is making you an offer."
-        )
-    );
+            button.classList.add("selected");
+            timerBox.hidden = false;
 
+            let remaining = 60;
+            timerValue.textContent = remaining;
 
-    createParagraph(
-        content,
-        `${interventionText(
-            "promise.expected",
-            "Right now it expects:"
-        )} ${expectation}.`
-    );
+            const interval = setInterval(() => {
+                remaining--;
+                timerValue.textContent = remaining;
 
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    timerValue.textContent = "0";
 
-    createParagraph(
-        content,
-        interventionText(
-            "promise.durationQuestion",
-            "If you do it, how long do you expect the feeling to last?"
-        )
-    );
-
-
-    const input =
-        createInput(
-            content,
-            interventionText(
-                "promise.durationPlaceholder",
-                "A few minutes, an hour, most of the day..."
-            )
-        );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "promise.afterQuestion",
-            "And what usually happens after that?"
-        )
-    );
-
-
-    const after =
-        createInput(
-            content,
-            interventionText(
-                "promise.afterPlaceholder",
-                "What happens next?"
-            )
-        );
-
-
-    createAction(
-        actions,
-        translate(
-            "common.continue",
-            "CONTINUE"
-        ),
-        () => {
-
-            if (
-                !input.value.trim() ||
-                !after.value.trim()
-            ) {
-                if (!input.value.trim()) {
-                    input.focus();
-                } else {
-                    after.focus();
+                    addWaveFinishOptions(box, actions);
                 }
-
-                return;
-            }
-
-            completeIntervention();
-
-        }
-    );
-}
-
-
-/* =========================================================
-   03 — RIDE THE WAVE
-   ========================================================= */
-
-function renderWave(
-    content,
-    actions
-) {
-
-    createParagraph(
-        content,
-        interventionText(
-            "wave.instruction",
-            "Don't fight the urge. Watch it."
-        )
-    );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "wave.locationPrompt",
-            "Where do you feel it?"
-        )
-    );
-
-
-    const locations = [
-        "Chest",
-        "Stomach",
-        "Head",
-        "Hands",
-        "Everywhere"
-    ];
-
-
-    locations.forEach(location => {
-
-        createAction(
-            actions,
-            interventionText(
-                `wave.locations.${location.toLowerCase()}`,
-                location
-            ),
-            () => startWaveTimer(
-                content,
-                actions
-            ),
-            false
-        );
-
+            }, 1000);
+        });
     });
 }
 
-
-function startWaveTimer(
-    content,
-    actions
-) {
-
-    content.innerHTML = "";
-    actions.innerHTML = "";
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "wave.timerIntro",
-            "Stay with the sensation for 60 seconds."
-        )
-    );
-
-
-    const timerBox =
-        document.createElement("div");
-
-    timerBox.className =
-        "intervention-timer";
-
-
-    const timerValue =
-        document.createElement("div");
-
-    timerValue.className =
-        "timer-value";
-
-    timerValue.textContent =
-        "1:00";
-
-
-    timerBox.appendChild(timerValue);
-
-    content.appendChild(timerBox);
-
-
-    startTimer(
-        60,
-        timerValue,
-        () => {
-
-            actions.innerHTML = "";
-
-            createParagraph(
-                content,
-                interventionText(
-                    "wave.finished",
-                    "Did anything change?"
-                )
-            );
-
-
-            createAction(
-                actions,
-                interventionText(
-                    "wave.weaker",
-                    "It got weaker"
-                ),
-                completeIntervention
-            );
-
-
-            createAction(
-                actions,
-                interventionText(
-                    "wave.changed",
-                    "It changed"
-                ),
-                completeIntervention,
-                false
-            );
-
-
-            createAction(
-                actions,
-                interventionText(
-                    "wave.same",
-                    "It stayed the same"
-                ),
-                completeIntervention,
-                false
-            );
-
-
-            createAction(
-                actions,
-                interventionText(
-                    "wave.stronger",
-                    "It got stronger"
-                ),
-                completeIntervention,
-                false
-            );
-
-        }
-    );
-}
-
-
-/* =========================================================
-   04 — NOT NOW
-   ========================================================= */
-
-function renderDelay(
-    content,
-    actions
-) {
-
-    createParagraph(
-        content,
-        interventionText(
-            "delay.instruction",
-            "You don't have to decide forever."
-        )
-    );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "delay.promise",
-            "Just don't do it for the next 10 minutes."
-        )
-    );
-
-
-    createAction(
-        actions,
-        interventionText(
-            "delay.start",
-            "START 10:00"
-        ),
-        () => startDelayTimer(
-            content,
-            actions
-        )
-    );
-}
-
-
-function startDelayTimer(
-    content,
-    actions
-) {
-
-    content.innerHTML = "";
-    actions.innerHTML = "";
-
-
-    const timerBox =
-        document.createElement("div");
-
-    timerBox.className =
-        "intervention-timer";
-
-
-    const timerValue =
-        document.createElement("div");
-
-    timerValue.className =
-        "timer-value";
-
-    timerValue.textContent =
-        "10:00";
-
-
-    timerBox.appendChild(timerValue);
-
-    content.appendChild(timerBox);
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "delay.waiting",
-            "You don't have to do anything. Just let the ten minutes pass."
-        )
-    );
-
-
-    startTimer(
-        600,
-        timerValue,
-        () => {
-
-            actions.innerHTML = "";
-
-            createParagraph(
-                content,
-                interventionText(
-                    "delay.finished",
-                    "The ten minutes are over."
-                )
-            );
-
-
-            createAction(
-                actions,
-                interventionText(
-                    "delay.stillWant",
-                    "I still want it"
-                ),
-                completeIntervention
-            );
-
-
-            createAction(
-                actions,
-                interventionText(
-                    "delay.weaker",
-                    "It's weaker"
-                ),
-                completeIntervention,
-                false
-            );
-
-
-            createAction(
-                actions,
-                interventionText(
-                    "delay.gone",
-                    "It's gone"
-                ),
-                completeIntervention,
-                false
-            );
-
-
-            createAction(
-                actions,
-                interventionText(
-                    "delay.alreadyDid",
-                    "I already did it"
-                ),
-                completeIntervention,
-                false
-            );
-
-        }
-    );
-}
-
-
-/* =========================================================
-   05 — FAST FORWARD
-   ========================================================= */
-
-function renderFastForward(
-    content,
-    actions
-) {
-
-    createParagraph(
-        content,
-        interventionText(
-            "fastForward.intro",
-            "Imagine you've already done it."
-        )
-    );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "fastForward.tenMinutes",
-            "10 minutes later..."
-        )
-    );
-
-
-    const first =
-        createInput(
-            content,
-            interventionText(
-                "fastForward.tenPlaceholder",
-                "How do you feel?"
-            )
-        );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "fastForward.tomorrow",
-            "Tomorrow..."
-        )
-    );
-
-
-    const second =
-        createInput(
-            content,
-            interventionText(
-                "fastForward.tomorrowPlaceholder",
-                "How do you feel tomorrow?"
-            )
-        );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "fastForward.next",
-            "What happens next?"
-        )
-    );
-
-
-    const third =
-        createInput(
-            content,
-            interventionText(
-                "fastForward.nextPlaceholder",
-                "What happens after that?"
-            )
-        );
-
-
-    createAction(
-        actions,
-        translate(
-            "common.continue",
-            "CONTINUE"
-        ),
-        () => {
-
-            if (
-                !first.value.trim() ||
-                !second.value.trim() ||
-                !third.value.trim()
-            ) {
-                return;
-            }
-
-            completeIntervention();
-
-        }
-    );
-}
-
-
-/* =========================================================
-   06 — CHANGE THE SCENE
-   ========================================================= */
-
-function renderChangeScene(
-    content,
-    actions
-) {
-
-    const steps = [
-        interventionText(
-            "changeScene.step1",
-            "Stand up."
-        ),
-        interventionText(
-            "changeScene.step2",
-            "Put the device or object down."
-        ),
-        interventionText(
-            "changeScene.step3",
-            "Go somewhere different."
-        ),
-        interventionText(
-            "changeScene.step4",
-            "Stay there for two minutes."
-        )
-    ];
-
-
-    steps.forEach(
-        (step, index) => {
-
-            createParagraph(
-                content,
-                `${index + 1}. ${step}`
-            );
-
-        }
-    );
-
-
-    createAction(
-        actions,
-        interventionText(
-            "changeScene.ready",
-            "I'M SOMEWHERE ELSE"
-        ),
-        () => {
-
-            content.innerHTML = "";
-            actions.innerHTML = "";
-
-            createParagraph(
-                content,
-                interventionText(
-                    "changeScene.wait",
-                    "Stay here for two minutes."
-                )
-            );
-
-
-            const timerBox =
-                document.createElement("div");
-
-            timerBox.className =
-                "intervention-timer";
-
-
-            const timerValue =
-                document.createElement("div");
-
-            timerValue.className =
-                "timer-value";
-
-            timerValue.textContent =
-                "2:00";
-
-
-            timerBox.appendChild(
-                timerValue
-            );
-
-            content.appendChild(
-                timerBox
-            );
-
-
-            startTimer(
-                120,
-                timerValue,
-                () => {
-
-                    actions.innerHTML = "";
-
-                    createAction(
-                        actions,
-                        translate(
-                            "common.continue",
-                            "CONTINUE"
-                        ),
-                        completeIntervention
-                    );
-
-                }
-            );
-
-        }
-    );
-}
-
-
-/* =========================================================
-   07 — ACTUAL NEED
-   ========================================================= */
-
-function renderActualNeed(
-    content,
-    actions
-) {
-
-    createParagraph(
-        content,
-        interventionText(
-            "actualNeed.intro",
-            "Forget the behavior for a second."
-        )
-    );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "actualNeed.question",
-            "What do you actually need?"
-        )
-    );
-
-
-    const needs = [
-        "stimulation",
-        "relief",
-        "comfort",
-        "escape",
-        "connection",
-        "control",
-        "rest",
-        "unknown"
-    ];
-
-
-    needs.forEach(need => {
-
-        createAction(
-            actions,
-            interventionText(
-                `actualNeed.options.${need}`,
-                need
-            ),
-            () => {
-
-                state.session.actualNeed =
-                    need;
-
-                showNeedSuggestion(
-                    content,
-                    actions,
-                    need
-                );
-
-            },
-            false
-        );
-
-    });
-}
-
-
-function showNeedSuggestion(
-    content,
-    actions,
-    need
-) {
-
-    content.innerHTML = "";
-    actions.innerHTML = "";
-
-
-    const suggestions = {
-
-        stimulation:
-            interventionText(
-                "actualNeed.suggestions.stimulation",
-                "Give your brain something new for 90 seconds."
-            ),
-
-        relief:
-            interventionText(
-                "actualNeed.suggestions.relief",
-                "Take a slow breath and deliberately relax your shoulders."
-            ),
-
-        comfort:
-            interventionText(
-                "actualNeed.suggestions.comfort",
-                "Move somewhere physically comfortable and give yourself two quiet minutes."
-            ),
-
-        escape:
-            interventionText(
-                "actualNeed.suggestions.escape",
-                "Step away from the situation for two minutes."
-            ),
-
-        connection:
-            interventionText(
-                "actualNeed.suggestions.connection",
-                "Send one simple message to someone you trust."
-            ),
-
-        control:
-            interventionText(
-                "actualNeed.suggestions.control",
-                "Choose one small thing around you that you can control right now."
-            ),
-
-        rest:
-            interventionText(
-                "actualNeed.suggestions.rest",
-                "Put everything down for two minutes and let yourself stop."
-            ),
-
-        unknown:
-            interventionText(
-                "actualNeed.suggestions.unknown",
-                "You don't need to know yet. Just create two minutes of distance."
-            )
-    };
-
-
-    createParagraph(
-        content,
-        suggestions[need] ||
-        suggestions.unknown
-    );
-
-
-    createAction(
-        actions,
-        translate(
-            "common.done",
-            "DONE"
-        ),
-        completeIntervention
-    );
-}
-
-
-/* =========================================================
-   08 — BREAK THE CHAIN
-   ========================================================= */
-
-function renderBreakChain(
-    content,
-    actions
-) {
-
-    createParagraph(
-        content,
-        interventionText(
-            "breakChain.question",
-            "What happened right before the urge?"
-        )
-    );
-
-
-    const triggers = [
-        "boredom",
-        "stress",
-        "something_seen",
-        "argument",
-        "alone",
-        "phone",
-        "habit",
-        "nothing_obvious"
-    ];
-
-
-    triggers.forEach(trigger => {
-
-        createAction(
-            actions,
-            interventionText(
-                `breakChain.options.${trigger}`,
-                trigger
-            ),
-            () => {
-
-                state.session.trigger =
-                    trigger;
-
-
-                content.innerHTML = "";
-                actions.innerHTML = "";
-
-
-                createParagraph(
-                    content,
-                    interventionText(
-                        "breakChain.result",
-                        "That's useful. Now interrupt the chain here."
-                    )
-                );
-
-
-                createAction(
-                    actions,
-                    interventionText(
-                        "breakChain.changeScene",
-                        "CHANGE MY SCENE"
-                    ),
-                    completeIntervention
-                );
-
-            },
-            false
-        );
-
-    });
-}
-
-
-/* =========================================================
-   09 — TWO FUTURES
-   ========================================================= */
-
-function renderTwoFutures(
-    content,
-    actions
-) {
-
-    createParagraph(
-        content,
-        interventionText(
-            "twoFutures.intro",
-            "Look at the two paths without judging either one."
-        )
-    );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "twoFutures.act",
-            "IF I ACT"
-        )
-    );
-
-
-    const act =
-        createInput(
-            content,
-            interventionText(
-                "twoFutures.actPlaceholder",
-                "What happens?"
-            )
-        );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "twoFutures.dont",
-            "IF I DON'T"
-        )
-    );
-
-
-    const dont =
-        createInput(
-            content,
-            interventionText(
-                "twoFutures.dontPlaceholder",
-                "What happens instead?"
-            )
-        );
-
-
-    createAction(
-        actions,
-        translate(
-            "common.continue",
-            "CONTINUE"
-        ),
-        () => {
-
-            if (
-                !act.value.trim() ||
-                !dont.value.trim()
-            ) {
-                return;
-            }
-
-            completeIntervention();
-
-        }
-    );
-}
-
-
-/* =========================================================
-   10 — 90 SECOND SWITCH
-   ========================================================= */
-
-function renderSwitch90(
-    content,
-    actions
-) {
-
-    createParagraph(
-        content,
-        interventionText(
-            "switch90.instruction",
-            "No thinking. Just do something else for 90 seconds."
-        )
-    );
-
-
-    const tasks = [
-        interventionText(
-            "switch90.task1",
-            "Find five things around you that are blue."
-        ),
-        interventionText(
-            "switch90.task2",
-            "Wash one cup."
-        ),
-        interventionText(
-            "switch90.task3",
-            "Stand up and walk around."
-        ),
-        interventionText(
-            "switch90.task4",
-            "Count ten objects around you."
-        )
-    ];
-
-
-    const randomTask =
-        tasks[
-            Math.floor(
-                Math.random() *
-                tasks.length
-            )
-        ];
-
-
-    createParagraph(
-        content,
-        randomTask
-    );
-
-
-    createAction(
-        actions,
-        interventionText(
-            "switch90.start",
-            "START 90 SECONDS"
-        ),
-        () => {
-
-            content.innerHTML = "";
-            actions.innerHTML = "";
-
-
-            createParagraph(
-                content,
-                randomTask
-            );
-
-
-            const timerBox =
-                document.createElement("div");
-
-            timerBox.className =
-                "intervention-timer";
-
-
-            const timerValue =
-                document.createElement("div");
-
-            timerValue.className =
-                "timer-value";
-
-            timerValue.textContent =
-                "1:30";
-
-
-            timerBox.appendChild(
-                timerValue
-            );
-
-            content.appendChild(
-                timerBox
-            );
-
-
-            startTimer(
-                90,
-                timerValue,
-                () => {
-
-                    actions.innerHTML = "";
-
-                    createAction(
-                        actions,
-                        translate(
-                            "common.continue",
-                            "CONTINUE"
-                        ),
-                        completeIntervention
-                    );
-
-                }
-            );
-
-        }
-    );
-}
-
-
-/* =========================================================
-   11 — REALITY CHECK
-   ========================================================= */
-
-function renderRealityCheck(
-    content,
-    actions
-) {
-
-    createParagraph(
-        content,
-        interventionText(
-            "realityCheck.question",
-            "What do you think will happen if you do it?"
-        )
-    );
-
-
-    const prediction =
-        createInput(
-            content,
-            interventionText(
-                "realityCheck.placeholder",
-                "I think..."
-            )
-        );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "realityCheck.certainty",
-            "How certain are you?"
-        )
-    );
-
-
-    const certainty =
-        document.createElement("input");
-
-    certainty.type = "range";
-    certainty.min = "0";
-    certainty.max = "100";
-    certainty.value = "50";
-    certainty.className =
-        "intervention-range";
-
-    content.appendChild(
-        certainty
-    );
-
-
-    const certaintyValue =
-        document.createElement("p");
-
-    certaintyValue.textContent =
-        "50%";
-
-    content.appendChild(
-        certaintyValue
-    );
-
-
-    certainty.addEventListener(
-        "input",
-        () => {
-
-            certaintyValue.textContent =
-                `${certainty.value}%`;
-
-        }
-    );
-
-
-    createParagraph(
-        content,
-        interventionText(
-            "realityCheck.past",
-            "Has this actually happened consistently before?"
-        )
-    );
-
-
-    createAction(
-        actions,
-        interventionText(
-            "realityCheck.yes",
-            "YES"
-        ),
-        completeIntervention
-    );
-
-
-    createAction(
-        actions,
-        interventionText(
-            "realityCheck.no",
-            "NO"
-        ),
-        completeIntervention,
-        false
-    );
-
-
-    createAction(
-        actions,
-        interventionText(
-            "realityCheck.sometimes",
-            "SOMETIMES"
-        ),
-        completeIntervention,
-        false
-    );
-}
-
-
-/* =========================================================
-   12 — PREVIOUS SUCCESS
-   ========================================================= */
-
-function renderPreviousSuccess(
-    content,
-    actions
-) {
-
-    const best =
-        findBestPreviousIntervention();
-
-
-    if (!best) {
-
-        renderGenericIntervention(
-            content,
-            actions
-        );
-
+function addWaveFinishOptions(box, actions) {
+    if (box.querySelector(".wave-finish")) {
         return;
     }
 
+    const finish = document.createElement("div");
+    finish.className = "wave-finish";
 
-    const title =
-        translate(
-            INTERVENTIONS[best].titleKey,
-            best
-        );
+    finish.innerHTML = `
+        <p>${t("interventions.wave.finished")}</p>
+        <div class="wave-results">
+            ${["weaker", "changed", "same", "stronger"].map(
+                key => `<button type="button" class="choice-button" data-wave-result="${key}">
+                    ${t(`interventions.wave.${key}`)}
+                </button>`
+            ).join("")}
+        </div>
+    `;
 
+    box.appendChild(finish);
 
-    createParagraph(
-        content,
-        interventionText(
-            "previousSuccess.intro",
-            "You've been here before."
-        )
-    );
+    finish.querySelectorAll("[data-wave-result]").forEach(button => {
+        button.addEventListener("click", () => {
+            finish.querySelectorAll(".choice-button").forEach(item => {
+                item.classList.remove("selected");
+            });
 
+            button.classList.add("selected");
 
-    createParagraph(
-        content,
-        interventionText(
-            "previousSuccess.message",
-            `Last time, ${title} helped reduce the urge.`
-        )
-    );
+            actions.innerHTML = "";
 
-
-    createAction(
-        actions,
-        interventionText(
-            "previousSuccess.try",
-            "TRY IT AGAIN"
-        ),
-        () => {
-
-            state.session.intervention =
-                best;
-
-            renderIntervention(
-                best
+            addActionButton(
+                actions,
+                t("common.continue", "CONTINUE"),
+                finishIntervention
             );
+        });
+    });
+}
 
+function renderDelay(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
+
+    box.innerHTML = `
+        <p>${t("interventions.delay.instruction")}</p>
+        <p class="intervention-highlight">${t("interventions.delay.promise")}</p>
+        <div class="delay-timer">10:00</div>
+    `;
+
+    content.appendChild(box);
+
+    const timer = box.querySelector(".delay-timer");
+
+    addActionButton(
+        actions,
+        t("interventions.delay.start"),
+        () => {
+            actions.innerHTML = "";
+            let remaining = 600;
+
+            const interval = setInterval(() => {
+                remaining--;
+
+                const minutes = Math.floor(remaining / 60);
+                const seconds = remaining % 60;
+
+                timer.textContent =
+                    `${minutes}:${String(seconds).padStart(2, "0")}`;
+
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    timer.textContent = "0:00";
+
+                    const result = document.createElement("div");
+                    result.className = "delay-result";
+
+                    result.innerHTML = `
+                        <p>${t("interventions.delay.finished")}</p>
+                        <div class="option-grid">
+                            <button type="button" class="choice-button">${t("interventions.delay.stillWant")}</button>
+                            <button type="button" class="choice-button">${t("interventions.delay.weaker")}</button>
+                            <button type="button" class="choice-button">${t("interventions.delay.gone")}</button>
+                            <button type="button" class="choice-button">${t("interventions.delay.alreadyDid")}</button>
+                        </div>
+                    `;
+
+                    box.appendChild(result);
+
+                    result.querySelectorAll(".choice-button").forEach(button => {
+                        button.addEventListener("click", () => {
+                            result.querySelectorAll(".choice-button").forEach(item => {
+                                item.classList.remove("selected");
+                            });
+
+                            button.classList.add("selected");
+
+                            actions.innerHTML = "";
+
+                            addActionButton(
+                                actions,
+                                t("common.continue", "CONTINUE"),
+                                finishIntervention
+                            );
+                        });
+                    });
+                }
+            }, 1000);
         }
     );
 }
 
+function renderFastForward(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
 
-/* =========================================================
-   GENERIC INTERVENTION
-   ========================================================= */
+    box.innerHTML = `
+        <p>${t("interventions.fastForward.intro")}</p>
+        <p class="intervention-prompt">${t("interventions.fastForward.tenMinutes")}</p>
+        <textarea class="intervention-textarea"
+            placeholder="${t("interventions.fastForward.tenPlaceholder")}"></textarea>
+        <p class="intervention-prompt">${t("interventions.fastForward.tomorrow")}</p>
+        <textarea class="intervention-textarea"
+            placeholder="${t("interventions.fastForward.tomorrowPlaceholder")}"></textarea>
+        <p class="intervention-prompt">${t("interventions.fastForward.next")}</p>
+        <textarea class="intervention-textarea"
+            placeholder="${t("interventions.fastForward.nextPlaceholder")}"></textarea>
+    `;
 
-function renderGenericIntervention(
-    content,
-    actions
-) {
+    content.appendChild(box);
 
-    createParagraph(
-        content,
-        interventionText(
-            "generic.instruction",
-            "Create some distance between the urge and the action."
-        )
-    );
-
-
-    createAction(
+    addActionButton(
         actions,
-        translate(
-            "common.done",
-            "DONE"
-        ),
-        completeIntervention
+        t("common.continue", "CONTINUE"),
+        finishIntervention
     );
 }
 
+function renderChangeScene(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
 
-/* =========================================================
-   INTERVENTION COMPLETION
-   ========================================================= */
+    box.innerHTML = `
+        <ol class="intervention-steps">
+            <li>${t("interventions.changeScene.step1")}</li>
+            <li>${t("interventions.changeScene.step2")}</li>
+            <li>${t("interventions.changeScene.step3")}</li>
+            <li>${t("interventions.changeScene.step4")}</li>
+        </ol>
+        <div class="scene-timer"></div>
+    `;
 
-function completeIntervention() {
+    content.appendChild(box);
 
-    stopTimer();
+    const timer = box.querySelector(".scene-timer");
 
-    showScreen("reassess");
+    addActionButton(
+        actions,
+        t("interventions.changeScene.ready"),
+        () => {
+            actions.innerHTML = "";
 
+            let remaining = 120;
+            timer.textContent = remaining;
 
-    $("#reassessSlider").value =
-        state.session.intensityBefore;
+            const interval = setInterval(() => {
+                remaining--;
+                timer.textContent = remaining;
 
-    $("#reassessValue").textContent =
-        state.session.intensityBefore;
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    timer.textContent = "0";
+
+                    addActionButton(
+                        actions,
+                        t("common.continue", "CONTINUE"),
+                        finishIntervention
+                    );
+                }
+            }, 1000);
+        }
+    );
 }
 
+function renderActualNeed(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
 
-function updateReassessDisplay() {
+    box.innerHTML = `
+        <p>${t("interventions.actualNeed.intro")}</p>
+        <p class="intervention-prompt">${t("interventions.actualNeed.question")}</p>
+        <div class="option-grid">
+            ${Object.keys(t("interventions.actualNeed.options", {})).map(
+                key => `<button type="button" class="choice-button" data-need="${key}">
+                    ${t(`interventions.actualNeed.options.${key}`)}
+                </button>`
+            ).join("")}
+        </div>
+        <div class="need-suggestion" hidden></div>
+    `;
 
-    const value =
-        Number(
-            $("#reassessSlider").value
-        );
+    content.appendChild(box);
 
-    $("#reassessValue")
-        .textContent = value;
-}
+    const suggestion = box.querySelector(".need-suggestion");
 
+    box.querySelectorAll("[data-need]").forEach(button => {
+        button.addEventListener("click", () => {
+            box.querySelectorAll("[data-need]").forEach(item => {
+                item.classList.remove("selected");
+            });
 
-function completeReassessment() {
+            button.classList.add("selected");
 
-    const before =
-        Number(
-            state.session.intensityBefore
-        );
+            const key = button.dataset.need;
 
-    const after =
-        Number(
-            $("#reassessSlider").value
-        );
+            suggestion.hidden = false;
+            suggestion.textContent =
+                t(`interventions.actualNeed.suggestions.${key}`);
 
+            actions.innerHTML = "";
 
-    state.session.intensityAfter =
-        after;
-
-
-    state.session.interventionAttempts
-        .push({
-
-            id:
-                state.session.intervention,
-
-            before,
-            after,
-
-            timestamp:
-                new Date().toISOString()
-
+            addActionButton(
+                actions,
+                t("common.continue", "CONTINUE"),
+                finishIntervention
+            );
         });
+    });
+}
 
+function renderBreakChain(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
+
+    box.innerHTML = `
+        <p>${t("interventions.breakChain.question")}</p>
+        <div class="option-grid">
+            ${Object.keys(t("interventions.breakChain.options", {})).map(
+                key => `<button type="button" class="choice-button" data-trigger="${key}">
+                    ${t(`interventions.breakChain.options.${key}`)}
+                </button>`
+            ).join("")}
+        </div>
+        <p class="trigger-result" hidden></p>
+    `;
+
+    content.appendChild(box);
+
+    const result = box.querySelector(".trigger-result");
+
+    box.querySelectorAll("[data-trigger]").forEach(button => {
+        button.addEventListener("click", () => {
+            box.querySelectorAll("[data-trigger]").forEach(item => {
+                item.classList.remove("selected");
+            });
+
+            button.classList.add("selected");
+
+            session.trigger = button.dataset.trigger;
+
+            result.hidden = false;
+            result.textContent = t("interventions.breakChain.result");
+
+            actions.innerHTML = "";
+
+            addActionButton(
+                actions,
+                t("interventions.breakChain.changeScene"),
+                finishIntervention
+            );
+        });
+    });
+}
+
+function renderTwoFutures(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
+
+    box.innerHTML = `
+        <p>${t("interventions.twoFutures.intro")}</p>
+        <p class="intervention-prompt">${t("interventions.twoFutures.act")}</p>
+        <textarea class="intervention-textarea"
+            placeholder="${t("interventions.twoFutures.actPlaceholder")}"></textarea>
+        <p class="intervention-prompt">${t("interventions.twoFutures.dont")}</p>
+        <textarea class="intervention-textarea"
+            placeholder="${t("interventions.twoFutures.dontPlaceholder")}"></textarea>
+    `;
+
+    content.appendChild(box);
+
+    addActionButton(
+        actions,
+        t("common.continue", "CONTINUE"),
+        finishIntervention
+    );
+}
+
+function renderSwitch90(content, actions) {
+    const tasks = [
+        t("interventions.switch90.task1"),
+        t("interventions.switch90.task2"),
+        t("interventions.switch90.task3"),
+        t("interventions.switch90.task4")
+    ];
+
+    const task = tasks[Math.floor(Math.random() * tasks.length)];
+
+    const box = document.createElement("div");
+    box.className = "intervention-box";
+
+    box.innerHTML = `
+        <p>${t("interventions.switch90.instruction")}</p>
+        <p class="intervention-highlight">${task}</p>
+        <div class="switch-timer">90</div>
+    `;
+
+    content.appendChild(box);
+
+    const timer = box.querySelector(".switch-timer");
+
+    addActionButton(
+        actions,
+        t("interventions.switch90.start"),
+        () => {
+            actions.innerHTML = "";
+
+            let remaining = 90;
+            timer.textContent = remaining;
+
+            const interval = setInterval(() => {
+                remaining--;
+                timer.textContent = remaining;
+
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    timer.textContent = "0";
+
+                    addActionButton(
+                        actions,
+                        t("common.continue", "CONTINUE"),
+                        finishIntervention
+                    );
+                }
+            }, 1000);
+        }
+    );
+}
+
+function renderRealityCheck(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
+
+    box.innerHTML = `
+        <p>${t("interventions.realityCheck.question")}</p>
+        <textarea class="intervention-textarea"
+            placeholder="${t("interventions.realityCheck.placeholder")}"></textarea>
+
+        <p class="intervention-prompt">${t("interventions.realityCheck.certainty")}</p>
+        <input class="intervention-range" type="range" min="0" max="100" value="50">
+        <div class="certainty-value">50%</div>
+
+        <p class="intervention-prompt">${t("interventions.realityCheck.past")}</p>
+        <div class="option-grid">
+            <button type="button" class="choice-button">${t("interventions.realityCheck.yes")}</button>
+            <button type="button" class="choice-button">${t("interventions.realityCheck.no")}</button>
+            <button type="button" class="choice-button">${t("interventions.realityCheck.sometimes")}</button>
+        </div>
+    `;
+
+    content.appendChild(box);
+
+    const range = box.querySelector(".intervention-range");
+    const value = box.querySelector(".certainty-value");
+
+    range.addEventListener("input", () => {
+        value.textContent = `${range.value}%`;
+    });
+
+    box.querySelectorAll(".choice-button").forEach(button => {
+        button.addEventListener("click", () => {
+            box.querySelectorAll(".choice-button").forEach(item => {
+                item.classList.remove("selected");
+            });
+
+            button.classList.add("selected");
+
+            actions.innerHTML = "";
+
+            addActionButton(
+                actions,
+                t("common.continue", "CONTINUE"),
+                finishIntervention
+            );
+        });
+    });
+
+    addActionButton(
+        actions,
+        t("common.continue", "CONTINUE"),
+        finishIntervention
+    );
+}
+
+function renderGeneric(content, actions) {
+    const box = document.createElement("div");
+    box.className = "intervention-box";
+
+    box.innerHTML = `
+        <p>${t("interventions.generic.instruction")}</p>
+    `;
+
+    content.appendChild(box);
+
+    addActionButton(
+        actions,
+        t("common.continue", "CONTINUE"),
+        finishIntervention
+    );
+}
+
+function startIntervention() {
+    const intervention = chooseIntervention();
+
+    session.intervention = intervention;
+
+    if (!session.interventionAttempts.includes(intervention)) {
+        session.interventionAttempts.push(intervention);
+    }
+
+    $("interventionCategory").textContent =
+        interventionCategory(intervention);
+
+    $("interventionTitle").textContent =
+        interventionTitle(intervention);
+
+    renderIntervention(intervention);
+
+    showScreen("intervention");
+}
+
+function reassess() {
+    session.intensityAfter =
+        Number($("reassessSlider").value);
 
     showScreen("outcome");
 }
 
+function selectOutcome(button) {
+    document.querySelectorAll(".outcome-button").forEach(item => {
+        item.classList.remove("selected");
+    });
 
-/* =========================================================
-   OUTCOME
-   ========================================================= */
+    button.classList.add("selected");
 
-function selectOutcome(outcome) {
+    session.outcome = button.dataset.outcome;
 
-    state.session.outcome =
-        outcome;
+    completeSession();
+}
 
-    state.session.completedAt =
-        new Date().toISOString();
+function completeSession() {
+    session.completedAt = new Date().toISOString();
 
+    const sessions = getSavedSessions();
 
-    saveSession();
+    const existingIndex = sessions.findIndex(
+        item => item.id === session.id
+    );
 
-    renderResult();
+    const snapshot = JSON.parse(JSON.stringify(session));
+
+    if (existingIndex >= 0) {
+        sessions[existingIndex] = snapshot;
+    } else {
+        sessions.push(snapshot);
+    }
+
+    saveSessions(sessions);
+
+    showResult();
+}
+
+function showResult() {
+    const before = Number(session.intensityBefore);
+    const after = Number(session.intensityAfter);
+
+    $("resultBefore").textContent = before;
+    $("resultAfter").textContent = after;
+
+    const difference = before - after;
+
+    let percentage = 0;
+
+    if (before > 0) {
+        percentage = Math.round((difference / before) * 100);
+    }
+
+    if (difference > 0) {
+        $("resultChange").textContent = `−${percentage}%`;
+        $("resultMessage").textContent =
+            t("result.messages.lower");
+    } else if (difference < 0) {
+        $("resultChange").textContent = `+${Math.abs(percentage)}%`;
+        $("resultMessage").textContent =
+            t("result.messages.higher");
+    } else {
+        $("resultChange").textContent = "0%";
+        $("resultMessage").textContent =
+            t("result.messages.same");
+    }
+
+    const titles = {
+        interrupted: "interruptedTitle",
+        delayed: "delayedTitle",
+        acted: "actedTitle",
+        unsure: "unsureTitle"
+    };
+
+    $("resultTitle").textContent =
+        t(`result.${titles[session.outcome] || "interruptedTitle"}`);
+
+    $("resultIntervention").textContent =
+        interventionTitle(session.intervention);
+
+    $("resultBehavior").textContent =
+        session.behaviorLabel || session.behavior || "—";
 
     showScreen("result");
 }
 
-
-/* =========================================================
-   RESULT
-   ========================================================= */
-
-function renderResult() {
-
-    const before =
-        Number(
-            state.session.intensityBefore
-        );
-
-    const after =
-        Number(
-            state.session.intensityAfter
-        );
-
-
-    $("#resultBefore")
-        .textContent = before;
-
-    $("#resultAfter")
-        .textContent = after;
-
-
-    const change =
-        before > 0
-            ? Math.round(
-                ((before - after) /
-                    before) *
-                100
-            )
-            : 0;
-
-
-    const signedChange =
-        change > 0
-            ? `−${change}%`
-            : change < 0
-                ? `+${Math.abs(change)}%`
-                : "0%";
-
-
-    $("#resultChange")
-        .textContent =
-        signedChange;
-
-
-    $("#resultBehavior")
-        .textContent =
-        state.session.behaviorLabel ||
-        state.session.behavior ||
-        "—";
-
-
-    const intervention =
-        INTERVENTIONS[
-            state.session.intervention
-        ];
-
-
-    $("#resultIntervention")
-        .textContent =
-        intervention
-            ? translate(
-                intervention.titleKey,
-                state.session.intervention
-            )
-            : "—";
-
-
-    let message;
-
-
-    if (after < before) {
-
-        message =
-            translate(
-                "result.messages.lower",
-                "The urge got quieter."
-            );
-
-    } else if (after === before) {
-
-        message =
-            translate(
-                "result.messages.same",
-                "The urge didn't move this time."
-            );
-
-    } else {
-
-        message =
-            translate(
-                "result.messages.higher",
-                "The urge got stronger. That is useful information too."
-            );
-    }
-
-
-    $("#resultMessage")
-        .textContent = message;
-
-
-    if (
-        state.session.outcome ===
-        "interrupted"
-    ) {
-
-        $("#resultTitle")
-            .textContent =
-            translate(
-                "result.interruptedTitle",
-                "You interrupted the moment."
-            );
-
-    } else if (
-        state.session.outcome ===
-        "delayed"
-    ) {
-
-        $("#resultTitle")
-            .textContent =
-            translate(
-                "result.delayedTitle",
-                "You created some distance."
-            );
-
-    } else if (
-        state.session.outcome ===
-        "acted"
-    ) {
-
-        $("#resultTitle")
-            .textContent =
-            translate(
-                "result.actedTitle",
-                "The urge won this time."
-            );
-
-    } else {
-
-        $("#resultTitle")
-            .textContent =
-            translate(
-                "result.unsureTitle",
-                "The moment passed."
-            );
-    }
-}
-
-
-/* =========================================================
-   TRY ANOTHER INTERVENTION
-   ========================================================= */
-
 function tryAnotherIntervention() {
+    const next = chooseIntervention();
 
-    /*
-     * Exclude interventions already attempted
-     * in the current session.
-     */
+    session.intervention = next;
 
-    const used =
-        new Set(
-            state.session.interventionAttempts
-                .map(attempt => attempt.id)
-        );
-
-
-    const available =
-        Object.keys(INTERVENTIONS)
-            .filter(id => !used.has(id));
-
-
-    if (!available.length) {
-
-        showScreen("outcome");
-
-        return;
+    if (!session.interventionAttempts.includes(next)) {
+        session.interventionAttempts.push(next);
     }
 
+    $("interventionCategory").textContent =
+        interventionCategory(next);
 
-    const next =
-        chooseAlternativeIntervention(
-            available
-        );
-
-
-    state.session.intervention =
-        next;
-
+    $("interventionTitle").textContent =
+        interventionTitle(next);
 
     renderIntervention(next);
 
     showScreen("intervention");
 }
 
-
-function chooseAlternativeIntervention(
-    available
-) {
-
-    /*
-     * Prefer a different mechanism
-     * from the last attempt.
-     */
-
-    const last =
-        state.session.interventionAttempts
-            .at(-1);
-
-
-    if (last) {
-
-        const lastCategory =
-            INTERVENTIONS[last.id]
-                ?.category;
-
-
-        const different =
-            available.filter(id => {
-
-                return (
-                    INTERVENTIONS[id]
-                        ?.category !==
-                    lastCategory
-                );
-
-            });
-
-
-        if (different.length) {
-
-            return different[
-                Math.floor(
-                    Math.random() *
-                    different.length
-                )
-            ];
-
-        }
-
-    }
-
-
-    return available[
-        Math.floor(
-            Math.random() *
-            available.length
-        )
-    ];
-}
-
-
-/* =========================================================
-   TIMER
-   ========================================================= */
-
-function startTimer(
-    seconds,
-    display,
-    onComplete
-) {
-
-    stopTimer();
-
-    state.timer.remaining =
-        seconds;
-
-
-    updateTimerDisplay(
-        display,
-        state.timer.remaining
-    );
-
-
-    state.timer.interval =
-        setInterval(() => {
-
-            state.timer.remaining--;
-
-            updateTimerDisplay(
-                display,
-                state.timer.remaining
-            );
-
-
-            if (
-                state.timer.remaining <= 0
-            ) {
-
-                stopTimer();
-
-                if (
-                    typeof onComplete ===
-                    "function"
-                ) {
-                    onComplete();
-                }
-
-            }
-
-        }, 1000);
-}
-
-
-function updateTimerDisplay(
-    display,
-    seconds
-) {
-
-    const minutes =
-        Math.floor(seconds / 60);
-
-    const remainingSeconds =
-        seconds % 60;
-
-
-    display.textContent =
-        `${minutes}:${String(
-            remainingSeconds
-        ).padStart(2, "0")}`;
-}
-
-
-function stopTimer() {
-
-    if (state.timer.interval) {
-
-        clearInterval(
-            state.timer.interval
-        );
-
-        state.timer.interval = null;
-    }
-}
-
-
-/* =========================================================
-   LOCAL STORAGE
-   ========================================================= */
-
-function getStoredSessions() {
-
-    try {
-
-        const raw =
-            localStorage.getItem(
-                SESSION_STORAGE_KEY
-            );
-
-
-        if (!raw) {
-            return [];
-        }
-
-
-        const sessions =
-            JSON.parse(raw);
-
-
-        return Array.isArray(sessions)
-            ? sessions
-            : [];
-
-    } catch (error) {
-
-        console.error(
-            "Could not read sessions:",
-            error
-        );
-
-        return [];
-    }
-}
-
-
-function saveSession() {
-
-    try {
-
-        const sessions =
-            getStoredSessions();
-
-
-        sessions.push(
-            JSON.parse(
-                JSON.stringify(
-                    state.session
-                )
-            )
-        );
-
-
-        /*
-         * Keep the first MVP lightweight.
-         * We keep the most recent 250 sessions.
-         */
-
-        const trimmed =
-            sessions.slice(-250);
-
-
-        localStorage.setItem(
-            SESSION_STORAGE_KEY,
-            JSON.stringify(trimmed)
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Could not save session:",
-            error
-        );
-    }
-}
-
-
-/* =========================================================
-   FINISH
-   ========================================================= */
-
-function finishSession() {
-
+function finishAndReset() {
     resetSession();
-
     showScreen("home");
 }
 
+function goBack(target) {
+    showScreen(target);
+}
 
-/* =========================================================
-   UTILITY: DEBUG
-   ========================================================= */
+function initializeEvents() {
+    $("logoButton").addEventListener("click", () => {
+        finishAndReset();
+    });
 
-/*
- * Available in browser console:
- *
- * INTERRUPT_DEBUG.getSessions()
- * INTERRUPT_DEBUG.clearSessions()
- * INTERRUPT_DEBUG.state()
- */
+    $("languageButton").addEventListener("click", event => {
+        event.stopPropagation();
+        toggleLanguageMenu();
+    });
 
-window.INTERRUPT_DEBUG = {
+    document.querySelectorAll(".language-option").forEach(option => {
+        option.addEventListener("click", async () => {
+            await loadLanguage(option.dataset.language);
+            toggleLanguageMenu(false);
+        });
+    });
 
-    getSessions() {
-        return getStoredSessions();
-    },
+    document.addEventListener("click", event => {
+        if (!event.target.closest(".language-wrapper")) {
+            toggleLanguageMenu(false);
+        }
+    });
 
-    clearSessions() {
-        localStorage.removeItem(
-            SESSION_STORAGE_KEY
+    $("startButton").addEventListener("click", () => {
+        resetSession();
+        showScreen("behavior");
+    });
+
+    document.querySelectorAll("#behaviorOptions .choice-button").forEach(button => {
+        button.addEventListener("click", () => {
+            selectBehavior(button);
+        });
+    });
+
+    $("otherBehaviorInput").addEventListener("input", validateOtherBehavior);
+
+    $("behaviorContinueButton").addEventListener("click", () => {
+        if (!session.behaviorLabel) {
+            return;
+        }
+
+        showScreen("intensity");
+    });
+
+    $("intensitySlider").addEventListener("input", () => {
+        updateSliderValue(
+            $("intensitySlider"),
+            $("intensityValue")
         );
-        console.log(
-            "INTERRUPT sessions cleared."
+    });
+
+    $("intensityContinueButton").addEventListener("click", () => {
+        session.intensityBefore =
+            Number($("intensitySlider").value);
+
+        showScreen("expectation");
+    });
+
+    document.querySelectorAll("#expectationOptions .choice-button").forEach(button => {
+        button.addEventListener("click", () => {
+            selectExpectation(button);
+        });
+    });
+
+    $("otherExpectationInput").addEventListener(
+        "input",
+        validateOtherExpectation
+    );
+
+    $("expectationContinueButton").addEventListener("click", () => {
+        if (!session.expectationLabel) {
+            return;
+        }
+
+        startIntervention();
+    });
+
+    $("reassessSlider").addEventListener("input", () => {
+        updateSliderValue(
+            $("reassessSlider"),
+            $("reassessValue")
         );
-    },
+    });
 
-    state() {
-        return state;
-    }
+    $("reassessContinueButton").addEventListener(
+        "click",
+        reassess
+    );
 
-};
+    document.querySelectorAll(".outcome-button").forEach(button => {
+        button.addEventListener("click", () => {
+            selectOutcome(button);
+        });
+    });
+
+    $("finishButton").addEventListener("click", finishAndReset);
+
+    $("anotherInterventionButton").addEventListener(
+        "click",
+        tryAnotherIntervention
+    );
+
+    document.querySelectorAll(".back-button").forEach(button => {
+        button.addEventListener("click", () => {
+            goBack(button.dataset.back);
+        });
+    });
+}
+
+function exposeDebug() {
+    window.INTERRUPT_DEBUG = {
+        getSession: () => session,
+        getSessions: getSavedSessions,
+        getStats: calculateInterventionStats,
+        resetData: () => {
+            localStorage.removeItem(STORAGE.sessions);
+            console.log("INTERRUPT session data cleared.");
+        },
+        language: () => currentLanguage
+    };
+}
+
+async function initialize() {
+    initializeEvents();
+    exposeDebug();
+
+    const savedLanguage =
+        localStorage.getItem(STORAGE.language) || "en";
+
+    resetSession();
+
+    await loadLanguage(savedLanguage);
+}
+
+document.addEventListener("DOMContentLoaded", initialize);
