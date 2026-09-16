@@ -1,97 +1,174 @@
 {
   "common": {
+    "interrupt": "INTERRUPT",
     "continue": "CONTINUE",
     "back": "BACK",
-    "start": "START",
-    "done": "DONE",
-    "cancel": "CANCEL",
-    "yes": "YES",
-    "no": "NO"
+    "done": "DONE"
   },
 
+  "insights": {
+  "title": "Your patterns",
+  "subtitle": "INTERRUPT learns from what happens over time.",
+  "total": "Urges recorded",
+  "interrupted": "Interrupted",
+  "reduction": "Average reduction",
+  "best": "Most effective approach",
+  "triggerTitle": "Common trigger",
+  "recentTitle": "Recent sessions",
+  "empty": "No sessions yet."
+},
+
   "home": {
-    "title": "INTERRUPT",
-    "subtitle": "Pause the impulse. Change what happens next.",
-    "description": "When an urge takes over, you don't have to act immediately. INTERRUPT helps you create a small gap between the impulse and the action.",
-    "start": "INTERRUPT NOW",
-    "insights": "YOUR PATTERNS"
+    "title": "You don't need more willpower.",
+    "subtitle": "You need a way to interrupt the moment.",
+    "button": "INTERRUPT",
+    "privacy": "Private. No account required.",
+    "insights": "VIEW YOUR PATTERNS"
   },
 
   "behavior": {
     "title": "What are you about to do?",
-    "subtitle": "Choose what best describes the impulse.",
+    "subtitle": "Choose what is pulling you right now.",
+    "otherLabel": "What is it?",
+    "otherPlaceholder": "Type it here"
+  },
+
+  "behaviors": {
     "gamble": "Gamble",
     "scroll": "Scroll",
     "smoke": "Smoke",
     "eat": "Eat",
     "buy": "Buy something",
     "watch": "Watch",
-    "check": "Check",
-    "other": "Something else",
-    "otherPlaceholder": "What are you about to do?"
+    "check": "Check something",
+    "other": "Something else"
   },
 
   "intensity": {
-    "title": "How strong is the urge?",
-    "subtitle": "Rate it from 0 to 10.",
-    "low": "Low",
-    "high": "Extreme",
-    "continue": "CONTINUE"
+    "title": "How strong is the urge right now?",
+    "subtitle": "0 means barely there. 10 means extremely strong."
   },
 
   "expectation": {
-    "title": "What are you hoping to get from it?",
-    "subtitle": "There is usually something the impulse promises you.",
+    "title": "What do you expect it to give you?",
+    "subtitle": "What are you really looking for right now?",
+    "otherLabel": "What are you looking for?",
+    "otherPlaceholder": "Type it here"
+  },
+
+  "expectations": {
+    "money": "To win money",
     "relief": "Relief",
     "excitement": "Excitement",
     "escape": "Escape",
     "pleasure": "Pleasure",
     "comfort": "Comfort",
     "control": "Control",
-    "money": "Money",
-    "something_to_do": "Something to do",
-    "unknown": "I don't know",
-    "other": "Something else",
-    "otherPlaceholder": "What are you looking for?"
+    "somethingToDo": "Something to do",
+    "unknown": "I don't know"
+  },
+
+  "reassess": {
+    "title": "How strong is the urge now?",
+    "subtitle": "There is no right answer. Just be honest."
+  },
+
+  "outcome": {
+    "title": "What happened?",
+    "subtitle": "Whatever happened, your answer helps INTERRUPT learn."
+  },
+
+  "outcomes": {
+    "interrupted": {
+      "title": "I interrupted it",
+      "description": "I chose not to act on the urge."
+    },
+    "delayed": {
+      "title": "I delayed it",
+      "description": "I gave myself some time before acting."
+    },
+    "acted": {
+      "title": "I did it anyway",
+      "description": "The urge won this time."
+    },
+    "unsure": {
+      "title": "I'm not sure",
+      "description": "I don't know yet."
+    }
+  },
+
+  "result": {
+    "intervention": "Intervention",
+    "behavior": "Behavior",
+
+    "interruptedTitle": "You interrupted the moment.",
+    "delayedTitle": "You created some distance.",
+    "actedTitle": "The urge won this time.",
+    "unsureTitle": "The moment passed.",
+
+    "messages": {
+      "lower": "The urge got quieter.",
+      "same": "The urge didn't move this time.",
+      "higher": "The urge got stronger. That is useful information too."
+    }
+  },
+
+  "footer": {
+    "private": "Your data stays on this device."
   },
 
   "interventions": {
+
     "categories": {
-      "defusion": "DEFUSION",
-      "cognitive": "COGNITIVE",
-      "urge_surfing": "URGE SURFING",
+      "defusion": "CREATE DISTANCE",
+      "cognitive": "LOOK AGAIN",
+      "urge_surfing": "OBSERVE",
       "delay": "DELAY",
-      "future": "FUTURE",
-      "environment": "ENVIRONMENT",
-      "need": "UNDERLYING NEED",
-      "trigger": "TRIGGER",
-      "attention": "ATTENTION",
-      "personal": "PERSONAL HISTORY"
+      "future": "LOOK AHEAD",
+      "environment": "CHANGE YOUR ENVIRONMENT",
+      "need": "FIND THE NEED",
+      "trigger": "BREAK THE CHAIN",
+      "attention": "SHIFT ATTENTION",
+      "personal": "WHAT WORKED BEFORE"
     },
 
     "nameIt": {
-      "title": "Name the urge",
-      "instruction": "Don't fight the urge. Describe it.",
-      "firstPrompt": "What are you feeling right now?",
-      "placeholder": "Put it into words...",
-      "secondPrompt": "What is the urge telling you to do?",
-      "placeholder2": "It wants me to..."
+      "title": "NAME IT",
+
+      "instruction": "Let's separate the urge from you.",
+
+      "firstPrompt": "Complete this: “I am having the urge to…”",
+
+      "placeholder": "I am having the urge to...",
+
+      "secondPrompt": "Now try this: “My brain is telling me to…”",
+
+      "placeholder2": "My brain is telling me to..."
     },
 
     "promise": {
-      "title": "Make a short promise",
-      "intro": "You don't have to decide what happens forever.",
-      "expected": "The impulse is promising:",
-      "durationQuestion": "How long can you postpone acting on it?",
-      "durationPlaceholder": "For example: 10 minutes",
-      "afterQuestion": "What will you do during that time?",
-      "afterPlaceholder": "I'll..."
+      "title": "THE PROMISE",
+
+      "intro": "Your brain is making you an offer.",
+
+      "expected": "Right now it expects:",
+
+      "durationQuestion": "If you do it, how long do you expect the feeling to last?",
+
+      "durationPlaceholder": "A few minutes, an hour, most of the day...",
+
+      "afterQuestion": "And what usually happens after that?",
+
+      "afterPlaceholder": "What happens next?"
     },
 
     "wave": {
-      "title": "Ride the wave",
-      "instruction": "An urge can rise, peak and fall without being acted on.",
-      "locationPrompt": "Where do you feel it most strongly?",
+      "title": "RIDE THE WAVE",
+
+      "instruction": "Don't fight the urge. Watch it.",
+
+      "locationPrompt": "Where do you feel it?",
+
       "locations": {
         "chest": "Chest",
         "stomach": "Stomach",
@@ -99,181 +176,173 @@
         "hands": "Hands",
         "everywhere": "Everywhere"
       },
-      "timerIntro": "Stay with the sensation without acting on it.",
-      "finished": "What happened to the urge?",
-      "weaker": "It became weaker",
+
+      "timerIntro": "Stay with the sensation for 60 seconds.",
+
+      "finished": "Did anything change?",
+
+      "weaker": "It got weaker",
       "changed": "It changed",
       "same": "It stayed the same",
-      "stronger": "It became stronger"
+      "stronger": "It got stronger"
     },
 
     "delay": {
-      "title": "Delay the action",
-      "instruction": "You don't have to say no forever. Just don't act for the next 10 minutes.",
-      "promise": "For the next 10 minutes, I will not act on this urge.",
-      "start": "START 10 MINUTES",
-      "finished": "What happened during the delay?",
+      "title": "NOT NOW",
+
+      "instruction": "You don't have to decide forever.",
+
+      "promise": "Just don't do it for the next 10 minutes.",
+
+      "start": "START 10:00",
+
+      "waiting": "You don't have to do anything. Just let the ten minutes pass.",
+
+      "finished": "The ten minutes are over.",
+
       "stillWant": "I still want it",
-      "weaker": "The urge is weaker",
-      "gone": "The urge is gone",
-      "alreadyDid": "I did something else"
+      "weaker": "It's weaker",
+      "gone": "It's gone",
+      "alreadyDid": "I already did it"
     },
 
     "fastForward": {
-      "title": "Fast-forward",
-      "intro": "Move beyond the immediate moment and imagine what happens next.",
-      "tenMinutes": "Imagine yourself 10 minutes after acting on the urge.",
-      "tenPlaceholder": "What would you probably feel or think?",
-      "tomorrow": "Now imagine tomorrow.",
-      "tomorrowPlaceholder": "How might you feel about what happened?",
-      "next": "Now imagine the next time this happens.",
-      "nextPlaceholder": "What pattern could this create?"
+      "title": "FAST FORWARD",
+
+      "intro": "Imagine you've already done it.",
+
+      "tenMinutes": "10 minutes later...",
+
+      "tenPlaceholder": "How do you feel?",
+
+      "tomorrow": "Tomorrow...",
+
+      "tomorrowPlaceholder": "How do you feel tomorrow?",
+
+      "next": "What happens next?",
+
+      "nextPlaceholder": "What happens after that?"
     },
 
     "changeScene": {
-      "title": "Change the scene",
+      "title": "CHANGE THE SCENE",
+
       "step1": "Stand up.",
-      "step2": "Leave the place where the urge started.",
-      "step3": "Move somewhere different.",
-      "step4": "Stay there for two minutes before deciding what to do.",
-      "ready": "I'M MOVING"
+      "step2": "Put the device or object down.",
+      "step3": "Go somewhere different.",
+      "step4": "Stay there for two minutes.",
+
+      "ready": "I'M SOMEWHERE ELSE",
+
+      "wait": "Stay here for two minutes."
     },
 
     "actualNeed": {
-      "title": "Find the actual need",
-      "intro": "The behavior may not be the thing you actually need.",
-      "question": "What do you need right now?",
+      "title": "WHAT DO YOU ACTUALLY NEED?",
+
+      "intro": "Forget the behavior for a second.",
+
+      "question": "What do you actually need?",
+
       "options": {
-        "rest": "Rest",
-        "connection": "Connection",
         "stimulation": "Stimulation",
-        "comfort": "Comfort",
         "relief": "Relief",
-        "control": "Control",
+        "comfort": "Comfort",
         "escape": "Escape",
-        "food": "Food",
-        "money": "Money",
-        "other": "Something else"
+        "connection": "Connection",
+        "control": "Control",
+        "rest": "Rest",
+        "unknown": "I don't know"
       },
+
       "suggestions": {
-        "rest": "Give yourself a few minutes without demanding anything from yourself.",
-        "connection": "Contact someone or move toward another person.",
-        "stimulation": "Choose a deliberate activity that gives your brain something to engage with.",
-        "comfort": "Try to give yourself comfort directly rather than through the impulse.",
-        "relief": "Look for the source of pressure and reduce it, even slightly.",
-        "control": "Choose one small thing you can control right now.",
-        "escape": "Change your environment instead of escaping through the behavior.",
-        "food": "If you're hungry, eat something deliberately rather than automatically.",
-        "money": "Pause the purchase and decide whether the financial outcome is worth it.",
-        "other": "Name one concrete thing that would genuinely help right now."
+        "stimulation": "Give your brain something new for 90 seconds.",
+        "relief": "Take a slow breath and deliberately relax your shoulders.",
+        "comfort": "Move somewhere physically comfortable and give yourself two quiet minutes.",
+        "escape": "Step away from the situation for two minutes.",
+        "connection": "Send one simple message to someone you trust.",
+        "control": "Choose one small thing around you that you can control right now.",
+        "rest": "Put everything down for two minutes and let yourself stop.",
+        "unknown": "You don't need to know yet. Just create two minutes of distance."
       }
     },
 
     "breakChain": {
-      "title": "Break the chain",
-      "question": "What usually happens immediately before this impulse?",
+      "title": "BREAK THE CHAIN",
+
+      "question": "What happened right before the urge?",
+
       "options": {
         "boredom": "Boredom",
         "stress": "Stress",
-        "loneliness": "Loneliness",
-        "conflict": "Conflict",
-        "fatigue": "Fatigue",
-        "routine": "Routine",
-        "thought": "A thought",
-        "place": "A place",
-        "time": "A certain time",
-        "other": "Something else"
+        "something_seen": "I saw something",
+        "argument": "An argument",
+        "alone": "I was alone",
+        "phone": "I picked up my phone",
+        "habit": "It was automatic",
+        "nothing_obvious": "Nothing obvious"
       },
-      "result": "You found a possible link in the chain.",
-      "changeScene": "BREAK THE CHAIN"
+
+      "result": "That's useful. Now interrupt the chain here.",
+
+      "changeScene": "CHANGE MY SCENE"
     },
 
     "twoFutures": {
-      "title": "Two possible futures",
-      "intro": "Imagine two versions of the next few hours.",
-      "act": "If you act on the urge:",
-      "actPlaceholder": "What happens next?",
-      "dont": "If you don't act on the urge:",
-      "dontPlaceholder": "What happens next?"
+      "title": "TWO FUTURES",
+
+      "intro": "Look at the two paths without judging either one.",
+
+      "act": "IF I ACT",
+
+      "actPlaceholder": "What happens?",
+
+      "dont": "IF I DON'T",
+
+      "dontPlaceholder": "What happens instead?"
     },
 
     "switch90": {
-      "title": "Switch for 90 seconds",
-      "instruction": "Give your attention something completely different for 90 seconds.",
-      "task1": "Name five things you can see.",
-      "task2": "Count backwards from 50.",
-      "task3": "Describe the room you're in in detail.",
-      "task4": "Move your body and notice five physical sensations.",
+      "title": "90 SECOND SWITCH",
+
+      "instruction": "No thinking. Just do something else for 90 seconds.",
+
+      "task1": "Find five things around you that are blue.",
+      "task2": "Wash one cup.",
+      "task3": "Stand up and walk around.",
+      "task4": "Count ten objects around you.",
+
       "start": "START 90 SECONDS"
     },
 
     "realityCheck": {
-      "title": "Reality check",
-      "question": "What are you expecting this behavior to give you?",
-      "placeholder": "Be specific...",
-      "certainty": "How certain are you that it will actually deliver that?",
-      "past": "Has this behavior reliably delivered that in the past?",
-      "yes": "Yes",
-      "no": "No",
-      "sometimes": "Sometimes"
+      "title": "REALITY CHECK",
+
+      "question": "What do you think will happen if you do it?",
+
+      "placeholder": "I think...",
+
+      "certainty": "How certain are you?",
+
+      "past": "Has this actually happened consistently before?",
+
+      "yes": "YES",
+      "no": "NO",
+      "sometimes": "SOMETIMES"
+    },
+
+    "previousSuccess": {
+      "title": "WHAT WORKED LAST TIME?",
+
+      "intro": "You've been here before.",
+
+      "message": "Last time, this approach helped reduce the urge.",
+
+      "try": "TRY IT AGAIN"
     },
 
     "generic": {
-      "title": "Pause and notice",
-      "instruction": "Take a moment before deciding what to do next."
+      "instruction": "Create some distance between the urge and the action."
     }
-  },
-
-  "reassess": {
-    "title": "Check the urge again",
-    "subtitle": "Has anything changed?",
-    "low": "Low",
-    "high": "Extreme",
-    "continue": "CONTINUE"
-  },
-
-  "outcome": {
-    "title": "What happened?",
-    "subtitle": "Choose what best describes the result.",
-    "interrupted": "I interrupted it",
-    "delayed": "I delayed it",
-    "acted": "I acted on it",
-    "unsure": "I'm not sure"
-  },
-
-  "result": {
-    "interruptedTitle": "You created a gap.",
-    "delayedTitle": "You bought yourself time.",
-    "actedTitle": "You noticed what happened.",
-    "unsureTitle": "You still learned something.",
-    "messages": {
-      "lower": "The urge became weaker.",
-      "higher": "The urge became stronger.",
-      "same": "The urge stayed about the same."
-    },
-    "before": "Before",
-    "after": "After",
-    "change": "Change",
-    "intervention": "Intervention",
-    "behavior": "Behavior",
-    "finish": "FINISH",
-    "another": "TRY ANOTHER"
-  },
-
-  "insights": {
-    "title": "Your patterns",
-    "subtitle": "INTERRUPT learns from what happens over time.",
-    "total": "Urges recorded",
-    "interrupted": "Interrupted",
-    "reduction": "Average reduction",
-    "best": "Most effective approach",
-    "triggerTitle": "Common trigger",
-    "recentTitle": "Recent sessions",
-    "empty": "No sessions yet.",
-    "personalHistory": "PERSONAL HISTORY",
-    "lastTime": "Last time, this type of urge dropped from {before} to {after} with {intervention}.",
-    "repeatedly": "{intervention} has repeatedly reduced this type of urge for you.",
-    "similar": "You have reduced a similar urge with {intervention} before.",
-    "noDecrease": "You tried {intervention} before, but the urge did not decrease."
   }
 }
