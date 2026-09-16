@@ -36,10 +36,8 @@ return value.replace(/\{(\w+)\}/g,(_,key)=>params[key]??"");
 
 function t(key,fallback=key,params={}){
 let value=getPath(translations,key);
-
 if(value===undefined)value=getPath(englishTranslations,key);
 if(value===undefined)value=fallback;
-
 return interpolate(value,params);
 }
 
@@ -108,9 +106,7 @@ async function loadLanguage(language){
 if(!LANGUAGES[language])language="en";
 
 try{
-if(!Object.keys(englishTranslations).length){
-englishTranslations=await fetchJSON(LANGUAGES.en.file);
-}
+if(!Object.keys(englishTranslations).length)englishTranslations=await fetchJSON(LANGUAGES.en.file);
 
 if(language==="en"){
 translations=englishTranslations;
@@ -253,9 +249,7 @@ trigger:attempt.trigger??item.trigger
 return;
 }
 
-if(item.intervention&&typeof item.intensityBefore==="number"&&typeof item.intensityAfter==="number"){
-history.push(item);
-}
+if(item.intervention&&typeof item.intensityBefore==="number"&&typeof item.intensityAfter==="number")history.push(item);
 });
 
 return history;
@@ -347,6 +341,67 @@ $("interventionTitle").textContent=interventionTitle(session.intervention);
 renderIntervention(session.intervention);
 }
 
+function getPersonalHistoryText(recommendation,intervention,before,after){
+const languageTexts={
+en:{
+title:"PERSONAL HISTORY",
+last:`Last time, this type of urge dropped from ${before} to ${after} with ${intervention}.`,
+repeat:`${intervention} has repeatedly reduced this type of urge for you.`,
+similar:`You have reduced a similar urge with ${intervention} before.`,
+same:`You tried ${intervention} before, but the urge did not decrease.`
+},
+ro:{
+title:"ISTORIC PERSONAL",
+last:`Data trecută, acest tip de impuls a scăzut de la ${before} la ${after} cu ${intervention}.`,
+repeat:`${intervention} a redus în mod repetat acest tip de impuls pentru tine.`,
+similar:`Ai redus un impuls similar cu ${intervention} și înainte.`,
+same:`Ai încercat ${intervention} înainte, dar impulsul nu a scăzut.`
+},
+fr:{
+title:"HISTORIQUE PERSONNEL",
+last:`La dernière fois, ce type d'envie est passé de ${before} à ${after} avec ${intervention}.`,
+repeat:`${intervention} a réduit à plusieurs reprises ce type d'envie pour vous.`,
+similar:`Vous avez déjà réduit une envie similaire avec ${intervention}.`,
+same:`Vous avez déjà essayé ${intervention}, mais l'envie n'a pas diminué.`
+},
+de:{
+title:"PERSÖNLICHER VERLAUF",
+last:`Beim letzten Mal ist dieser Drang mit ${intervention} von ${before} auf ${after} gesunken.`,
+repeat:`${intervention} hat diesen Drang bei dir wiederholt reduziert.`,
+similar:`Du hast einen ähnlichen Drang schon einmal mit ${intervention} reduziert.`,
+same:`Du hast ${intervention} schon einmal ausprobiert, aber der Drang wurde nicht schwächer.`
+},
+es:{
+title:"HISTORIAL PERSONAL",
+last:`La última vez, este tipo de impulso bajó de ${before} a ${after} con ${intervention}.`,
+repeat:`${intervention} ha reducido este tipo de impulso varias veces.`,
+similar:`Ya has reducido un impulso similar con ${intervention}.`,
+same:`Ya probaste ${intervention}, pero el impulso no disminuyó.`
+},
+it:{
+title:"STORICO PERSONALE",
+last:`L'ultima volta, questo tipo di impulso è sceso da ${before} a ${after} con ${intervention}.`,
+repeat:`${intervention} ha ridotto più volte questo tipo di impulso.`,
+similar:`Hai già ridotto un impulso simile con ${intervention}.`,
+same:`Hai già provato ${intervention}, ma l'impulso non è diminuito.`
+}
+};
+
+const text=languageTexts[currentLanguage]||languageTexts.en;
+
+let message;
+
+if(recommendation.reduction>0){
+if(recommendation.uses===1)message=text.last;
+else if(recommendation.confidence==="high")message=text.repeat;
+else message=text.similar;
+}else{
+message=text.same;
+}
+
+return{title:text.title,message};
+}
+
 function renderPersonalRecommendation(container){
 const recommendation=getRecommendation(session.intervention);
 if(!recommendation)return;
@@ -357,42 +412,13 @@ box.className="insight-section";
 const before=recommendation.last.intensityBefore;
 const after=recommendation.last.intensityAfter;
 const intervention=interventionTitle(session.intervention);
-
-let text;
-
-if(recommendation.reduction>0){
-if(recommendation.uses===1){
-text=t(
-"insights.lastTime",
-`Last time, this type of urge dropped from ${before} to ${after} with ${intervention}.`,
-{before,after,intervention}
-);
-}else if(recommendation.confidence==="high"){
-text=t(
-"insights.repeatedly",
-`${intervention} has repeatedly reduced this type of urge for you.`,
-{intervention}
-);
-}else{
-text=t(
-"insights.similar",
-`You have reduced a similar urge with ${intervention} before.`,
-{intervention}
-);
-}
-}else{
-text=t(
-"insights.noDecrease",
-`You tried ${intervention} before, but the urge did not decrease.`,
-{intervention}
-);
-}
+const text=getPersonalHistoryText(recommendation,intervention,before,after);
 
 const title=document.createElement("h3");
-title.textContent=t("insights.personalHistory","PERSONAL HISTORY");
+title.textContent=text.title;
 
 const paragraph=document.createElement("p");
-paragraph.textContent=text;
+paragraph.textContent=text.message;
 
 box.append(title,paragraph);
 container.appendChild(box);
@@ -834,9 +860,7 @@ session.intervention=intervention;
 session.attemptIntensityBefore=Number(session.intensityAfter??session.intensityBefore);
 session.attemptStartedAt=new Date().toISOString();
 
-if(!session.interventionAttempts.includes(intervention)){
-session.interventionAttempts.push(intervention);
-}
+if(!session.interventionAttempts.includes(intervention))session.interventionAttempts.push(intervention);
 
 $("interventionCategory").textContent=interventionCategory(intervention);
 $("interventionTitle").textContent=interventionTitle(intervention);
@@ -942,9 +966,7 @@ session.intervention=next;
 session.attemptIntensityBefore=Number(session.intensityAfter??session.intensityBefore);
 session.attemptStartedAt=new Date().toISOString();
 
-if(!session.interventionAttempts.includes(next)){
-session.interventionAttempts.push(next);
-}
+if(!session.interventionAttempts.includes(next))session.interventionAttempts.push(next);
 
 $("interventionCategory").textContent=interventionCategory(next);
 $("interventionTitle").textContent=interventionTitle(next);
@@ -997,17 +1019,13 @@ successRate:data.successRate
 const triggerCounts={};
 
 getEngineHistory().forEach(item=>{
-if(item.trigger){
-triggerCounts[item.trigger]=(triggerCounts[item.trigger]||0)+1;
-}
+if(item.trigger)triggerCounts[item.trigger]=(triggerCounts[item.trigger]||0)+1;
 });
 
 let commonTrigger=null;
 
 Object.entries(triggerCounts).forEach(([trigger,count])=>{
-if(!commonTrigger||count>commonTrigger.count){
-commonTrigger={trigger,count};
-}
+if(!commonTrigger||count>commonTrigger.count)commonTrigger={trigger,count};
 });
 
 $("insightTotal").textContent=total;
@@ -1082,9 +1100,7 @@ toggleLanguageMenu(false);
 });
 
 document.addEventListener("click",event=>{
-if(!event.target.closest(".language-wrapper")){
-toggleLanguageMenu(false);
-}
+if(!event.target.closest(".language-wrapper"))toggleLanguageMenu(false);
 });
 
 $("startButton").addEventListener("click",()=>{
