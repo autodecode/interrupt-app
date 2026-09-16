@@ -288,9 +288,78 @@ function getRecommendation(intervention){
 return INTERRUPT_ADAPTIVE.getRecommendation(getEngineHistory(),getAdaptiveContext(),intervention);
 }
 
+/* PERSONAL SUCCESS
+   Finds a previously successful intervention for the current context.
+   It is a recommendation layer, not an intervention itself. */
+function getPreviousSuccessRecommendation(){
+const attempted=new Set(session.interventionAttempts||[]);
+const history=getRelevantHistory();
+const stats=INTERRUPT_ADAPTIVE.buildStats(history,getAdaptiveContext());
+const intensity=Number(session.attemptIntensityBefore??session.intensityBefore);
+const rules=INTERVENTION_RULES[session.behavior]||INTERVENTION_RULES.other;
+const preferred=rules[session.expectation]||rules.default;
+
+const candidates=[];
+
+Object.entries(stats).forEach(([id,data])=>{
+if(attempted.has(id)||!data?.uses)return;
+
+const successful=history
+.filter(item=>item.intervention===id&&item.intensityAfter<item.intensityBefore)
+.sort((a,b)=>new Date(b.completedAt||b.startedAt||0)-new Date(a.completedAt||a.startedAt||0));
+
+if(!successful.length)return;
+
+const last=successful[0];
+const score=INTERRUPT_ADAPTIVE.scoreIntervention(id,stats,preferred,intensity);
+const successStrength=
+(data.recencyWeightedSuccessRate||0)*8+
+(data.successRate||0)*4+
+Math.min(data.uses,6)*0.7+
+Math.max(0,data.recencyWeightedImpact||0)*2+
+(successful.length>1?3:0);
+
+candidates.push({
+intervention:id,
+before:last.intensityBefore,
+after:last.intensityAfter,
+reduction:last.intensityBefore-last.intensityAfter,
+uses:data.uses,
+successes:successful.length,
+successRate:data.successRate,
+recencyWeightedSuccessRate:data.recencyWeightedSuccessRate,
+recencyWeightedImpact:data.recencyWeightedImpact,
+confidence:data.confidence,
+score:score+successStrength
+});
+});
+
+if(!candidates.length)return null;
+
+candidates.sort((a,b)=>b.score-a.score);
+
+const best=candidates[0];
+
+if(best.reduction<=0)return null;
+
+return{
+intervention:best.intervention,
+before:best.before,
+after:best.after,
+reduction:best.reduction,
+uses:best.uses,
+successes:best.successes,
+successRate:best.successRate,
+recencyWeightedSuccessRate:best.recencyWeightedSuccessRate,
+recencyWeightedImpact:best.recencyWeightedImpact,
+confidence:best.confidence
+};
+}
+
 function chooseIntervention(){
 const attempted=new Set(session.interventionAttempts);
-const stats=getAdaptiveStats().stats;
+const adaptive=getAdaptiveStats();
+const stats=adaptive.stats;
 const rules=INTERVENTION_RULES[session.behavior]||INTERVENTION_RULES.other;
 const preferred=rules[session.expectation]||rules.default;
 
@@ -302,11 +371,23 @@ candidates=[...INTERVENTIONS];
 }
 
 const intensity=Number(session.attemptIntensityBefore??session.intensityBefore);
+const previous=getPreviousSuccessRecommendation();
 
-candidates.sort((a,b)=>
-INTERRUPT_ADAPTIVE.scoreIntervention(b,stats,preferred,intensity)-
-INTERRUPT_ADAPTIVE.scoreIntervention(a,stats,preferred,intensity)
-);
+candidates.sort((a,b)=>{
+let scoreB=INTERRUPT_ADAPTIVE.scoreIntervention(b,stats,preferred,intensity);
+let scoreA=INTERRUPT_ADAPTIVE.scoreIntervention(a,stats,preferred,intensity);
+
+if(previous){
+if(b===previous.intervention){
+scoreB+=previous.successes>1?10:5;
+}
+if(a===previous.intervention){
+scoreA+=previous.successes>1?10:5;
+}
+}
+
+return scoreB-scoreA;
+});
 
 return candidates[0];
 }
@@ -349,43 +430,37 @@ en:{
 title:"PERSONAL HISTORY",
 last:`Last time, this type of urge dropped from ${before} to ${after} with ${intervention}.`,
 repeat:`${intervention} has repeatedly reduced this type of urge for you.`,
-similar:`You have reduced a similar urge with ${intervention} before.`,
-same:`You tried ${intervention} before, but the urge did not decrease.`
+similar:`You have reduced a similar urge with ${intervention} before.`
 },
 ro:{
 title:"ISTORIC PERSONAL",
 last:`Data trecută, acest tip de impuls a scăzut de la ${before} la ${after} cu ${intervention}.`,
 repeat:`${intervention} a redus în mod repetat acest tip de impuls pentru tine.`,
-similar:`Ai redus un impuls similar cu ${intervention} și înainte.`,
-same:`Ai încercat ${intervention} înainte, dar impulsul nu a scăzut.`
+similar:`Ai redus un impuls similar cu ${intervention} și înainte.`
 },
 fr:{
 title:"HISTORIQUE PERSONNEL",
 last:`La dernière fois, ce type d'envie est passé de ${before} à ${after} avec ${intervention}.`,
 repeat:`${intervention} a réduit à plusieurs reprises ce type d'envie pour vous.`,
-similar:`Vous avez déjà réduit une envie similaire avec ${intervention}.`,
-same:`Vous avez déjà essayé ${intervention}, mais l'envie n'a pas diminué.`
+similar:`Vous avez déjà réduit une envie similaire avec ${intervention}.`
 },
 de:{
 title:"PERSÖNLICHER VERLAUF",
 last:`Beim letzten Mal ist dieser Drang mit ${intervention} von ${before} auf ${after} gesunken.`,
 repeat:`${intervention} hat diesen Drang bei dir wiederholt reduziert.`,
-similar:`Du hast einen ähnlichen Drang schon einmal mit ${intervention} reduziert.`,
-same:`Du hast ${intervention} schon einmal ausprobiert, aber der Drang wurde nicht schwächer.`
+similar:`Du hast einen ähnlichen Drang schon einmal mit ${intervention} reduziert.`
 },
 es:{
 title:"HISTORIAL PERSONAL",
 last:`La última vez, este tipo de impulso bajó de ${before} a ${after} con ${intervention}.`,
 repeat:`${intervention} ha reducido este tipo de impulso varias veces.`,
-similar:`Ya has reducido un impulso similar con ${intervention}.`,
-same:`Ya probaste ${intervention}, pero el impulso no disminuyó.`
+similar:`Ya has reducido un impulso similar con ${intervention}.`
 },
 it:{
 title:"STORICO PERSONALE",
 last:`L'ultima volta, questo tipo di impulso è sceso da ${before} a ${after} con ${intervention}.`,
 repeat:`${intervention} ha ridotto più volte questo tipo di impulso.`,
-similar:`Hai già ridotto un impulso simile con ${intervention}.`,
-same:`Hai già provato ${intervention}, ma l'impulso non è diminuito.`
+similar:`Hai già ridotto un impulso simile con ${intervention}.`
 }
 };
 
@@ -394,11 +469,9 @@ const text=languageTexts[currentLanguage]||languageTexts.en;
 let message;
 
 if(recommendation.reduction>0){
-if(recommendation.uses===1)message=text.last;
-else if(recommendation.confidence==="high")message=text.repeat;
+if(recommendation.successes===1)message=text.last;
+else if(recommendation.confidence==="high"||recommendation.recencyWeightedSuccessRate>=.7)message=text.repeat;
 else message=text.similar;
-}else{
-message=text.same;
 }
 
 return{title:text.title,message};
@@ -406,7 +479,8 @@ return{title:text.title,message};
 
 function renderPersonalRecommendation(container){
 const recommendation=getRecommendation(session.intervention);
-if(!recommendation)return;
+
+if(!recommendation||recommendation.reduction<=0)return;
 
 const box=document.createElement("div");
 box.className="insight-section";
@@ -1475,6 +1549,7 @@ getHistory:getEngineHistory,
 getStats:calculateInterventionStats,
 getAdaptiveStats,
 getRecommendation,
+getPreviousSuccessRecommendation,
 getInsights:()=>{
 renderInsights();
 return{
