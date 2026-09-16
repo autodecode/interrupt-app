@@ -1,59 +1,62 @@
 (() => {
-let lastUrl=location.href;
+  let lastUrl = location.href;
 
-function reportNavigation(){
-const url=location.href;
+  function reportNavigation() {
+    const url = location.href;
 
-if(url===lastUrl)return;
-lastUrl=url;
-chrome.runtime.sendMessage({
-  type:"spaNavigation",
-  url
-}).catch(()=>{});
+    if (url === lastUrl) {
+      return;
+    }
 
-}
+    lastUrl = url;
 
-const originalPushState=
-history.pushState;
+    chrome.runtime.sendMessage({
+      type: "spaNavigation",
+      url
+    }).catch(() => {});
+  }
 
-const originalReplaceState=
-history.replaceState;
+  const originalPushState =
+    history.pushState;
 
-history.pushState=function(…args){
-const result=
-originalPushState.apply(
-this,
-args
-);
+  const originalReplaceState =
+    history.replaceState;
 
-reportNavigation();
-return result;
+  history.pushState = function (...args) {
+    const result =
+      originalPushState.apply(
+        this,
+        args
+      );
 
-};
+    reportNavigation();
 
-history.replaceState=function(…args){
-const result=
-originalReplaceState.apply(
-this,
-args
-);
+    return result;
+  };
 
-reportNavigation();
-return result;
+  history.replaceState = function (...args) {
+    const result =
+      originalReplaceState.apply(
+        this,
+        args
+      );
 
-};
+    reportNavigation();
 
-window.addEventListener(
-“popstate”,
-reportNavigation
-);
+    return result;
+  };
 
-window.addEventListener(
-“hashchange”,
-reportNavigation
-);
+  window.addEventListener(
+    "popstate",
+    reportNavigation
+  );
 
-setInterval(()=>{
-reportNavigation();
-},800);
+  window.addEventListener(
+    "hashchange",
+    reportNavigation
+  );
+
+  setInterval(() => {
+    reportNavigation();
+  }, 800);
 })();
