@@ -6,11 +6,24 @@
     "done": "GATA"
   },
 
+  "insights": {
+  "title": "Tiparele tale",
+  "subtitle": "INTERRUPT învață din ceea ce se întâmplă în timp.",
+  "total": "Impulsuri înregistrate",
+  "interrupted": "Întrerupte",
+  "reduction": "Reducere medie",
+  "best": "Cea mai eficientă abordare",
+  "triggerTitle": "Declanșator frecvent",
+  "recentTitle": "Sesiuni recente",
+  "empty": "Nicio sesiune încă."
+},
+
   "home": {
     "title": "Nu ai nevoie de mai multă voință.",
     "subtitle": "Ai nevoie de o cale de a întrerupe momentul.",
     "button": "ÎNTRERUPE",
-    "privacy": "Privat. Fără cont."
+    "privacy": "Privat. Fără cont.",
+    "insights": "VEZI TIPARELE TALE"
   },
 
   "behavior": {
