@@ -156,6 +156,8 @@ if(typeof value==="string")element.placeholder=value;
 });
 
 updateDynamicIntervention();
+
+if($("screen-insights")?.classList.contains("screen-active"))renderInsights();
 }
 
 function toggleLanguageMenu(force){
@@ -271,7 +273,7 @@ return true;
 }
 
 function calculateInterventionStats(){
-return INTERRUPT_ADAPTIVE.buildStats(getRelevantHistory());
+return INTERRUPT_ADAPTIVE.buildStats(getRelevantHistory(),getAdaptiveContext());
 }
 
 function getAdaptiveStats(){
@@ -980,14 +982,257 @@ resetSession();
 showScreen("home");
 }
 
-function goBack(target){
-showScreen(target);
+function getCompletedSessions(){
+return getSavedSessions()
+.filter(item=>typeof item.intensityBefore==="number"&&typeof item.intensityAfter==="number")
+.sort((a,b)=>new Date(b.completedAt||b.startedAt)-new Date(a.completedAt||a.startedAt));
+}
+
+function getLabel(type,value){
+if(!value)return"—";
+
+const paths={
+behavior:`behaviors.${value}`,
+expectation:`expectations.${value}`,
+trigger:`interventions.breakChain.options.${value}`
+};
+
+return t(paths[type]||value,value);
+}
+
+function getRecentHistory(days=30){
+const cutoff=Date.now()-days*86400000;
+
+return getEngineHistory().filter(item=>{
+const time=new Date(item.completedAt||item.startedAt||0).getTime();
+return time>=cutoff;
+});
+}
+
+function getBestIntervention(history){
+if(!history.length)return null;
+
+const stats=INTERRUPT_ADAPTIVE.buildStats(history);
+
+let best=null;
+
+Object.entries(stats).forEach(([id,data])=>{
+if(!best||data.recencyWeightedImpact>best.recencyWeightedImpact){
+best={
+id,
+uses:data.uses,
+averageImpact:data.averageImpact,
+recencyWeightedImpact:data.recencyWeightedImpact,
+successRate:data.successRate,
+negativeRate:data.negativeRate,
+confidence:data.confidence
+};
+}
+});
+
+return best;
+}
+
+function getMostCommon(history,key){
+const counts={};
+
+history.forEach(item=>{
+if(!item[key])return;
+counts[item[key]]=(counts[item[key]]||0)+1;
+});
+
+let best=null;
+
+Object.entries(counts).forEach(([value,count])=>{
+if(!best||count>best.count)best={value,count};
+});
+
+return best;
+}
+
+function getBestContextPattern(history){
+if(!history.length)return null;
+
+const groups={};
+
+history.forEach(item=>{
+if(!item.intervention||!item.behavior)return;
+
+const behavior=item.behavior;
+const expectation=item.expectation||"unknown";
+const band=INTERRUPT_ADAPTIVE.getIntensityBand(item.intensityBefore);
+const key=`${behavior}|${expectation}|${band}`;
+
+if(!groups[key]){
+groups[key]={
+behavior,
+expectation,
+band,
+count:0,
+impact:0,
+positive:0
+};
+}
+
+const group=groups[key];
+const impact=item.intensityBefore-item.intensityAfter;
+
+group.count++;
+group.impact+=impact;
+
+if(impact>0)group.positive++;
+});
+
+let best=null;
+
+Object.values(groups).forEach(group=>{
+if(group.count<2)return;
+
+group.averageImpact=group.impact/group.count;
+group.successRate=group.positive/group.count;
+
+if(
+!best||
+group.averageImpact>best.averageImpact||
+(
+group.averageImpact===best.averageImpact&&
+group.count>best.count
+)
+){
+best=group;
+}
+});
+
+return best;
+}
+
+function getInsightsCopy(){
+const copy={
+en:{
+learning:"WHAT INTERRUPT IS LEARNING",
+recent:"RECENT PERFORMANCE",
+pattern:"YOUR STRONGEST PATTERN",
+bestRecent:"Recent performance",
+bestOverall:"Overall performance",
+uses:"uses",
+success:"success",
+commonBehavior:"Most common behavior",
+commonExpectation:"Most common expectation",
+commonTrigger:"Most common trigger",
+noPattern:"Not enough repeated context yet. INTERRUPT will learn as you use it more.",
+patternText:(behavior,expectation,band,intervention,impact)=>`${intervention} has shown a ${impact>0?"positive":"mixed"} result when this type of urge is ${band} intensity.`,
+recentText:(name,reduction)=>`${name} has been your strongest recent approach, with an average reduction of ${reduction}.`,
+overallText:(name,reduction)=>`${name} has the strongest overall reduction in your recorded history: ${reduction}.`,
+none:"Not enough data yet."
+},
+ro:{
+learning:"CE ÎNVAȚĂ INTERRUPT",
+recent:"PERFORMANȚĂ RECENTĂ",
+pattern:"CEL MAI PUTERNIC TIPAR",
+bestRecent:"Performanță recentă",
+bestOverall:"Performanță generală",
+uses:"utilizări",
+success:"succes",
+commonBehavior:"Comportamentul cel mai frecvent",
+commonExpectation:"Așteptarea cea mai frecventă",
+commonTrigger:"Declanșatorul cel mai frecvent",
+noPattern:"Încă nu există suficiente contexte repetate. INTERRUPT va învăța pe măsură ce îl folosești.",
+patternText:(behavior,expectation,band,intervention,impact)=>`${intervention} a arătat un rezultat ${impact>0?"pozitiv":"mixt"} când acest tip de impuls este de intensitate ${band}.`,
+recentText:(name,reduction)=>`${name} a fost cea mai eficientă abordare recentă, cu o reducere medie de ${reduction}.`,
+overallText:(name,reduction)=>`${name} are cea mai mare reducere medie din istoricul înregistrat: ${reduction}.`,
+none:"Încă nu există suficiente date."
+},
+fr:{
+learning:"CE QU'INTERRUPT APPREND",
+recent:"PERFORMANCE RÉCENTE",
+pattern:"VOTRE MOTIF LE PLUS FORT",
+bestRecent:"Performance récente",
+bestOverall:"Performance globale",
+uses:"utilisations",
+success:"succès",
+commonBehavior:"Comportement le plus fréquent",
+commonExpectation:"Attente la plus fréquente",
+commonTrigger:"Déclencheur le plus fréquent",
+noPattern:"Pas encore assez de contexte répété. INTERRUPT apprendra avec votre utilisation.",
+patternText:(behavior,expectation,band,intervention,impact)=>`${intervention} montre un résultat ${impact>0?"positif":"mitigé"} lorsque ce type d'envie est d'intensité ${band}.`,
+recentText:(name,reduction)=>`${name} est votre approche récente la plus efficace, avec une réduction moyenne de ${reduction}.`,
+overallText:(name,reduction)=>`${name} présente la meilleure réduction moyenne de votre historique : ${reduction}.`,
+none:"Pas encore assez de données."
+},
+de:{
+learning:"WAS INTERRUPT LERNT",
+recent:"AKTUELLE LEISTUNG",
+pattern:"IHR STÄRKSTES MUSTER",
+bestRecent:"Aktuelle Leistung",
+bestOverall:"Gesamtleistung",
+uses:"Anwendungen",
+success:"Erfolg",
+commonBehavior:"Häufigstes Verhalten",
+commonExpectation:"Häufigste Erwartung",
+commonTrigger:"Häufigster Auslöser",
+noPattern:"Noch gibt es nicht genug wiederholten Kontext. INTERRUPT lernt mit der Zeit.",
+patternText:(behavior,expectation,band,intervention,impact)=>`${intervention} zeigt ein ${impact>0?"positives":"gemischtes"} Ergebnis bei dieser Drangstärke: ${band}.`,
+recentText:(name,reduction)=>`${name} war zuletzt dein stärkster Ansatz mit einer durchschnittlichen Reduktion von ${reduction}.`,
+overallText:(name,reduction)=>`${name} hat in deinem bisherigen Verlauf die stärkste durchschnittliche Reduktion: ${reduction}.`,
+none:"Noch nicht genug Daten."
+},
+es:{
+learning:"LO QUE INTERRUPT ESTÁ APRENDIENDO",
+recent:"RENDIMIENTO RECIENTE",
+pattern:"TU PATRÓN MÁS FUERTE",
+bestRecent:"Rendimiento reciente",
+bestOverall:"Rendimiento general",
+uses:"usos",
+success:"éxito",
+commonBehavior:"Comportamiento más frecuente",
+commonExpectation:"Expectativa más frecuente",
+commonTrigger:"Desencadenante más frecuente",
+noPattern:"Todavía no hay suficiente contexto repetido. INTERRUPT aprenderá con el uso.",
+patternText:(behavior,expectation,band,intervention,impact)=>`${intervention} ha mostrado un resultado ${impact>0?"positivo":"mixto"} cuando este tipo de impulso tiene intensidad ${band}.`,
+recentText:(name,reduction)=>`${name} ha sido tu enfoque reciente más eficaz, con una reducción media de ${reduction}.`,
+overallText:(name,reduction)=>`${name} tiene la mayor reducción media de tu historial: ${reduction}.`,
+none:"Todavía no hay suficientes datos."
+},
+it:{
+learning:"COSA STA IMPARANDO INTERRUPT",
+recent:"PRESTAZIONI RECENTI",
+pattern:"IL TUO SCHEMA PIÙ FORTE",
+bestRecent:"Prestazioni recenti",
+bestOverall:"Prestazioni complessive",
+uses:"utilizzi",
+success:"successo",
+commonBehavior:"Comportamento più frequente",
+commonExpectation:"Aspettativa più frequente",
+commonTrigger:"Trigger più frequente",
+noPattern:"Non c'è ancora abbastanza contesto ripetuto. INTERRUPT imparerà con l'utilizzo.",
+patternText:(behavior,expectation,band,intervention,impact)=>`${intervention} ha mostrato un risultato ${impact>0?"positivo":"misto"} quando questo tipo di impulso è di intensità ${band}.`,
+recentText:(name,reduction)=>`${name} è stato il tuo approccio recente più efficace, con una riduzione media di ${reduction}.`,
+overallText:(name,reduction)=>`${name} ha la riduzione media più forte nella tua cronologia: ${reduction}.`,
+none:"Non ci sono ancora abbastanza dati."
+}
+};
+
+return copy[currentLanguage]||copy.en;
+}
+
+function createInsightSection(title,text){
+const box=document.createElement("div");
+box.className="insight-section";
+
+const heading=document.createElement("h3");
+heading.textContent=title;
+
+const paragraph=document.createElement("p");
+paragraph.textContent=text;
+
+box.append(heading,paragraph);
+return box;
 }
 
 function renderInsights(){
-const sessions=getSavedSessions()
-.filter(item=>typeof item.intensityBefore==="number"&&typeof item.intensityAfter==="number")
-.sort((a,b)=>new Date(b.completedAt||b.startedAt)-new Date(a.completedAt||a.startedAt));
+const sessions=getCompletedSessions();
+const history=getEngineHistory();
+const copy=getInsightsCopy();
 
 const total=sessions.length;
 const interrupted=sessions.filter(item=>item.outcome==="interrupted").length;
@@ -996,55 +1241,127 @@ let totalBefore=0;
 let totalAfter=0;
 
 sessions.forEach(item=>{
-totalBefore+=item.intensityBefore;
-totalAfter+=item.intensityAfter;
+totalBefore+=Number(item.intensityBefore)||0;
+totalAfter+=Number(item.intensityAfter)||0;
 });
 
-const reduction=totalBefore>0?Math.round((totalBefore-totalAfter)/totalBefore*100):0;
-const stats=INTERRUPT_ADAPTIVE.buildStats(getEngineHistory());
+const reduction=totalBefore>0?
+Math.round((totalBefore-totalAfter)/totalBefore*100):0;
 
-let best=null;
+const stats=INTERRUPT_ADAPTIVE.buildStats(history);
+const recentHistory=getRecentHistory(30);
+const recentBest=getBestIntervention(recentHistory);
+const overallBest=getBestIntervention(history);
 
-Object.entries(stats).forEach(([id,data])=>{
-if(!best||data.averageImpact>best.average){
-best={
-id,
-average:data.averageImpact,
-uses:data.uses,
-successRate:data.successRate
-};
-}
-});
-
-const triggerCounts={};
-
-getEngineHistory().forEach(item=>{
-if(item.trigger)triggerCounts[item.trigger]=(triggerCounts[item.trigger]||0)+1;
-});
-
-let commonTrigger=null;
-
-Object.entries(triggerCounts).forEach(([trigger,count])=>{
-if(!commonTrigger||count>commonTrigger.count)commonTrigger={trigger,count};
-});
+const commonBehavior=getMostCommon(history,"behavior");
+const commonExpectation=getMostCommon(history,"expectation");
+const commonTrigger=getMostCommon(history,"trigger");
+const pattern=getBestContextPattern(history);
 
 $("insightTotal").textContent=total;
 $("insightInterrupted").textContent=interrupted;
 $("insightReduction").textContent=`${reduction>0?"−":""}${Math.abs(reduction)}%`;
-$("insightBest").textContent=best?interventionTitle(best.id):"—";
+$("insightBest").textContent=overallBest?interventionTitle(overallBest.id):"—";
 
 $("insightTrigger").textContent=commonTrigger
-?t(`interventions.breakChain.options.${commonTrigger.trigger}`,commonTrigger.trigger)
+?getLabel("trigger",commonTrigger.value)
 :"—";
 
 const recent=$("recentSessions");
 recent.innerHTML="";
 
+if(!sessions.length){
+const empty=document.createElement("p");
+empty.textContent=t("insights.empty",copy.none);
+recent.appendChild(empty);
+return;
+}
+
+if(recentBest){
+const reductionText=
+recentBest.recencyWeightedImpact>0?
+`−${recentBest.recencyWeightedImpact.toFixed(1)}`:
+recentBest.recencyWeightedImpact.toFixed(1);
+
+recent.appendChild(
+createInsightSection(
+copy.recent,
+copy.recentText(interventionTitle(recentBest.id),reductionText)
+)
+);
+}
+
+if(overallBest){
+const reductionText=
+overallBest.averageImpact>0?
+`−${overallBest.averageImpact.toFixed(1)}`:
+overallBest.averageImpact.toFixed(1);
+
+recent.appendChild(
+createInsightSection(
+copy.learning,
+copy.overallText(interventionTitle(overallBest.id),reductionText)
+)
+);
+}
+
+if(pattern){
+const interventionStats=stats[history.find(item=>
+item.behavior===pattern.behavior&&
+(item.expectation||"unknown")===pattern.expectation&&
+INTERRUPT_ADAPTIVE.getIntensityBand(item.intensityBefore)===pattern.band
+)?.intervention];
+
+const intervention=interventionStats?
+Object.entries(stats).sort((a,b)=>b[1].recencyWeightedImpact-a[1].recencyWeightedImpact)[0]?.[0]:
+overallBest?.id;
+
+recent.appendChild(
+createInsightSection(
+copy.pattern,
+copy.patternText(
+getLabel("behavior",pattern.behavior),
+getLabel("expectation",pattern.expectation),
+pattern.band,
+intervention?interventionTitle(intervention):"—",
+pattern.averageImpact
+)
+)
+);
+}else{
+recent.appendChild(createInsightSection(copy.pattern,copy.noPattern));
+}
+
+const facts=document.createElement("div");
+facts.className="insights-facts";
+
+[
+[copy.commonBehavior,commonBehavior?getLabel("behavior",commonBehavior.value):"—"],
+[copy.commonExpectation,commonExpectation?getLabel("expectation",commonExpectation.value):"—"],
+[copy.commonTrigger,commonTrigger?getLabel("trigger",commonTrigger.value):"—"]
+].forEach(([label,value])=>{
+const row=document.createElement("div");
+row.className="recent-session";
+row.innerHTML=`
+<div class="recent-session-main">
+<div class="recent-session-behavior">${escapeHTML(label)}</div>
+<div class="recent-session-intervention">${escapeHTML(value)}</div>
+</div>`;
+facts.appendChild(row);
+});
+
+recent.appendChild(facts);
+
+const title=document.createElement("h3");
+title.textContent=t("insights.recentTitle","RECENT SESSIONS");
+recent.appendChild(title);
+
 sessions.slice(0,5).forEach(item=>{
 const row=document.createElement("div");
 row.className="recent-session";
 
-const difference=item.intensityBefore-item.intensityAfter;
+const difference=Number(item.intensityBefore)-Number(item.intensityAfter);
+
 const change=difference>0
 ?`−${difference}`
 :difference<0
@@ -1060,12 +1377,6 @@ row.innerHTML=`
 
 recent.appendChild(row);
 });
-
-if(!sessions.length){
-const empty=document.createElement("p");
-empty.textContent=t("insights.empty","No sessions yet.");
-recent.appendChild(empty);
-}
 }
 
 function escapeHTML(value){
@@ -1164,6 +1475,14 @@ getHistory:getEngineHistory,
 getStats:calculateInterventionStats,
 getAdaptiveStats,
 getRecommendation,
+getInsights:()=>{
+renderInsights();
+return{
+sessions:getCompletedSessions(),
+history:getEngineHistory(),
+stats:INTERRUPT_ADAPTIVE.buildStats(getEngineHistory())
+};
+},
 band:value=>INTERRUPT_ADAPTIVE.getIntensityBand(value),
 resetData:()=>{
 if(typeof INTERRUPT_STORAGE!=="undefined"&&typeof INTERRUPT_STORAGE.clearSessions==="function"){
