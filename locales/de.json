@@ -1,174 +1,89 @@
 {
   "common": {
-    "interrupt": "INTERRUPT",
     "continue": "WEITER",
     "back": "ZURÜCK",
-    "done": "FERTIG"
+    "start": "STARTEN",
+    "done": "FERTIG",
+    "cancel": "ABBRECHEN",
+    "yes": "JA",
+    "no": "NEIN"
   },
-
-  "insights": {
-  "title": "Deine Muster",
-  "subtitle": "INTERRUPT lernt aus dem, was im Laufe der Zeit passiert.",
-  "total": "Erfasste Impulse",
-  "interrupted": "Unterbrochen",
-  "reduction": "Durchschnittliche Reduktion",
-  "best": "Effektivster Ansatz",
-  "triggerTitle": "Häufiger Auslöser",
-  "recentTitle": "Letzte Sitzungen",
-  "empty": "Noch keine Sitzungen."
-},
-
   "home": {
-    "title": "Du brauchst nicht mehr Willenskraft.",
-    "subtitle": "Du brauchst eine Möglichkeit, den Moment zu unterbrechen.",
-    "button": "UNTERBRECHEN",
-    "privacy": "Privat. Kein Konto erforderlich.",
-    "insights": "DEINE MUSTER ANZEIGEN"
+    "title": "INTERRUPT",
+    "subtitle": "Unterbrich den Impuls. Verändere, was als Nächstes passiert.",
+    "description": "Ein Impuls ist keine Entscheidung. Halte inne, verstehe, was gerade passiert, und entscheide, was als Nächstes kommt.",
+    "start": "STARTEN",
+    "insights": "MEINE DATEN"
   },
-
   "behavior": {
-    "title": "Was bist du gerade dabei zu tun?",
-    "subtitle": "Wähle das, wozu es dich gerade hinzieht.",
-    "otherLabel": "Worum geht es?",
-    "otherPlaceholder": "Hier eingeben"
-  },
-
-  "behaviors": {
-    "gamble": "Glücksspiel",
+    "title": "Was möchtest du gerade tun?",
+    "subtitle": "Wähle das, was am besten zu dem passt, was gerade passiert.",
+    "gamble": "Geld verspielen",
     "scroll": "Scrollen",
     "smoke": "Rauchen",
     "eat": "Essen",
     "buy": "Etwas kaufen",
-    "watch": "Etwas ansehen",
+    "watch": "Etwas anschauen",
     "check": "Etwas überprüfen",
-    "other": "Etwas anderes"
+    "other": "Sonstiges",
+    "otherPlaceholder": "Beschreibe, was du gerade tun möchtest..."
   },
-
   "intensity": {
-    "title": "Wie stark ist der Drang gerade?",
-    "subtitle": "0 bedeutet kaum vorhanden. 10 bedeutet extrem stark."
+    "title": "Wie stark ist der Impuls?",
+    "subtitle": "Bewerte ihn von 0 bis 10, wobei 10 die höchstmögliche Stärke bedeutet.",
+    "low": "NIEDRIG",
+    "high": "SEHR STARK",
+    "continue": "WEITER"
   },
-
   "expectation": {
-    "title": "Was erwartest du davon?",
-    "subtitle": "Wonach suchst du gerade wirklich?",
-    "otherLabel": "Wonach suchst du?",
-    "otherPlaceholder": "Hier eingeben"
-  },
-
-  "expectations": {
-    "money": "Geld gewinnen",
+    "title": "Was möchtest du dadurch erreichen?",
+    "subtitle": "Es gibt keine richtige oder falsche Antwort.",
     "relief": "Erleichterung",
     "excitement": "Aufregung",
     "escape": "Flucht",
     "pleasure": "Vergnügen",
     "comfort": "Trost",
     "control": "Kontrolle",
-    "somethingToDo": "Etwas zu tun",
-    "unknown": "Ich weiß es nicht"
+    "money": "Geld",
+    "something_to_do": "Etwas zu tun",
+    "unknown": "Ich weiß es nicht",
+    "other": "Sonstiges",
+    "otherPlaceholder": "Beschreibe, wonach du suchst..."
   },
-
-  "reassess": {
-    "title": "Wie stark ist der Drang jetzt?",
-    "subtitle": "Es gibt keine richtige Antwort. Sei einfach ehrlich."
-  },
-
-  "outcome": {
-    "title": "Was ist passiert?",
-    "subtitle": "Was auch immer passiert ist – deine Antwort hilft INTERRUPT zu lernen."
-  },
-
-  "outcomes": {
-    "interrupted": {
-      "title": "Ich habe ihn unterbrochen",
-      "description": "Ich habe mich entschieden, nicht nach dem Drang zu handeln."
-    },
-    "delayed": {
-      "title": "Ich habe es aufgeschoben",
-      "description": "Ich habe mir etwas Zeit gegeben, bevor ich gehandelt habe."
-    },
-    "acted": {
-      "title": "Ich habe es trotzdem getan",
-      "description": "Diesmal war der Drang stärker."
-    },
-    "unsure": {
-      "title": "Ich bin mir nicht sicher",
-      "description": "Ich weiß es noch nicht."
-    }
-  },
-
-  "result": {
-    "intervention": "Intervention",
-    "behavior": "Verhalten",
-
-    "interruptedTitle": "Du hast den Moment unterbrochen.",
-    "delayedTitle": "Du hast etwas Abstand geschaffen.",
-    "actedTitle": "Diesmal war der Drang stärker.",
-    "unsureTitle": "Der Moment ist vorbei.",
-
-    "messages": {
-      "lower": "Der Drang ist schwächer geworden.",
-      "same": "Der Drang hat sich diesmal nicht verändert.",
-      "higher": "Der Drang ist stärker geworden. Auch das ist eine nützliche Information."
-    }
-  },
-
-  "footer": {
-    "private": "Deine Daten bleiben auf diesem Gerät."
-  },
-
   "interventions": {
-
     "categories": {
-      "defusion": "ABSTAND SCHAFFEN",
-      "cognitive": "BETRACHTE ES NEU",
-      "urge_surfing": "BEOBACHTEN",
-      "delay": "AUFSCHIEBEN",
-      "future": "BLICK NACH VORN",
-      "environment": "UMGEBUNG WECHSELN",
-      "need": "BEDÜRFNIS ERKENNEN",
-      "trigger": "KETTE DURCHBRECHEN",
-      "attention": "FOKUS WECHSELN",
-      "personal": "WAS FRÜHER FUNKTIONIERT HAT"
+      "defusion": "DISTANZ",
+      "cognitive": "REFLEXION",
+      "urge_surfing": "IMPULS BEOBACHTEN",
+      "delay": "AUFSCHUB",
+      "future": "VORAUSSCHAU",
+      "environment": "UMGEBUNG",
+      "need": "BEDÜRFNIS",
+      "trigger": "AUSLÖSER",
+      "attention": "AUFMERKSAMKEIT",
+      "personal": "PERSÖNLICH"
     },
-
     "nameIt": {
-      "title": "BENENNE ES",
-
-      "instruction": "Trennen wir den Drang von dir.",
-
-      "firstPrompt": "Vervollständige: „Ich habe gerade den Drang, …“",
-
-      "placeholder": "Ich habe gerade den Drang, ...",
-
-      "secondPrompt": "Versuche jetzt: „Mein Gehirn sagt mir gerade, dass ich …“",
-
-      "placeholder2": "Mein Gehirn sagt mir gerade, dass ich ..."
+      "title": "Benenne den Impuls",
+      "instruction": "Bringe in Worte, was gerade passiert, statt einfach zu handeln.",
+      "firstPrompt": "Was sagt dir dein Kopf, was du tun sollst?",
+      "placeholder": "z. B. „Ich muss es jetzt tun.“",
+      "secondPrompt": "Vervollständige jetzt diesen Satz: „Ich bemerke, dass ich den Impuls habe, ...“",
+      "placeholder2": "Ich bemerke, dass ich den Impuls habe, ..."
     },
-
     "promise": {
-      "title": "DAS VERSPRECHEN",
-
-      "intro": "Dein Gehirn macht dir gerade ein Angebot.",
-
-      "expected": "Du erwartest gerade:",
-
-      "durationQuestion": "Wenn du es tust, wie lange wird sich das deiner Meinung nach gut anfühlen?",
-
-      "durationPlaceholder": "Ein paar Minuten, eine Stunde, fast den ganzen Tag...",
-
-      "afterQuestion": "Und was passiert normalerweise danach?",
-
-      "afterPlaceholder": "Was passiert danach?"
+      "title": "Gib dir ein Versprechen",
+      "intro": "Du musst nicht für immer Nein sagen. Entscheide dich einfach, eine bestimmte Zeit lang nicht zu handeln.",
+      "expected": "Wie lange kannst du warten?",
+      "durationQuestion": "Wie lange möchtest du warten?",
+      "durationPlaceholder": "z. B. 10 Minuten",
+      "afterQuestion": "Was wirst du in dieser Zeit tun?",
+      "afterPlaceholder": "z. B. Ich werde duschen..."
     },
-
     "wave": {
-      "title": "LASS DIE WELLE VORÜBERGEHEN",
-
-      "instruction": "Kämpfe nicht gegen den Drang. Beobachte ihn.",
-
-      "locationPrompt": "Wo spürst du ihn?",
-
+      "title": "Lass die Welle vorbeiziehen",
+      "instruction": "Ein Impuls steigt an, erreicht einen Höhepunkt und nimmt wieder ab. Beobachte ihn, ohne zu handeln.",
+      "locationPrompt": "Wo spürst du den Impuls in deinem Körper?",
       "locations": {
         "chest": "Brust",
         "stomach": "Magen",
@@ -176,173 +91,168 @@
         "hands": "Hände",
         "everywhere": "Überall"
       },
-
-      "timerIntro": "Bleibe 60 Sekunden bei diesem Gefühl.",
-
-      "finished": "Hat sich etwas verändert?",
-
-      "weaker": "Schwächer geworden",
-      "changed": "Verändert",
-      "same": "Gleich geblieben",
-      "stronger": "Stärker geworden"
+      "timerIntro": "Beobachte die Empfindungen einfach für einige Augenblicke.",
+      "finished": "Was ist mit dem Impuls passiert?",
+      "weaker": "Er ist schwächer geworden",
+      "changed": "Er hat sich verändert",
+      "same": "Er ist gleich geblieben",
+      "stronger": "Er ist stärker geworden"
     },
-
     "delay": {
-      "title": "JETZT NICHT",
-
-      "instruction": "Du musst dich nicht für immer entscheiden.",
-
-      "promise": "Tu es einfach in den nächsten 10 Minuten nicht.",
-
-      "start": "10:00 STARTEN",
-
-      "waiting": "Du musst nichts tun. Lass einfach diese zehn Minuten verstreichen.",
-
-      "finished": "Die zehn Minuten sind vorbei.",
-
-      "stillWant": "Ich will es immer noch",
-      "weaker": "Es ist schwächer",
-      "gone": "Es ist vorbei",
-      "alreadyDid": "Ich habe es schon getan"
+      "title": "Verzögere die Handlung",
+      "instruction": "Du musst jetzt keine Entscheidung treffen. Schaffe einfach Abstand zwischen dem Impuls und der Handlung.",
+      "promise": "Ich werde in den nächsten ... nicht handeln.",
+      "start": "AUFSCHUB STARTEN",
+      "finished": "Der Aufschub ist vorbei. Was passiert jetzt?",
+      "stillWant": "Ich möchte es immer noch",
+      "weaker": "Der Impuls ist schwächer",
+      "gone": "Der Impuls ist verschwunden",
+      "alreadyDid": "Ich habe es bereits getan"
     },
-
     "fastForward": {
-      "title": "VORSPULEN",
-
-      "intro": "Stell dir vor, du hast es bereits getan.",
-
-      "tenMinutes": "10 Minuten später...",
-
-      "tenPlaceholder": "Wie fühlst du dich?",
-
+      "title": "Spule in die Zukunft",
+      "intro": "Stell dir vor, du bist dem Impuls gefolgt. Bleib nicht beim ersten angenehmen Moment stehen. Erzähle die Geschichte weiter.",
+      "tenMinutes": "In 10 Minuten...",
+      "tenPlaceholder": "Was passiert?",
       "tomorrow": "Morgen...",
-
-      "tomorrowPlaceholder": "Wie wirst du dich morgen fühlen?",
-
-      "next": "Was passiert danach?",
-
-      "nextPlaceholder": "Was passiert danach?"
+      "tomorrowPlaceholder": "Wie fühlst du dich?",
+      "next": "Und danach...",
+      "nextPlaceholder": "Was passiert als Nächstes?"
     },
-
     "changeScene": {
-      "title": "WECHSLE DEN ORT",
-
-      "step1": "Steh auf.",
-      "step2": "Leg dein Handy oder den Gegenstand weg.",
-      "step3": "Geh an einen anderen Ort.",
-      "step4": "Bleib dort zwei Minuten.",
-
-      "ready": "ICH BIN AN EINEM ANDEREN ORT",
-
-      "wait": "Bleib zwei Minuten hier."
+      "title": "Wechsle die Umgebung",
+      "step1": "Die Umgebung, in der du dich befindest, ist Teil des Impulses.",
+      "step2": "Steh auf und wechsle tatsächlich den Ort.",
+      "step3": "Geh an einen Ort, an dem die Handlung schwieriger wird.",
+      "step4": "Bleib dort einige Minuten.",
+      "ready": "ICH WECHSLE DEN ORT"
     },
-
     "actualNeed": {
-      "title": "WAS BRAUCHST DU WIRKLICH?",
-
-      "intro": "Leg das Verhalten für einen Moment beiseite.",
-
-      "question": "Was brauchst du wirklich?",
-
+      "title": "Finde das eigentliche Bedürfnis",
+      "intro": "Der Impuls kann ein Versuch sein, ein anderes Bedürfnis zu erfüllen.",
+      "question": "Was brauchst du gerade wirklich?",
       "options": {
-        "stimulation": "Anregung",
-        "relief": "Erleichterung",
-        "comfort": "Trost",
-        "escape": "Flucht",
-        "connection": "Verbindung",
-        "control": "Kontrolle",
         "rest": "Ruhe",
-        "unknown": "Ich weiß es nicht"
+        "connection": "Verbindung",
+        "stimulation": "Anregung",
+        "comfort": "Trost",
+        "relief": "Erleichterung",
+        "control": "Kontrolle",
+        "escape": "Flucht",
+        "food": "Essen",
+        "money": "Geld",
+        "other": "Sonstiges"
       },
-
       "suggestions": {
-        "stimulation": "Gib deinem Gehirn 90 Sekunden lang etwas Neues.",
-        "relief": "Atme langsam und entspanne bewusst deine Schultern.",
-        "comfort": "Geh an einen Ort, an dem du dich wohlfühlst, und gönn dir zwei Minuten Ruhe.",
-        "escape": "Entferne dich für zwei Minuten aus der Situation.",
-        "connection": "Schreib einer Person, der du vertraust, eine kurze Nachricht.",
-        "control": "Wähle eine kleine Sache um dich herum, die du jetzt kontrollieren kannst.",
-        "rest": "Leg für zwei Minuten alles beiseite und erlaube dir, einfach innezuhalten.",
-        "unknown": "Du musst es noch nicht wissen. Schaffe einfach zwei Minuten Abstand."
+        "rest": "Mach für einige Minuten eine echte Pause.",
+        "connection": "Kontaktiere jemanden oder geh zu einer Person.",
+        "stimulation": "Wähle eine Aktivität, die dich anregt, ohne den Impuls zu verstärken.",
+        "comfort": "Gib dir bewusst etwas, das dir Trost oder Wohlbefinden gibt.",
+        "relief": "Versuche, den Druck direkt zu reduzieren, statt durch die impulsive Handlung.",
+        "control": "Tu eine kleine Sache, die du tatsächlich kontrollieren kannst.",
+        "escape": "Wechsle die Umgebung, ohne dem Impuls zu folgen.",
+        "food": "Prüfe, ob du wirklich Hunger hast.",
+        "money": "Überlege, welches Problem du gerade mit Geld lösen möchtest.",
+        "other": "Finde eine konkrete Handlung, die dieses Bedürfnis erfüllt."
       }
     },
-
     "breakChain": {
-      "title": "DURCHBRICH DIE KETTE",
-
-      "question": "Was ist unmittelbar vor dem Drang passiert?",
-
+      "title": "Durchbrich die Kette",
+      "question": "Was hat diesen Impuls wahrscheinlich ausgelöst?",
       "options": {
         "boredom": "Langeweile",
         "stress": "Stress",
-        "something_seen": "Ich habe etwas gesehen",
-        "argument": "Ein Streit",
-        "alone": "Ich war allein",
-        "phone": "Ich habe mein Handy genommen",
-        "habit": "Es passierte automatisch",
-        "nothing_obvious": "Nichts Offensichtliches"
+        "loneliness": "Einsamkeit",
+        "conflict": "Konflikt",
+        "fatigue": "Müdigkeit",
+        "routine": "Routine",
+        "thought": "Gedanke",
+        "place": "Ort",
+        "time": "Tageszeit",
+        "other": "Sonstiges"
       },
-
-      "result": "Das ist nützlich. Unterbrich die Kette genau hier.",
-
-      "changeScene": "ORT WECHSELN"
+      "result": "Du hast einen Auslöser erkannt. Verändere ein Element der Kette, bevor der Impuls dich mitreißt.",
+      "changeScene": "EIN ELEMENT ÄNDERN"
     },
-
     "twoFutures": {
-      "title": "ZWEI ZUKÜNFTE",
-
-      "intro": "Betrachte beide Wege, ohne sie zu beurteilen.",
-
-      "act": "WENN ICH ES TUE",
-
-      "actPlaceholder": "Was passiert?",
-
-      "dont": "WENN ICH ES NICHT TUE",
-
-      "dontPlaceholder": "Was passiert stattdessen?"
+      "title": "Zwei Zukünfte",
+      "intro": "Vergleiche beide Wege ehrlich. Nicht nur den ersten Moment, sondern auch das, was danach kommt.",
+      "act": "Wenn ich handle...",
+      "actPlaceholder": "Was passiert danach?",
+      "dont": "Wenn ich nicht handle...",
+      "dontPlaceholder": "Was passiert danach?"
     },
-
     "switch90": {
-      "title": "90-SEKUNDEN-WECHSEL",
-
-      "instruction": "Denk nicht darüber nach. Tu einfach 90 Sekunden lang etwas anderes.",
-
-      "task1": "Finde fünf blaue Dinge in deiner Umgebung.",
-      "task2": "Spüle eine Tasse ab.",
-      "task3": "Steh auf und geh ein wenig herum.",
-      "task4": "Zähle zehn Gegenstände um dich herum.",
-
-      "start": "90 SEKUNDEN STARTEN"
+      "title": "90-Sekunden-Unterbrechung",
+      "instruction": "Tu 90 Sekunden lang etwas, das deine Aufmerksamkeit wirklich beansprucht.",
+      "task1": "Schau dich um und benenne 5 Dinge, die du siehst.",
+      "task2": "Berühre 4 Dinge und achte auf ihre Oberfläche.",
+      "task3": "Höre 3 Geräusche.",
+      "task4": "Atme 2-mal langsam und tief ein und aus.",
+      "start": "STARTEN"
     },
-
     "realityCheck": {
-      "title": "REALITÄTSCHECK",
-
-      "question": "Was glaubst du, wird passieren, wenn du es tust?",
-
-      "placeholder": "Ich glaube, dass...",
-
-      "certainty": "Wie sicher bist du dir?",
-
-      "past": "Ist es in der Vergangenheit tatsächlich regelmäßig so passiert?",
-
-      "yes": "JA",
-      "no": "NEIN",
-      "sometimes": "MANCHMAL"
+      "title": "Realitätscheck",
+      "question": "Wenn du mit Sicherheit wüsstest, dass diese Handlung dir nicht das geben wird, was du dir erhoffst, würdest du sie trotzdem tun?",
+      "placeholder": "Warum?",
+      "certainty": "Wie sicher bist du, dass dir diese Handlung das gibt, wonach du suchst?",
+      "past": "Hat dir diese Handlung in der Vergangenheit tatsächlich das gegeben, wonach du gesucht hast?",
+      "yes": "Ja",
+      "no": "Nein",
+      "sometimes": "Manchmal"
     },
-
-    "previousSuccess": {
-      "title": "WAS HAT BEIM LETZTEN MAL FUNKTIONIERT?",
-
-      "intro": "Du warst schon einmal an diesem Punkt.",
-
-      "message": "Beim letzten Mal hat dieser Ansatz geholfen, den Drang zu reduzieren.",
-
-      "try": "NOCH EINMAL VERSUCHEN"
-    },
-
     "generic": {
-      "instruction": "Schaffe etwas Abstand zwischen dem Drang und der Handlung."
+      "title": "Mach eine Pause",
+      "instruction": "Nimm dir einen Moment, bevor du entscheidest, was du als Nächstes tun möchtest."
     }
+  },
+  "reassess": {
+    "title": "Wie stark ist der Impuls jetzt?",
+    "subtitle": "Bewerte den Impuls erneut von 0 bis 10.",
+    "low": "NIEDRIG",
+    "high": "SEHR STARK",
+    "continue": "WEITER"
+  },
+  "outcome": {
+    "title": "Was hast du letztendlich getan?",
+    "subtitle": "Sei ehrlich. Es gibt keine falsche Antwort.",
+    "interrupted": "Ich habe den Impuls unterbrochen",
+    "delayed": "Ich habe die Handlung aufgeschoben",
+    "acted": "Ich habe gehandelt",
+    "unsure": "Ich bin mir nicht sicher"
+  },
+  "result": {
+    "interruptedTitle": "Du hast den Impuls unterbrochen.",
+    "delayedTitle": "Du hast einen Aufschub geschaffen.",
+    "actedTitle": "Du hast trotz des Impulses gehandelt.",
+    "unsureTitle": "Du bist dir nicht sicher, was passiert ist.",
+    "messages": {
+      "lower": "Der Impuls ist schwächer geworden.",
+      "higher": "Der Impuls ist stärker geworden.",
+      "same": "Der Impuls ist gleich geblieben."
+    },
+    "before": "Vorher",
+    "after": "Nachher",
+    "change": "Veränderung",
+    "intervention": "Intervention",
+    "behavior": "Verhalten",
+    "finish": "BEENDEN",
+    "another": "ANDERE INTERVENTION AUSPROBIEREN"
+  },
+  "insights": {
+    "title": "DEINE DATEN",
+    "subtitle": "Was deine Sitzungen im Laufe der Zeit zeigen.",
+    "total": "Sitzungen",
+    "interrupted": "Unterbrochene Impulse",
+    "reduction": "Durchschnittliche Reduktion",
+    "best": "Wirksamste Intervention",
+    "triggerTitle": "Häufige Auslöser",
+    "recentTitle": "Letzte Sitzungen",
+    "empty": "Noch nicht genügend Daten. Deine Sitzungen werden hier angezeigt.",
+    "personalHistory": "PERSÖNLICHE HISTORIE",
+    "lastTime": "Beim letzten Mal ist diese Art von Impuls mit {intervention} von {before} auf {after} gesunken.",
+    "repeatedly": "{intervention} hat diese Art von Impuls bei dir wiederholt reduziert.",
+    "similar": "Du hast einen ähnlichen Impuls bereits mit {intervention} reduziert.",
+    "noDecrease": "Du hast {intervention} bereits ausprobiert, aber der Impuls ist nicht gesunken."
   }
 }
