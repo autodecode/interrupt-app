@@ -7,37 +7,53 @@ const url=location.href;
 if(url===lastUrl)return;
 lastUrl=url;
 chrome.runtime.sendMessage({
-  type:"checkUrl",
+  type:"spaNavigation",
   url
 }).catch(()=>{});
 
 }
 
-const originalPushState=history.pushState;
-const originalReplaceState=history.replaceState;
+const originalPushState=
+history.pushState;
+
+const originalReplaceState=
+history.replaceState;
 
 history.pushState=function(…args){
-const result=originalPushState.apply(this,args);
+const result=
+originalPushState.apply(
+this,
+args
+);
+
 reportNavigation();
 return result;
+
 };
 
 history.replaceState=function(…args){
-const result=originalReplaceState.apply(this,args);
+const result=
+originalReplaceState.apply(
+this,
+args
+);
+
 reportNavigation();
 return result;
+
 };
 
-window.addEventListener(“popstate”,reportNavigation);
-window.addEventListener(“hashchange”,reportNavigation);
+window.addEventListener(
+“popstate”,
+reportNavigation
+);
 
-let lastCheck=Date.now();
+window.addEventListener(
+“hashchange”,
+reportNavigation
+);
 
 setInterval(()=>{
-if(Date.now()-lastCheck<800)return;
-
-lastCheck=Date.now();
 reportNavigation();
-
 },800);
 })();
