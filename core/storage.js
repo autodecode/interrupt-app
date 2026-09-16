@@ -1,166 +1,171 @@
-const INTERRUPT_STORAGE=(()=>{
+const INTERRUPT_STORAGE = (() => {
 
-const KEYS={
-sessions:“interrupt_sessions”,
-events:“interrupt_events”
-};
+  const KEYS = {
+    sessions: "interrupt_sessions",
+    events: "interrupt_events"
+  };
 
-const MAX_SESSIONS=500;
-const MAX_EVENTS=500;
+  const MAX_SESSIONS = 500;
+  const MAX_EVENTS = 500;
 
-function read(key,fallback=[]){
-try{
-const raw=
-localStorage.getItem(key);
+  function read(key, fallback = []) {
+    try {
+      const raw =
+        localStorage.getItem(key);
 
-  if(!raw)return fallback;
-  const value=
-    JSON.parse(raw);
-  return value;
-}catch(error){
-  console.warn(
-    "INTERRUPT storage read failed:",
-    key,
-    error
-  );
-  return fallback;
-}
+      if (!raw) {
+        return fallback;
+      }
 
-}
+      const value =
+        JSON.parse(raw);
 
-function write(key,value){
-try{
-localStorage.setItem(
-key,
-JSON.stringify(value)
-);
+      return value;
 
-  return true;
-}catch(error){
-  console.warn(
-    "INTERRUPT storage write failed:",
-    key,
-    error
-  );
-  return false;
-}
+    } catch (error) {
+      console.warn(
+        "INTERRUPT storage read failed:",
+        key,
+        error
+      );
 
-}
+      return fallback;
+    }
+  }
 
-function remove(key){
-try{
-localStorage.removeItem(key);
-return true;
-}catch(error){
-console.warn(
-“INTERRUPT storage remove failed:”,
-key,
-error
-);
+  function write(key, value) {
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify(value)
+      );
 
-  return false;
-}
+      return true;
 
-}
+    } catch (error) {
+      console.warn(
+        "INTERRUPT storage write failed:",
+        key,
+        error
+      );
 
-function getSessions(){
-const sessions=
-read(KEYS.sessions,[]);
+      return false;
+    }
+  }
 
-return Array.isArray(sessions)
-  ?sessions.slice(-MAX_SESSIONS)
-  :[];
+  function remove(key) {
+    try {
+      localStorage.removeItem(key);
 
-}
+      return true;
 
-function saveSessions(sessions){
-if(!Array.isArray(sessions)){
-return false;
-}
+    } catch (error) {
+      console.warn(
+        "INTERRUPT storage remove failed:",
+        key,
+        error
+      );
 
-return write(
-  KEYS.sessions,
-  sessions.slice(-MAX_SESSIONS)
-);
+      return false;
+    }
+  }
 
-}
+  function getSessions() {
+    const sessions =
+      read(KEYS.sessions, []);
 
-function appendSession(session){
-const sessions=
-getSessions();
+    return Array.isArray(sessions)
+      ? sessions.slice(-MAX_SESSIONS)
+      : [];
+  }
 
-sessions.push(session);
-return saveSessions(sessions);
+  function saveSessions(sessions) {
+    if (!Array.isArray(sessions)) {
+      return false;
+    }
 
-}
+    return write(
+      KEYS.sessions,
+      sessions.slice(-MAX_SESSIONS)
+    );
+  }
 
-function getEvents(){
-const events=
-read(KEYS.events,[]);
+  function appendSession(session) {
+    const sessions =
+      getSessions();
 
-return Array.isArray(events)
-  ?events.slice(-MAX_EVENTS)
-  :[];
+    sessions.push(session);
 
-}
+    return saveSessions(sessions);
+  }
 
-function saveEvents(events){
-if(!Array.isArray(events)){
-return false;
-}
+  function getEvents() {
+    const events =
+      read(KEYS.events, []);
 
-return write(
-  KEYS.events,
-  events.slice(-MAX_EVENTS)
-);
+    return Array.isArray(events)
+      ? events.slice(-MAX_EVENTS)
+      : [];
+  }
 
-}
+  function saveEvents(events) {
+    if (!Array.isArray(events)) {
+      return false;
+    }
 
-function appendEvent(event){
-const events=
-getEvents();
+    return write(
+      KEYS.events,
+      events.slice(-MAX_EVENTS)
+    );
+  }
 
-events.push(event);
-return saveEvents(events);
+  function appendEvent(event) {
+    const events =
+      getEvents();
 
-}
+    events.push(event);
 
-function clearSessions(){
-return remove(KEYS.sessions);
-}
+    return saveEvents(events);
+  }
 
-function clearEvents(){
-return remove(KEYS.events);
-}
+  function clearSessions() {
+    return remove(KEYS.sessions);
+  }
 
-function clearAll(){
-const sessions=
-clearSessions();
+  function clearEvents() {
+    return remove(KEYS.events);
+  }
 
-const events=
-  clearEvents();
-return sessions&&events;
+  function clearAll() {
+    const sessions =
+      clearSessions();
 
-}
+    const events =
+      clearEvents();
 
-return{
-KEYS,
-MAX_SESSIONS,
-MAX_EVENTS,
+    return sessions && events;
+  }
 
-read,
-write,
-remove,
-getSessions,
-saveSessions,
-appendSession,
-clearSessions,
-getEvents,
-saveEvents,
-appendEvent,
-clearEvents,
-clearAll
+  return {
+    KEYS,
+    MAX_SESSIONS,
+    MAX_EVENTS,
 
-};
+    read,
+    write,
+    remove,
+
+    getSessions,
+    saveSessions,
+    appendSession,
+    clearSessions,
+
+    getEvents,
+    saveEvents,
+    appendEvent,
+    clearEvents,
+
+    clearAll
+  };
 
 })();
