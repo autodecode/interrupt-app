@@ -5,7 +5,8 @@ const defaults = {
   categories: {
     gambling: true,
     pornography: true,
-    socialMedia: true
+    socialMedia: true,
+    custom: true
   },
   mode: "medium",
   customDomains: []
@@ -23,34 +24,31 @@ async function getSettings() {
       ...(result.settings?.categories || {})
     },
     customDomains:
-      Array.isArray(
-        result.settings?.customDomains
-      )
+      Array.isArray(result.settings?.customDomains)
         ? result.settings.customDomains
         : []
   };
 }
 
 function updateStatus() {
-  const active =
-    $("enabled").checked;
+  const enabled = $("enabled");
+  const status = document.querySelector(".status");
+  const statusText = $("statusText");
 
-  const status =
-    $(".status");
-
-  if (!status) {
+  if (!enabled || !status || !statusText) {
     return;
   }
+
+  const active = enabled.checked;
 
   status.classList.toggle(
     "active",
     active
   );
 
-  $("statusText").textContent =
-    active
-      ? "Protection is active"
-      : "Protection is off";
+  statusText.textContent = active
+    ? "Protection is active"
+    : "Protection is off";
 }
 
 async function load() {
@@ -86,18 +84,26 @@ async function load() {
       ? result.protectionEvents
       : [];
 
-  const count = events.length;
+  const count =
+    events.length;
 
   $("eventCount").textContent =
     `${count} interruption${count === 1 ? "" : "s"} recorded`;
 }
 
 async function save() {
+  const current =
+    await getSettings();
+
   const settings = {
+    ...current,
+
     enabled:
       $("enabled").checked,
 
     categories: {
+      ...current.categories,
+
       gambling:
         $("gambling").checked,
 
@@ -109,9 +115,7 @@ async function save() {
     },
 
     mode:
-      $("mode").value,
-
-    customDomains: []
+      $("mode").value
   };
 
   await chrome.storage.local.set({
@@ -138,4 +142,9 @@ $("save").addEventListener(
   save
 );
 
-load();
+load().catch(error => {
+  console.warn(
+    "INTERRUPT popup initialization failed:",
+    error
+  );
+});
