@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>INTERRUPT</title>
+  <link rel="stylesheet" href="blocked.css">
+</head>
+<body>
+  <main class="container">
+    <div class="brand">INTERRUPT</div>
+<section class="card">
+  <div class="eyebrow" id="categoryLabel">PROTECTED ACTIVITY</div>
+  <h1 id="title">Pause for a moment.</h1>
+  <p id="message">
+    You were about to open something you've chosen to interrupt.
+  </p>
+  <div class="urge">
+    <label for="urgeSlider">How strong is the urge right now?</label>
+    <div class="urge-row">
+      <input id="urgeSlider" type="range" min="1" max="10" value="5">
+      <strong id="urgeValue">5</strong>
+    </div>
+  </div>
+  <div class="timer" id="timer">60</div>
+  <p class="prompt" id="prompt">
+    You don't have to decide anything yet.
+  </p>
+  <div class="actions">
+    <button id="interruptButton" class="primary">
+      INTERRUPT
+    </button>
+    <button id="backButton" class="secondary">
+      GO BACK
+    </button>
+    <button id="continueButton" class="text-button">
+      CONTINUE ANYWAY
+    </button>
+  </div>
+</section>
+<footer>
+  <span id="domainLabel"></span>
+</footer>
+  </main>
+  <script src="blocked.js"></script>
+</body>
+</html>
