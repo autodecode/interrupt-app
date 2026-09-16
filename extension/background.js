@@ -1,93 +1,14 @@
-const DEFAULT_SETTINGS={
-enabled:true,
-categories:{
-gambling:true,
-pornography:true,
-socialMedia:true
-},
-mode:“medium”,
-customDomains:[]
-};
-
-const DOMAINS={
-gambling:[
-“bet365.com”,
-“betfair.com”,
-“pokerstars.com”,
-“williamhill.com”,
-“888.com”,
-“betway.com”,
-“bwin.com”,
-“unibet.com”,
-“draftkings.com”,
-“fanduel.com”
-],
-pornography:[
-“pornhub.com”,
-“xvideos.com”,
-“xnxx.com”,
-“xhamster.com”,
-“redtube.com”,
-“youporn.com”,
-“spankbang.com”,
-“onlyfans.com”
-],
-socialMedia:[
-“facebook.com”,
-“instagram.com”,
-“tiktok.com”,
-“x.com”,
-“twitter.com”,
-“reddit.com”,
-“snapchat.com”,
-“pinterest.com”,
-“threads.net”
-]
-};
+importScripts(”../core/protection.js”);
 
 const BLOCK_PAGE=chrome.runtime.getURL(“blocked.html”);
 const pendingBlocks=new Map();
 const allowedOnce=new Map();
 
-function normalizeDomain(domain){
-return String(domain||””)
-.toLowerCase()
-.replace(/^www./,””)
-.trim()
-.replace(/.$/,””);
-}
-
-function domainMatches(host,domain){
-host=normalizeDomain(host);
-domain=normalizeDomain(domain);
-
-if(!host||!domain)return false;
-
-return host===domain||host.endsWith(.${domain});
-}
-
-function normalizeSettings(settings){
-return{
-…DEFAULT_SETTINGS,
-…(settings||{}),
-categories:{
-…DEFAULT_SETTINGS.categories,
-…(settings?.categories||{})
-},
-customDomains:Array.isArray(settings?.customDomains)
-?settings.customDomains
-.map(normalizeDomain)
-.filter(Boolean)
-:[],
-mode:[“light”,“medium”,“strong”].includes(settings?.mode)
-?settings.mode
-:“medium”
-};
-}
-
 async function getSettings(){
 const result=await chrome.storage.local.get(“settings”);
-const settings=normalizeSettings(result.settings);
+const settings=INTERRUPT_PROTECTION.normalizeSettings(
+result.settings
+);
 
 if(!result.settings){
 await chrome.storage.local.set({settings});
@@ -96,43 +17,12 @@ await chrome.storage.local.set({settings});
 return settings;
 }
 
-function parseUrl(url){
-try{
-const parsed=new URL(url);
-
-if(!["http:","https:"].includes(parsed.protocol))return null;
-return parsed;
-
-}catch{
-return null;
-}
-}
-
 function isBlockPage(url){
 return String(url||””).startsWith(BLOCK_PAGE);
 }
 
-function getCategory(host,settings){
-for(const category of Object.keys(DOMAINS)){
-if(!settings.categories[category])continue;
-
-if(DOMAINS[category].some(domain=>domainMatches(host,domain))){
-  return category;
-}
-
-}
-
-if(
-settings.customDomains.some(domain=>domainMatches(host,domain))
-){
-return “custom”;
-}
-
-return null;
-}
-
 function getAllowKey(tabId,host){
-return ${tabId}:${normalizeDomain(host)};
+return ${tabId}:${INTERRUPT_PROTECTION.normalizeDomain(host)};
 }
 
 function hasAllowedOnce(tabId,host){
@@ -166,46 +56,41 @@ allowedOnce.delete(key);
 }
 }
 
-async function checkUrl(url,tabId=null){
+async function inspect(url,tabId=null){
 const settings=await getSettings();
 
-if(!settings.enabled)return null;
+const result=
+INTERRUPT_PROTECTION.inspectUrl(
+url,
+settings
+);
 
-if(!url||isBlockPage(url))return null;
+if(!result)return null;
 
-const parsed=parseUrl(url);
-
-if(!parsed)return null;
-
-const host=normalizeDomain(parsed.hostname);
-const category=getCategory(host,settings);
-
-if(!category)return null;
-
-if(tabId!==null&&hasAllowedOnce(tabId,host)){
+if(
+tabId!==null&&
+hasAllowedOnce(tabId,result.host)
+){
 return null;
 }
 
-return{
-category,
-host,
-url:parsed.href,
-mode:settings.mode
-};
+return result;
 }
 
-async function recordBlock(data){
-const result=await chrome.storage.local.get(“protectionEvents”);
-const events=Array.isArray(result.protectionEvents)
+async function recordEvent(data){
+const result=
+await chrome.storage.local.get(
+“protectionEvents”
+);
+
+const events=
+Array.isArray(result.protectionEvents)
 ?result.protectionEvents
 :[];
 
-events.push({
-id:${Date.now()}-${Math.random().toString(36).slice(2,8)},
-type:“blocked”,
-…data,
-timestamp:new Date().toISOString()
-});
+events.push(
+INTERRUPT_PROTECTION.createEvent(data)
+);
 
 await chrome.storage.local.set({
 protectionEvents:events.slice(-500)
@@ -229,22 +114,25 @@ category:result.category,
 timestamp:Date.now()
 });
 
+await recordEvent({
+type:“blocked”,
+category:result.category,
+host:result.host,
+url:result.url,
+mode:result.mode,
+action:“block”
+});
+
 const target=
 ${BLOCK_PAGE}?category=${encodeURIComponent(result.category)}+
 &host=${encodeURIComponent(result.host)}+
 &url=${encodeURIComponent(result.url)}+
 &mode=${encodeURIComponent(result.mode)};
 
-await recordBlock({
-category:result.category,
-host:result.host,
-originalUrl:result.url,
-mode:result.mode,
-tabId
-});
-
 try{
-await chrome.tabs.update(tabId,{url:target});
+await chrome.tabs.update(tabId,{
+url:target
+});
 }catch{
 pendingBlocks.delete(tabId);
 }
@@ -262,59 +150,80 @@ pendingBlocks.delete(tabId);
 return;
 }
 
-const result=await checkUrl(details.url,tabId);
+const result=await inspect(
+details.url,
+tabId
+);
 
 if(!result)return;
 
-await redirectToBlockPage(tabId,result);
+await redirectToBlockPage(
+tabId,
+result
+);
 }
 
 chrome.webNavigation.onBeforeNavigate.addListener(
 handleNavigation,
 {
 url:[
-{schemes:[“http”,“https”]}
+{
+schemes:[
+“http”,
+“https”
+]
+}
 ]
 }
 );
 
-chrome.tabs.onRemoved.addListener(tabId=>{
+chrome.tabs.onRemoved.addListener(
+tabId=>{
 clearTabState(tabId);
-});
+}
+);
 
-chrome.tabs.onUpdated.addListener((tabId,changeInfo)=>{
-if(changeInfo.status===“loading”&&changeInfo.url){
+chrome.tabs.onUpdated.addListener(
+(tabId,changeInfo)=>{
+if(
+changeInfo.status===“loading”&&
+changeInfo.url
+){
 const pending=pendingBlocks.get(tabId);
 
-if(
-  pending&&
-  changeInfo.url!==pending.url&&
-  !isBlockPage(changeInfo.url)
-){
-  pendingBlocks.delete(tabId);
+  if(
+    pending&&
+    changeInfo.url!==pending.url&&
+    !isBlockPage(changeInfo.url)
+  ){
+    pendingBlocks.delete(tabId);
+  }
 }
 
 }
-});
+);
 
 chrome.runtime.onMessage.addListener(
 (message,sender,sendResponse)=>{
-if(message?.type===“getSettings”){
-getSettings().then(sendResponse);
-return true;
-}
 
+if(message?.type==="getSettings"){
+  getSettings().then(sendResponse);
+  return true;
+}
 if(message?.type==="setSettings"){
   getSettings().then(async current=>{
-    const settings=normalizeSettings({
-      ...current,
-      ...(message.settings||{}),
-      categories:{
-        ...current.categories,
-        ...(message.settings?.categories||{})
-      }
+    const settings=
+      INTERRUPT_PROTECTION.normalizeSettings({
+        ...current,
+        ...(message.settings||{}),
+        categories:{
+          ...current.categories,
+          ...(message.settings?.categories||{})
+        }
+      });
+    await chrome.storage.local.set({
+      settings
     });
-    await chrome.storage.local.set({settings});
     sendResponse({
       ok:true,
       settings
@@ -324,13 +233,45 @@ if(message?.type==="setSettings"){
 }
 if(message?.type==="checkUrl"){
   const tabId=sender.tab?.id??null;
-  checkUrl(message.url,tabId).then(sendResponse);
+  inspect(
+    message.url,
+    tabId
+  ).then(sendResponse);
+  return true;
+}
+if(message?.type==="spaNavigation"){
+  const tabId=sender.tab?.id;
+  if(typeof tabId!=="number"){
+    sendResponse({ok:false});
+    return false;
+  }
+  inspect(
+    message.url,
+    tabId
+  ).then(async result=>{
+    if(result){
+      await redirectToBlockPage(
+        tabId,
+        result
+      );
+    }
+    sendResponse({
+      ok:true,
+      blocked:Boolean(result)
+    });
+  });
   return true;
 }
 if(message?.type==="allowOnce"){
   const tabId=sender.tab?.id;
-  if(typeof tabId==="number"&&message.host){
-    allowOnce(tabId,message.host);
+  if(
+    typeof tabId==="number"&&
+    message.host
+  ){
+    allowOnce(
+      tabId,
+      message.host
+    );
   }
   sendResponse({ok:true});
   return false;
@@ -340,38 +281,50 @@ if(message?.type==="getProtectionEvents"){
     .get("protectionEvents")
     .then(result=>{
       sendResponse({
-        events:Array.isArray(result.protectionEvents)
-          ?result.protectionEvents
-          :[]
+        events:
+          Array.isArray(
+            result.protectionEvents
+          )
+            ?result.protectionEvents
+            :[]
       });
     });
   return true;
 }
 if(message?.type==="clearProtectionEvents"){
   chrome.storage.local
-    .set({protectionEvents:[]})
-    .then(()=>sendResponse({ok:true}));
+    .set({
+      protectionEvents:[]
+    })
+    .then(()=>{
+      sendResponse({ok:true});
+    });
   return true;
 }
+return false;
 
 }
 );
 
-chrome.runtime.onInstalled.addListener(async()=>{
-const result=await chrome.storage.local.get([
+chrome.runtime.onInstalled.addListener(
+async()=>{
+const result=
+await chrome.storage.local.get([
 “settings”,
 “protectionEvents”
 ]);
 
 if(!result.settings){
-await chrome.storage.local.set({
-settings:DEFAULT_SETTINGS
-});
+  await chrome.storage.local.set({
+    settings:
+      INTERRUPT_PROTECTION.DEFAULT_SETTINGS
+  });
+}
+if(!Array.isArray(result.protectionEvents)){
+  await chrome.storage.local.set({
+    protectionEvents:[]
+  });
 }
 
-if(!Array.isArray(result.protectionEvents)){
-await chrome.storage.local.set({
-protectionEvents:[]
-});
 }
-});
+);
