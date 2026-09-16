@@ -24,6 +24,11 @@ let translations={},englishTranslations={},currentLanguage="en";
 let session={id:null,behavior:null,behaviorLabel:null,intensityBefore:5,intensityAfter:null,expectation:null,expectationLabel:null,intervention:null,interventionAttempts:[],attemptHistory:[],attemptIntensityBefore:5,attemptStartedAt:null,outcome:null,trigger:null,startedAt:null,completedAt:null,protectionCategory:null,protectionDomain:null,protectionMode:null,protectionEventId:null};
 const $=id=>document.getElementById(id);
 
+function registerServiceWorker(){
+if(!("serviceWorker"in navigator))return;
+window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(error=>console.warn("Service Worker registration failed:",error)));
+}
+
 function getPath(object,path){if(!object||!path)return undefined;return path.split(".").reduce((value,key)=>value?.[key],object)}
 function interpolate(value,params={}){if(typeof value!=="string")return value;return value.replace(/\{(\w+)\}/g,(_,key)=>params[key]??"")}
 function t(key,fallback=key,params={}){let value=getPath(translations,key);if(value===undefined)value=getPath(englishTranslations,key);if(value===undefined)value=fallback;return interpolate(value,params)}
@@ -73,23 +78,7 @@ attempts.forEach(a=>{const category=a.category||a.protectionCategory,domain=a.ho
 saved.forEach(item=>{if(item?.protectionCategory){protectedSessionIds.add(item.id);const c=item.protectionCategory,d=item.protectionDomain,m=item.protectionMode;if(c&&!Object.keys(categories).includes(c))categories[c]=(categories[c]||0)+1;if(d&&!Object.keys(domains).includes(d))domains[d]=(domains[d]||0)+1;if(m&&!Object.keys(modes).includes(m))modes[m]=(modes[m]||0)+1}});
 let reduced=0,totalBefore=0,totalAfter=0;
 attempts.forEach(a=>{const before=Number(a.intensityBefore),after=Number(a.intensityAfter);totalBefore+=before;totalAfter+=after;if(after<before)reduced++});
-return{
-events,
-sessions:saved.filter(item=>item?.protectionCategory),
-attempts,
-protectedSessions:protectedSessionIds.size,
-protectedAttempts:attempts.length,
-reduced,
-reduction:totalBefore>0?Math.round((totalBefore-totalAfter)/totalBefore*100):0,
-successRate:attempts.length?Math.round(reduced/attempts.length*100):0,
-categories:Object.entries(categories).sort((a,b)=>b[1]-a[1]),
-domains:Object.entries(domains).sort((a,b)=>b[1]-a[1]),
-modes:Object.entries(modes).sort((a,b)=>b[1]-a[1]),
-eventCount:events.length,
-reassessEvents:outcomeEvents.length,
-completedEvents:events.filter(e=>e?.type==="completed").length,
-interventionEvents:events.filter(e=>e?.type==="intervention").length
-};
+return{events,sessions:saved.filter(item=>item?.protectionCategory),attempts,protectedSessions:protectedSessionIds.size,protectedAttempts:attempts.length,reduced,reduction:totalBefore>0?Math.round((totalBefore-totalAfter)/totalBefore*100):0,successRate:attempts.length?Math.round(reduced/attempts.length*100):0,categories:Object.entries(categories).sort((a,b)=>b[1]-a[1]),domains:Object.entries(domains).sort((a,b)=>b[1]-a[1]),modes:Object.entries(modes).sort((a,b)=>b[1]-a[1]),eventCount:events.length,reassessEvents:outcomeEvents.length,completedEvents:events.filter(e=>e?.type==="completed").length,interventionEvents:events.filter(e=>e?.type==="intervention").length};
 }
 
 function getProtectionInsightText(){
@@ -318,5 +307,5 @@ recordEvent:recordProtectionEvent
 };
 }
 
-async function initialize(){initializeEvents();exposeDebug();const savedLanguage=localStorage.getItem(STORAGE.language)||"en";resetSession();await loadLanguage(savedLanguage);initProtection()}
+async function initialize(){registerServiceWorker();initializeEvents();exposeDebug();const savedLanguage=localStorage.getItem(STORAGE.language)||"en";resetSession();await loadLanguage(savedLanguage);initProtection()}
 document.addEventListener("DOMContentLoaded",initialize);
