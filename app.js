@@ -1,19 +1,82 @@
-const LANGUAGES={en:{file:“locales/en.json”,flag:“🇬🇧”,code:“EN”},ro:{file:“locales/ro.json”,flag:“🇷🇴”,code:“RO”},fr:{file:“locales/fr.json”,flag:“🇫🇷”,code:“FR”},de:{file:“locales/de.json”,flag:“🇩🇪”,code:“DE”},es:{file:“locales/es.json”,flag:“🇪🇸”,code:“ES”},it:{file:“locales/it.json”,flag:“🇮🇹”,code:“IT”}};
-const STORAGE={language:“interrupt_language”,sessions:“interrupt_sessions”};
-const INTERVENTIONS=[“nameIt”,“promise”,“wave”,“delay”,“fastForward”,“changeScene”,“actualNeed”,“breakChain”,“twoFutures”,“switch90”,“realityCheck”];
-
-const INTERVENTION_RULES={
-gamble:{money:[“fastForward”,“realityCheck”,“delay”,“promise”],excitement:[“delay”,“wave”,“changeScene”,“switch90”],escape:[“actualNeed”,“changeScene”,“nameIt”,“delay”],relief:[“actualNeed”,“delay”,“wave”,“changeScene”],default:[“fastForward”,“realityCheck”,“delay”,“nameIt”]},
-scroll:{something_to_do:[“switch90”,“changeScene”,“delay”],escape:[“changeScene”,“actualNeed”,“delay”,“nameIt”],excitement:[“switch90”,“changeScene”,“delay”],default:[“changeScene”,“switch90”,“delay”,“nameIt”]},
-smoke:{relief:[“delay”,“wave”,“actualNeed”,“changeScene”],comfort:[“actualNeed”,“wave”,“delay”],escape:[“changeScene”,“delay”,“actualNeed”],default:[“delay”,“wave”,“changeScene”,“nameIt”]},
-eat:{comfort:[“actualNeed”,“delay”,“wave”,“nameIt”],pleasure:[“delay”,“actualNeed”,“wave”],relief:[“actualNeed”,“delay”,“changeScene”],default:[“wave”,“delay”,“actualNeed”,“nameIt”]},
-buy:{money:[“fastForward”,“delay”,“realityCheck”,“twoFutures”],excitement:[“delay”,“fastForward”,“realityCheck”],comfort:[“actualNeed”,“delay”,“twoFutures”],default:[“delay”,“fastForward”,“realityCheck”,“nameIt”]},
-watch:{escape:[“changeScene”,“actualNeed”,“delay”,“switch90”],something_to_do:[“switch90”,“changeScene”,“delay”],default:[“delay”,“switch90”,“changeScene”,“nameIt”]},
-check:{relief:[“delay”,“nameIt”,“realityCheck”,“changeScene”],control:[“realityCheck”,“delay”,“nameIt”],default:[“nameIt”,“delay”,“realityCheck”,“changeScene”]},
-other:{default:[“nameIt”,“delay”,“changeScene”,“actualNeed”]}
+const LANGUAGES={
+en:{file:“locales/en.json”,flag:“🇬🇧”,code:“EN”},
+ro:{file:“locales/ro.json”,flag:“🇷🇴”,code:“RO”},
+fr:{file:“locales/fr.json”,flag:“🇫🇷”,code:“FR”},
+de:{file:“locales/de.json”,flag:“🇩🇪”,code:“DE”},
+es:{file:“locales/es.json”,flag:“🇪🇸”,code:“ES”},
+it:{file:“locales/it.json”,flag:“🇮🇹”,code:“IT”}
 };
 
-let translations={},currentLanguage=“en”;
+const STORAGE={
+language:“interrupt_language”,
+sessions:“interrupt_sessions”
+};
+
+const INTERVENTIONS=[
+“nameIt”,
+“promise”,
+“wave”,
+“delay”,
+“fastForward”,
+“changeScene”,
+“actualNeed”,
+“breakChain”,
+“twoFutures”,
+“switch90”,
+“realityCheck”
+];
+
+const INTERVENTION_RULES={
+gamble:{
+money:[“fastForward”,“realityCheck”,“delay”,“promise”],
+excitement:[“delay”,“wave”,“changeScene”,“switch90”],
+escape:[“actualNeed”,“changeScene”,“nameIt”,“delay”],
+relief:[“actualNeed”,“delay”,“wave”,“changeScene”],
+default:[“fastForward”,“realityCheck”,“delay”,“nameIt”]
+},
+
+scroll:{
+    something_to_do:["switch90","changeScene","delay"],
+    escape:["changeScene","actualNeed","delay","nameIt"],
+    excitement:["switch90","changeScene","delay"],
+    default:["changeScene","switch90","delay","nameIt"]
+},
+smoke:{
+    relief:["delay","wave","actualNeed","changeScene"],
+    comfort:["actualNeed","wave","delay"],
+    escape:["changeScene","delay","actualNeed"],
+    default:["delay","wave","changeScene","nameIt"]
+},
+eat:{
+    comfort:["actualNeed","delay","wave","nameIt"],
+    pleasure:["delay","actualNeed","wave"],
+    relief:["actualNeed","delay","changeScene"],
+    default:["wave","delay","actualNeed","nameIt"]
+},
+buy:{
+    money:["fastForward","delay","realityCheck","twoFutures"],
+    excitement:["delay","fastForward","realityCheck"],
+    comfort:["actualNeed","delay","twoFutures"],
+    default:["delay","fastForward","realityCheck","nameIt"]
+},
+watch:{
+    escape:["changeScene","actualNeed","delay","switch90"],
+    something_to_do:["switch90","changeScene","delay"],
+    default:["delay","switch90","changeScene","nameIt"]
+},
+check:{
+    relief:["delay","nameIt","realityCheck","changeScene"],
+    control:["realityCheck","delay","nameIt"],
+    default:["nameIt","delay","realityCheck","changeScene"]
+},
+other:{
+    default:["nameIt","delay","changeScene","actualNeed"]
+}
+
+};
+
+let translations={};
+let currentLanguage=“en”;
 
 let session={
 id:null,
@@ -36,29 +99,62 @@ completedAt:null
 const $=id=>document.getElementById(id);
 
 function getPath(object,path){
-return path.split(”.”).reduce((value,key)=>value?.[key],object);
+return path
+.split(”.”)
+.reduce(
+(value,key)=>value?.[key],
+object
+);
 }
 
 function t(key,fallback=key){
-return getPath(translations,key)??fallback;
+return getPath(
+translations,
+key
+)??fallback;
 }
 
 function getSavedSessions(){
-try{
-const data=JSON.parse(
-localStorage.getItem(STORAGE.sessions)||”[]”
-);
-return Array.isArray(data)?data:[];
-}catch{
-return[];
+if(
+typeof INTERRUPT_STORAGE!==“undefined”&&
+typeof INTERRUPT_STORAGE.getSessions===“function”
+){
+return INTERRUPT_STORAGE.getSessions();
 }
+
+try{
+    const data=JSON.parse(
+        localStorage.getItem(STORAGE.sessions)||"[]"
+    );
+    return Array.isArray(data)
+        ?data
+        :[];
+}catch{
+    return[];
+}
+
 }
 
 function saveSessions(sessions){
-localStorage.setItem(
-STORAGE.sessions,
-JSON.stringify(sessions)
+if(
+typeof INTERRUPT_STORAGE!==“undefined”&&
+typeof INTERRUPT_STORAGE.saveSessions===“function”
+){
+return INTERRUPT_STORAGE.saveSessions(
+sessions
 );
+}
+
+try{
+    localStorage.setItem(
+        STORAGE.sessions,
+        JSON.stringify(sessions)
+    );
+    return true;
+}catch{
+    return false;
+}
+
 }
 
 function createSession(){
@@ -101,18 +197,26 @@ $("expectationContinueButton").disabled=true;
 function clearSelections(){
 document
 .querySelectorAll(”.choice-button.selected”)
-.forEach(button=>button.classList.remove(“selected”));
+.forEach(button=>
+button.classList.remove(“selected”)
+);
 
 document
     .querySelectorAll(".outcome-button.selected")
-    .forEach(button=>button.classList.remove("selected"));
+    .forEach(button=>
+        button.classList.remove("selected")
+    );
 
 }
 
 function showScreen(name){
 document
 .querySelectorAll(”.screen”)
-.forEach(screen=>screen.classList.remove(“screen-active”));
+.forEach(screen=>
+screen.classList.remove(
+“screen-active”
+)
+);
 
 const target=$(`screen-${name}`);
 if(target){
@@ -126,7 +230,9 @@ if(target){
 }
 
 async function loadLanguage(language){
-if(!LANGUAGES[language])language=“en”;
+if(!LANGUAGES[language]){
+language=“en”;
+}
 
 try{
     const response=await fetch(
@@ -134,7 +240,9 @@ try{
         {cache:"no-store"}
     );
     if(!response.ok){
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(
+            `HTTP ${response.status}`
+        );
     }
     translations=await response.json();
     currentLanguage=language;
@@ -158,19 +266,24 @@ try{
 }
 
 function updateLanguageUI(){
-const language=LANGUAGES[currentLanguage];
+const language=
+LANGUAGES[currentLanguage];
 
-$("currentLanguageFlag").textContent=language.flag;
-$("currentLanguageCode").textContent=language.code;
+$("currentLanguageFlag").textContent=
+    language.flag;
+$("currentLanguageCode").textContent=
+    language.code;
 document
     .querySelectorAll(".language-option")
     .forEach(option=>{
         option.classList.toggle(
             "selected",
-            option.dataset.language===currentLanguage
+            option.dataset.language===
+                currentLanguage
         );
     });
-document.documentElement.lang=currentLanguage;
+document.documentElement.lang=
+    currentLanguage;
 
 }
 
@@ -178,9 +291,10 @@ function applyTranslations(){
 document
 .querySelectorAll(”[data-i18n]”)
 .forEach(element=>{
-const key=element.dataset.i18n;
-const value=t(key);
+const key=
+element.dataset.i18n;
 
+        const value=t(key);
         if(value!==key){
             element.textContent=value;
         }
@@ -188,7 +302,8 @@ const value=t(key);
 document
     .querySelectorAll("[data-i18n-placeholder]")
     .forEach(element=>{
-        const key=element.dataset.i18nPlaceholder;
+        const key=
+            element.dataset.i18nPlaceholder;
         const value=t(key);
         if(value!==key){
             element.placeholder=value;
@@ -201,11 +316,11 @@ updateDynamicIntervention();
 function toggleLanguageMenu(force){
 const menu=$(“languageMenu”);
 const button=$(“languageButton”);
-const open=
-typeof force===“boolean”
-?force
-:menu.hidden;
 
+const open=
+    typeof force==="boolean"
+        ?force
+        :menu.hidden;
 menu.hidden=!open;
 button.setAttribute(
     "aria-expanded",
@@ -216,11 +331,16 @@ button.setAttribute(
 
 function selectBehavior(button){
 document
-.querySelectorAll(”#behaviorOptions .choice-button”)
-.forEach(item=>item.classList.remove(“selected”));
+.querySelectorAll(
+“#behaviorOptions .choice-button”
+)
+.forEach(item=>
+item.classList.remove(“selected”)
+);
 
 button.classList.add("selected");
-const value=button.dataset.behavior;
+const value=
+    button.dataset.behavior;
 session.behavior=value;
 if(value==="other"){
     $("otherBehaviorContainer").hidden=false;
@@ -233,7 +353,8 @@ if(value==="other"){
         button
             .querySelector("[data-i18n]")
             ?.textContent
-            .trim()||value;
+            .trim()||
+        value;
     $("behaviorContinueButton").disabled=false;
 }
 
@@ -241,7 +362,9 @@ if(value==="other"){
 
 function validateOtherBehavior(){
 const value=
-$(“otherBehaviorInput”).value.trim();
+$(“otherBehaviorInput”)
+.value
+.trim();
 
 if(session.behavior==="other"){
     session.behaviorLabel=value;
@@ -253,11 +376,16 @@ if(session.behavior==="other"){
 
 function selectExpectation(button){
 document
-.querySelectorAll(”#expectationOptions .choice-button”)
-.forEach(item=>item.classList.remove(“selected”));
+.querySelectorAll(
+“#expectationOptions .choice-button”
+)
+.forEach(item=>
+item.classList.remove(“selected”)
+);
 
 button.classList.add("selected");
-const value=button.dataset.expectation;
+const value=
+    button.dataset.expectation;
 session.expectation=value;
 if(value==="other"){
     $("otherExpectationContainer").hidden=false;
@@ -270,7 +398,8 @@ if(value==="other"){
         button
             .querySelector("[data-i18n]")
             ?.textContent
-            .trim()||value;
+            .trim()||
+        value;
     $("expectationContinueButton").disabled=false;
 }
 
@@ -278,7 +407,9 @@ if(value==="other"){
 
 function validateOtherExpectation(){
 const value=
-$(“otherExpectationInput”).value.trim();
+$(“otherExpectationInput”)
+.value
+.trim();
 
 if(session.expectation==="other"){
     session.expectationLabel=value;
@@ -288,8 +419,12 @@ if(session.expectation==="other"){
 
 }
 
-function updateSliderValue(slider,output){
-output.textContent=slider.value;
+function updateSliderValue(
+slider,
+output
+){
+output.textContent=
+slider.value;
 }
 
 function getEngineHistory(){
@@ -305,8 +440,10 @@ getSavedSessions().forEach(item=>{
             if(
                 attempt&&
                 attempt.intervention&&
-                typeof attempt.intensityBefore==="number"&&
-                typeof attempt.intensityAfter==="number"
+                typeof attempt.intensityBefore===
+                    "number"&&
+                typeof attempt.intensityAfter===
+                    "number"
             ){
                 history.push({
                     ...item,
@@ -315,7 +452,8 @@ getSavedSessions().forEach(item=>{
                     behavior:item.behavior,
                     behaviorLabel:item.behaviorLabel,
                     expectation:item.expectation,
-                    expectationLabel:item.expectationLabel,
+                    expectationLabel:
+                        item.expectationLabel,
                     trigger:item.trigger
                 });
             }
@@ -324,8 +462,10 @@ getSavedSessions().forEach(item=>{
     }
     if(
         item.intervention&&
-        typeof item.intensityBefore==="number"&&
-        typeof item.intensityAfter==="number"
+        typeof item.intensityBefore===
+            "number"&&
+        typeof item.intensityAfter===
+            "number"
     ){
         history.push(item);
     }
@@ -388,23 +528,34 @@ intervention
 
 function chooseIntervention(){
 const attempted=
-new Set(session.interventionAttempts);
+new Set(
+session.interventionAttempts
+);
 
-const adaptive=getAdaptiveStats();
-const stats=adaptive.stats;
+const adaptive=
+    getAdaptiveStats();
+const stats=
+    adaptive.stats;
 const behaviorRules=
-    INTERVENTION_RULES[session.behavior]||
+    INTERVENTION_RULES[
+        session.behavior
+    ]||
     INTERVENTION_RULES.other;
 const preferred=
-    behaviorRules[session.expectation]||
+    behaviorRules[
+        session.expectation
+    ]||
     behaviorRules.default;
 let candidates=
     INTERVENTIONS.filter(
-        intervention=>!attempted.has(intervention)
+        intervention=>
+            !attempted.has(intervention)
     );
 if(!candidates.length){
     session.interventionAttempts=[];
-    candidates=[...INTERVENTIONS];
+    candidates=[
+        ...INTERVENTIONS
+    ];
 }
 candidates.sort(
     (a,b)=>
@@ -456,22 +607,37 @@ return t(
 }
 
 function updateDynamicIntervention(){
-if(!session.intervention)return;
+if(!session.intervention){
+return;
+}
 
 $("interventionCategory").textContent=
-    interventionCategory(session.intervention);
+    interventionCategory(
+        session.intervention
+    );
 $("interventionTitle").textContent=
-    interventionTitle(session.intervention);
-renderIntervention(session.intervention);
+    interventionTitle(
+        session.intervention
+    );
+renderIntervention(
+    session.intervention
+);
 
 }
 
-function renderPersonalRecommendation(container){
+function renderPersonalRecommendation(
+container
+){
 const recommendation=
-getRecommendation(session.intervention);
+getRecommendation(
+session.intervention
+);
 
-if(!recommendation)return;
-const box=document.createElement("div");
+if(!recommendation){
+    return;
+}
+const box=
+    document.createElement("div");
 box.className="insight-section";
 const before=
     recommendation.last.intensityBefore;
@@ -495,9 +661,12 @@ if(recommendation.reduction>0){
     text=
         `You tried ${interventionTitle(session.intervention)} before, but the urge did not decrease.`;
 }
-const title=document.createElement("h3");
-title.textContent="PERSONAL HISTORY";
-const paragraph=document.createElement("p");
+const title=
+    document.createElement("h3");
+title.textContent=
+    "PERSONAL HISTORY";
+const paragraph=
+    document.createElement("p");
 paragraph.textContent=text;
 box.appendChild(title);
 box.appendChild(paragraph);
@@ -506,9 +675,11 @@ container.appendChild(box);
 }
 
 function renderIntervention(id){
-const content=$(“interventionContent”);
-const actions=$(“interventionActions”);
+const content=
+$(“interventionContent”);
 
+const actions=
+    $("interventionActions");
 content.innerHTML="";
 actions.innerHTML="";
 const renderers={
@@ -525,11 +696,19 @@ const renderers={
     switch90:renderSwitch90
 };
 if(renderers[id]){
-    renderers[id](content,actions);
+    renderers[id](
+        content,
+        actions
+    );
 }else{
-    renderGeneric(content,actions);
+    renderGeneric(
+        content,
+        actions
+    );
 }
-renderPersonalRecommendation(content);
+renderPersonalRecommendation(
+    content
+);
 
 }
 
@@ -539,7 +718,8 @@ text,
 callback,
 className=“primary-button”
 ){
-const button=document.createElement(“button”);
+const button=
+document.createElement(“button”);
 
 button.type="button";
 button.className=className;
@@ -566,8 +746,12 @@ showScreen("reassess");
 
 }
 
-function renderNameIt(content,actions){
-const box=document.createElement(“div”);
+function renderNameIt(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
@@ -586,8 +770,12 @@ addActionButton(
 
 }
 
-function renderPromise(content,actions){
-const box=document.createElement(“div”);
+function renderPromise(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 const expected=
@@ -611,15 +799,25 @@ addActionButton(
 
 }
 
-function renderWave(content,actions){
-const box=document.createElement(“div”);
+function renderWave(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
     <p>${t("interventions.wave.instruction")}</p>
     <p class="intervention-prompt">${t("interventions.wave.locationPrompt")}</p>
     <div class="wave-locations">
-        ${["chest","stomach","head","hands","everywhere"].map(key=>`
+        ${[
+            "chest",
+            "stomach",
+            "head",
+            "hands",
+            "everywhere"
+        ].map(key=>`
             <button type="button" class="choice-button wave-location" data-location="${key}">
                 ${t(`interventions.wave.locations.${key}`)}
             </button>
@@ -642,41 +840,64 @@ box
             "click",
             ()=>{
                 box
-                    .querySelectorAll(".wave-location")
+                    .querySelectorAll(
+                        ".wave-location"
+                    )
                     .forEach(item=>
-                        item.classList.remove("selected")
+                        item.classList.remove(
+                            "selected"
+                        )
                     );
-                button.classList.add("selected");
+                button.classList.add(
+                    "selected"
+                );
                 timerBox.hidden=false;
                 let remaining=60;
-                timerValue.textContent=remaining;
-                const interval=setInterval(()=>{
-                    remaining--;
-                    timerValue.textContent=remaining;
-                    if(remaining<=0){
-                        clearInterval(interval);
-                        timerValue.textContent="0";
-                        addWaveFinishOptions(
-                            box,
-                            actions
-                        );
-                    }
-                },1000);
+                timerValue.textContent=
+                    remaining;
+                const interval=
+                    setInterval(()=>{
+                        remaining--;
+                        timerValue.textContent=
+                            remaining;
+                        if(remaining<=0){
+                            clearInterval(
+                                interval
+                            );
+                            timerValue.textContent=
+                                "0";
+                            addWaveFinishOptions(
+                                box,
+                                actions
+                            );
+                        }
+                    },1000);
             }
         );
     });
 
 }
 
-function addWaveFinishOptions(box,actions){
-if(box.querySelector(”.wave-finish”))return;
+function addWaveFinishOptions(
+box,
+actions
+){
+if(box.querySelector(”.wave-finish”)){
+return;
+}
 
-const finish=document.createElement("div");
+const finish=
+    document.createElement("div");
 finish.className="wave-finish";
 finish.innerHTML=`
     <p>${t("interventions.wave.finished")}</p>
     <div class="wave-results">
-        ${["weaker","changed","same","stronger"].map(key=>`
+        ${[
+            "weaker",
+            "changed",
+            "same",
+            "stronger"
+        ].map(key=>`
             <button type="button" class="choice-button" data-wave-result="${key}">
                 ${t(`interventions.wave.${key}`)}
             </button>
@@ -685,21 +906,32 @@ finish.innerHTML=`
 `;
 box.appendChild(finish);
 finish
-    .querySelectorAll("[data-wave-result]")
+    .querySelectorAll(
+        "[data-wave-result]"
+    )
     .forEach(button=>{
         button.addEventListener(
             "click",
             ()=>{
                 finish
-                    .querySelectorAll(".choice-button")
+                    .querySelectorAll(
+                        ".choice-button"
+                    )
                     .forEach(item=>
-                        item.classList.remove("selected")
+                        item.classList.remove(
+                            "selected"
+                        )
                     );
-                button.classList.add("selected");
+                button.classList.add(
+                    "selected"
+                );
                 actions.innerHTML="";
                 addActionButton(
                     actions,
-                    t("common.continue","CONTINUE"),
+                    t(
+                        "common.continue",
+                        "CONTINUE"
+                    ),
                     finishIntervention
                 );
             }
@@ -708,8 +940,12 @@ finish
 
 }
 
-function renderDelay(content,actions){
-const box=document.createElement(“div”);
+function renderDelay(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
@@ -726,60 +962,82 @@ addActionButton(
     ()=>{
         actions.innerHTML="";
         let remaining=600;
-        const interval=setInterval(()=>{
-            remaining--;
-            const minutes=
-                Math.floor(remaining/60);
-            const seconds=
-                remaining%60;
-            timer.textContent=
-                `${minutes}:${String(seconds).padStart(2,"0")}`;
-            if(remaining<=0){
-                clearInterval(interval);
-                timer.textContent="0:00";
-                const result=
-                    document.createElement("div");
-                result.className="delay-result";
-                result.innerHTML=`
-                    <p>${t("interventions.delay.finished")}</p>
-                    <div class="option-grid">
-                        <button type="button" class="choice-button">${t("interventions.delay.stillWant")}</button>
-                        <button type="button" class="choice-button">${t("interventions.delay.weaker")}</button>
-                        <button type="button" class="choice-button">${t("interventions.delay.gone")}</button>
-                        <button type="button" class="choice-button">${t("interventions.delay.alreadyDid")}</button>
-                    </div>
-                `;
-                box.appendChild(result);
-                result
-                    .querySelectorAll(".choice-button")
-                    .forEach(button=>{
-                        button.addEventListener(
-                            "click",
-                            ()=>{
-                                result
-                                    .querySelectorAll(".choice-button")
-                                    .forEach(item=>
-                                        item.classList.remove("selected")
-                                    );
-                                button.classList.add("selected");
-                                actions.innerHTML="";
-                                addActionButton(
-                                    actions,
-                                    t("common.continue","CONTINUE"),
-                                    finishIntervention
-                                );
-                            }
+        const interval=
+            setInterval(()=>{
+                remaining--;
+                const minutes=
+                    Math.floor(
+                        remaining/60
+                    );
+                const seconds=
+                    remaining%60;
+                timer.textContent=
+                    `${minutes}:${String(seconds).padStart(2,"0")}`;
+                if(remaining<=0){
+                    clearInterval(interval);
+                    timer.textContent=
+                        "0:00";
+                    const result=
+                        document.createElement(
+                            "div"
                         );
-                    });
-            }
-        },1000);
+                    result.className=
+                        "delay-result";
+                    result.innerHTML=`
+                        <p>${t("interventions.delay.finished")}</p>
+                        <div class="option-grid">
+                            <button type="button" class="choice-button">${t("interventions.delay.stillWant")}</button>
+                            <button type="button" class="choice-button">${t("interventions.delay.weaker")}</button>
+                            <button type="button" class="choice-button">${t("interventions.delay.gone")}</button>
+                            <button type="button" class="choice-button">${t("interventions.delay.alreadyDid")}</button>
+                        </div>
+                    `;
+                    box.appendChild(result);
+                    result
+                        .querySelectorAll(
+                            ".choice-button"
+                        )
+                        .forEach(button=>{
+                            button.addEventListener(
+                                "click",
+                                ()=>{
+                                    result
+                                        .querySelectorAll(
+                                            ".choice-button"
+                                        )
+                                        .forEach(item=>
+                                            item.classList.remove(
+                                                "selected"
+                                            )
+                                        );
+                                    button.classList.add(
+                                        "selected"
+                                    );
+                                    actions.innerHTML="";
+                                    addActionButton(
+                                        actions,
+                                        t(
+                                            "common.continue",
+                                            "CONTINUE"
+                                        ),
+                                        finishIntervention
+                                    );
+                                }
+                            );
+                        });
+                }
+            },1000);
     }
 );
 
 }
 
-function renderFastForward(content,actions){
-const box=document.createElement(“div”);
+function renderFastForward(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
@@ -800,8 +1058,12 @@ addActionButton(
 
 }
 
-function renderChangeScene(content,actions){
-const box=document.createElement(“div”);
+function renderChangeScene(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
@@ -822,27 +1084,40 @@ addActionButton(
     ()=>{
         actions.innerHTML="";
         let remaining=120;
-        timer.textContent=remaining;
-        const interval=setInterval(()=>{
-            remaining--;
-            timer.textContent=remaining;
-            if(remaining<=0){
-                clearInterval(interval);
-                timer.textContent="0";
-                addActionButton(
-                    actions,
-                    t("common.continue","CONTINUE"),
-                    finishIntervention
-                );
-            }
-        },1000);
+        timer.textContent=
+            remaining;
+        const interval=
+            setInterval(()=>{
+                remaining--;
+                timer.textContent=
+                    remaining;
+                if(remaining<=0){
+                    clearInterval(
+                        interval
+                    );
+                    timer.textContent=
+                        "0";
+                    addActionButton(
+                        actions,
+                        t(
+                            "common.continue",
+                            "CONTINUE"
+                        ),
+                        finishIntervention
+                    );
+                }
+            },1000);
     }
 );
 
 }
 
-function renderActualNeed(content,actions){
-const box=document.createElement(“div”);
+function renderActualNeed(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
@@ -850,10 +1125,15 @@ box.innerHTML=`
     <p class="intervention-prompt">${t("interventions.actualNeed.question")}</p>
     <div class="option-grid">
         ${Object.keys(
-            t("interventions.actualNeed.options",{})
+            t(
+                "interventions.actualNeed.options",
+                {}
+            )
         ).map(key=>`
             <button type="button" class="choice-button" data-need="${key}">
-                ${t(`interventions.actualNeed.options.${key}`)}
+                ${t(
+                    `interventions.actualNeed.options.${key}`
+                )}
             </button>
         `).join("")}
     </div>
@@ -861,7 +1141,9 @@ box.innerHTML=`
 `;
 content.appendChild(box);
 const suggestion=
-    box.querySelector(".need-suggestion");
+    box.querySelector(
+        ".need-suggestion"
+    );
 box
     .querySelectorAll("[data-need]")
     .forEach(button=>{
@@ -869,12 +1151,19 @@ box
             "click",
             ()=>{
                 box
-                    .querySelectorAll("[data-need]")
+                    .querySelectorAll(
+                        "[data-need]"
+                    )
                     .forEach(item=>
-                        item.classList.remove("selected")
+                        item.classList.remove(
+                            "selected"
+                        )
                     );
-                button.classList.add("selected");
-                const key=button.dataset.need;
+                button.classList.add(
+                    "selected"
+                );
+                const key=
+                    button.dataset.need;
                 suggestion.hidden=false;
                 suggestion.textContent=
                     t(
@@ -883,7 +1172,10 @@ box
                 actions.innerHTML="";
                 addActionButton(
                     actions,
-                    t("common.continue","CONTINUE"),
+                    t(
+                        "common.continue",
+                        "CONTINUE"
+                    ),
                     finishIntervention
                 );
             }
@@ -892,18 +1184,27 @@ box
 
 }
 
-function renderBreakChain(content,actions){
-const box=document.createElement(“div”);
+function renderBreakChain(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
     <p>${t("interventions.breakChain.question")}</p>
     <div class="option-grid">
         ${Object.keys(
-            t("interventions.breakChain.options",{})
+            t(
+                "interventions.breakChain.options",
+                {}
+            )
         ).map(key=>`
             <button type="button" class="choice-button" data-trigger="${key}">
-                ${t(`interventions.breakChain.options.${key}`)}
+                ${t(
+                    `interventions.breakChain.options.${key}`
+                )}
             </button>
         `).join("")}
     </div>
@@ -911,7 +1212,9 @@ box.innerHTML=`
 `;
 content.appendChild(box);
 const result=
-    box.querySelector(".trigger-result");
+    box.querySelector(
+        ".trigger-result"
+    );
 box
     .querySelectorAll("[data-trigger]")
     .forEach(button=>{
@@ -919,11 +1222,17 @@ box
             "click",
             ()=>{
                 box
-                    .querySelectorAll("[data-trigger]")
+                    .querySelectorAll(
+                        "[data-trigger]"
+                    )
                     .forEach(item=>
-                        item.classList.remove("selected")
+                        item.classList.remove(
+                            "selected"
+                        )
                     );
-                button.classList.add("selected");
+                button.classList.add(
+                    "selected"
+                );
                 session.trigger=
                     button.dataset.trigger;
                 result.hidden=false;
@@ -945,8 +1254,12 @@ box
 
 }
 
-function renderTwoFutures(content,actions){
-const box=document.createElement(“div”);
+function renderTwoFutures(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
@@ -965,7 +1278,10 @@ addActionButton(
 
 }
 
-function renderSwitch90(content,actions){
+function renderSwitch90(
+content,
+actions
+){
 const tasks=[
 t(“interventions.switch90.task1”),
 t(“interventions.switch90.task2”),
@@ -974,8 +1290,13 @@ t(“interventions.switch90.task4”)
 ];
 
 const task=
-    tasks[Math.floor(Math.random()*tasks.length)];
-const box=document.createElement("div");
+    tasks[
+        Math.floor(
+            Math.random()*tasks.length
+        )
+    ];
+const box=
+    document.createElement("div");
 box.className="intervention-box";
 box.innerHTML=`
     <p>${t("interventions.switch90.instruction")}</p>
@@ -991,27 +1312,40 @@ addActionButton(
     ()=>{
         actions.innerHTML="";
         let remaining=90;
-        timer.textContent=remaining;
-        const interval=setInterval(()=>{
-            remaining--;
-            timer.textContent=remaining;
-            if(remaining<=0){
-                clearInterval(interval);
-                timer.textContent="0";
-                addActionButton(
-                    actions,
-                    t("common.continue","CONTINUE"),
-                    finishIntervention
-                );
-            }
-        },1000);
+        timer.textContent=
+            remaining;
+        const interval=
+            setInterval(()=>{
+                remaining--;
+                timer.textContent=
+                    remaining;
+                if(remaining<=0){
+                    clearInterval(
+                        interval
+                    );
+                    timer.textContent=
+                        "0";
+                    addActionButton(
+                        actions,
+                        t(
+                            "common.continue",
+                            "CONTINUE"
+                        ),
+                        finishIntervention
+                    );
+                }
+            },1000);
     }
 );
 
 }
 
-function renderRealityCheck(content,actions){
-const box=document.createElement(“div”);
+function renderRealityCheck(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
@@ -1029,31 +1363,47 @@ box.innerHTML=`
 `;
 content.appendChild(box);
 const range=
-    box.querySelector(".intervention-range");
+    box.querySelector(
+        ".intervention-range"
+    );
 const value=
-    box.querySelector(".certainty-value");
+    box.querySelector(
+        ".certainty-value"
+    );
 range.addEventListener(
     "input",
     ()=>{
-        value.textContent=`${range.value}%`;
+        value.textContent=
+            `${range.value}%`;
     }
 );
 box
-    .querySelectorAll(".choice-button")
+    .querySelectorAll(
+        ".choice-button"
+    )
     .forEach(button=>{
         button.addEventListener(
             "click",
             ()=>{
                 box
-                    .querySelectorAll(".choice-button")
+                    .querySelectorAll(
+                        ".choice-button"
+                    )
                     .forEach(item=>
-                        item.classList.remove("selected")
+                        item.classList.remove(
+                            "selected"
+                        )
                     );
-                button.classList.add("selected");
+                button.classList.add(
+                    "selected"
+                );
                 actions.innerHTML="";
                 addActionButton(
                     actions,
-                    t("common.continue","CONTINUE"),
+                    t(
+                        "common.continue",
+                        "CONTINUE"
+                    ),
                     finishIntervention
                 );
             }
@@ -1067,8 +1417,12 @@ addActionButton(
 
 }
 
-function renderGeneric(content,actions){
-const box=document.createElement(“div”);
+function renderGeneric(
+content,
+actions
+){
+const box=
+document.createElement(“div”);
 
 box.className="intervention-box";
 box.innerHTML=`
@@ -1084,9 +1438,11 @@ addActionButton(
 }
 
 function startIntervention(){
-const intervention=chooseIntervention();
+const intervention=
+chooseIntervention();
 
-session.intervention=intervention;
+session.intervention=
+    intervention;
 session.attemptIntensityBefore=
     Number(
         session.intensityAfter??
@@ -1104,10 +1460,16 @@ if(
     );
 }
 $("interventionCategory").textContent=
-    interventionCategory(intervention);
+    interventionCategory(
+        intervention
+    );
 $("interventionTitle").textContent=
-    interventionTitle(intervention);
-renderIntervention(intervention);
+    interventionTitle(
+        intervention
+    );
+renderIntervention(
+    intervention
+);
 showScreen("intervention");
 
 }
@@ -1130,28 +1492,40 @@ if(!Array.isArray(session.attemptHistory)){
 }
 session.attemptHistory.push({
     id:`${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
-    intervention:session.intervention,
+    intervention:
+        session.intervention,
     intensityBefore:before,
     intensityAfter:after,
     impact:before-after,
-    startedAt:session.attemptStartedAt||now,
+    startedAt:
+        session.attemptStartedAt||
+        now,
     completedAt:now
 });
-session.intensityAfter=after;
-session.attemptIntensityBefore=after;
-session.attemptStartedAt=null;
+session.intensityAfter=
+    after;
+session.attemptIntensityBefore=
+    after;
+session.attemptStartedAt=
+    null;
 showScreen("outcome");
 
 }
 
 function selectOutcome(button){
 document
-.querySelectorAll(”.outcome-button”)
+.querySelectorAll(
+“.outcome-button”
+)
 .forEach(item=>
-item.classList.remove(“selected”)
+item.classList.remove(
+“selected”
+)
 );
 
-button.classList.add("selected");
+button.classList.add(
+    "selected"
+);
 session.outcome=
     button.dataset.outcome;
 completeSession();
@@ -1173,7 +1547,8 @@ const snapshot=
         JSON.stringify(session)
     );
 if(existingIndex>=0){
-    sessions[existingIndex]=snapshot;
+    sessions[existingIndex]=
+        snapshot;
 }else{
     sessions.push(snapshot);
 }
@@ -1184,19 +1559,27 @@ showResult();
 
 function showResult(){
 const before=
-Number(session.intensityBefore);
+Number(
+session.intensityBefore
+);
 
 const after=
-    Number(session.intensityAfter);
-$("resultBefore").textContent=before;
-$("resultAfter").textContent=after;
+    Number(
+        session.intensityAfter
+    );
+$("resultBefore").textContent=
+    before;
+$("resultAfter").textContent=
+    after;
 const difference=
     before-after;
 let percentage=0;
 if(before>0){
     percentage=
         Math.round(
-            difference/before*100
+            difference/
+            before*
+            100
         );
 }
 if(difference>0){
@@ -1210,7 +1593,8 @@ if(difference>0){
     $("resultMessage").textContent=
         t("result.messages.higher");
 }else{
-    $("resultChange").textContent="0%";
+    $("resultChange").textContent=
+        "0%";
     $("resultMessage").textContent=
         t("result.messages.same");
 }
@@ -1237,9 +1621,11 @@ showScreen("result");
 }
 
 function tryAnotherIntervention(){
-const next=chooseIntervention();
+const next=
+chooseIntervention();
 
-session.intervention=next;
+session.intervention=
+    next;
 session.attemptIntensityBefore=
     Number(
         session.intensityAfter??
@@ -1252,7 +1638,9 @@ if(
         next
     )
 ){
-    session.interventionAttempts.push(next);
+    session.interventionAttempts.push(
+        next
+    );
 }
 $("interventionCategory").textContent=
     interventionCategory(next);
@@ -1277,35 +1665,46 @@ const sessions=
 getSavedSessions()
 .filter(
 item=>
-typeof item.intensityBefore===“number”&&
-typeof item.intensityAfter===“number”
+typeof item.intensityBefore===
+“number”&&
+typeof item.intensityAfter===
+“number”
 )
 .sort(
 (a,b)=>
 new Date(
-b.completedAt||b.startedAt
+b.completedAt||
+b.startedAt
 )-
 new Date(
-a.completedAt||a.startedAt
+a.completedAt||
+a.startedAt
 )
 );
 
-const total=sessions.length;
+const total=
+    sessions.length;
 const interrupted=
     sessions.filter(
-        item=>item.outcome==="interrupted"
+        item=>
+            item.outcome==="interrupted"
     ).length;
 let totalBefore=0;
 let totalAfter=0;
 sessions.forEach(item=>{
-    totalBefore+=item.intensityBefore;
-    totalAfter+=item.intensityAfter;
+    totalBefore+=
+        item.intensityBefore;
+    totalAfter+=
+        item.intensityAfter;
 });
 let reduction=0;
 if(totalBefore>0){
     reduction=
         Math.round(
-            (totalBefore-totalAfter)/
+            (
+                totalBefore-
+                totalAfter
+            )/
             totalBefore*
             100
         );
@@ -1317,32 +1716,47 @@ const stats=
 const entries=
     Object.entries(stats);
 let best=null;
-entries.forEach(([id,data])=>{
-    if(
-        !best||
-        data.averageImpact>best.average
-    ){
-        best={
-            id,
-            average:data.averageImpact,
-            uses:data.uses,
-            successRate:data.successRate
-        };
+entries.forEach(
+    ([id,data])=>{
+        if(
+            !best||
+            data.averageImpact>
+                best.average
+        ){
+            best={
+                id,
+                average:
+                    data.averageImpact,
+                uses:data.uses,
+                successRate:
+                    data.successRate
+            };
+        }
     }
-});
+);
 const triggerCounts={};
-getEngineHistory().forEach(item=>{
-    if(item.trigger){
-        triggerCounts[item.trigger]=
-            (triggerCounts[item.trigger]||0)+1;
+getEngineHistory().forEach(
+    item=>{
+        if(item.trigger){
+            triggerCounts[item.trigger]=
+                (
+                    triggerCounts[
+                        item.trigger
+                    ]||
+                    0
+                )+1;
+        }
     }
-});
+);
 let commonTrigger=null;
-Object.entries(triggerCounts).forEach(
+Object.entries(
+    triggerCounts
+).forEach(
     ([trigger,count])=>{
         if(
             !commonTrigger||
-            count>commonTrigger.count
+            count>
+                commonTrigger.count
         ){
             commonTrigger={
                 trigger,
@@ -1351,8 +1765,10 @@ Object.entries(triggerCounts).forEach(
         }
     }
 );
-$("insightTotal").textContent=total;
-$("insightInterrupted").textContent=interrupted;
+$("insightTotal").textContent=
+    total;
+$("insightInterrupted").textContent=
+    interrupted;
 $("insightReduction").textContent=
     `${reduction>0?"−":""}${Math.abs(reduction)}%`;
 $("insightBest").textContent=
@@ -1366,14 +1782,18 @@ $("insightTrigger").textContent=
             commonTrigger.trigger
         )
         :"—";
-const recent=$("recentSessions");
+const recent=
+    $("recentSessions");
 recent.innerHTML="";
 sessions
     .slice(0,5)
     .forEach(item=>{
         const row=
-            document.createElement("div");
-        row.className="recent-session";
+            document.createElement(
+                "div"
+            );
+        row.className=
+            "recent-session";
         const difference=
             item.intensityBefore-
             item.intensityAfter;
@@ -1453,7 +1873,9 @@ $("insightsDoneButton").addEventListener(
     ()=>showScreen("home")
 );
 document
-    .querySelectorAll(".language-option")
+    .querySelectorAll(
+        ".language-option"
+    )
     .forEach(option=>
         option.addEventListener(
             "click",
@@ -1557,7 +1979,9 @@ $("reassessContinueButton").addEventListener(
     reassess
 );
 document
-    .querySelectorAll(".outcome-button")
+    .querySelectorAll(
+        ".outcome-button"
+    )
     .forEach(button=>
         button.addEventListener(
             "click",
@@ -1573,11 +1997,15 @@ $("anotherInterventionButton").addEventListener(
     tryAnotherIntervention
 );
 document
-    .querySelectorAll(".back-button")
+    .querySelectorAll(
+        ".back-button"
+    )
     .forEach(button=>
         button.addEventListener(
             "click",
-            ()=>goBack(button.dataset.back)
+            ()=>goBack(
+                button.dataset.back
+            )
         )
     );
 
@@ -1586,25 +2014,38 @@ document
 function exposeDebug(){
 window.INTERRUPT_DEBUG={
 getSession:()=>session,
-getSessions:getSavedSessions,
-getHistory:getEngineHistory,
-getStats:calculateInterventionStats,
-getAdaptiveStats,
-getRecommendation,
-band:value=>
-INTERRUPT_ADAPTIVE.getIntensityBand(
-value
-),
-resetData:()=>{
-localStorage.removeItem(
-STORAGE.sessions
-);
 
+    getSessions:
+        getSavedSessions,
+    getHistory:
+        getEngineHistory,
+    getStats:
+        calculateInterventionStats,
+    getAdaptiveStats:
+        getAdaptiveStats,
+    getRecommendation:
+        getRecommendation,
+    band:value=>
+        INTERRUPT_ADAPTIVE.getIntensityBand(
+            value
+        ),
+    resetData:()=>{
+        if(
+            typeof INTERRUPT_STORAGE!=="undefined"&&
+            typeof INTERRUPT_STORAGE.clearSessions==="function"
+        ){
+            INTERRUPT_STORAGE.clearSessions();
+        }else{
+            localStorage.removeItem(
+                STORAGE.sessions
+            );
+        }
         console.log(
             "INTERRUPT session data cleared."
         );
     },
-    language:()=>currentLanguage
+    language:
+        ()=>currentLanguage
 };
 
 }
@@ -1616,7 +2057,8 @@ exposeDebug();
 const savedLanguage=
     localStorage.getItem(
         STORAGE.language
-    )||"en";
+    )||
+    "en";
 resetSession();
 await loadLanguage(
     savedLanguage
