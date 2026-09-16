@@ -6,11 +6,24 @@
     "done": "FERTIG"
   },
 
+  "insights": {
+  "title": "Deine Muster",
+  "subtitle": "INTERRUPT lernt aus dem, was im Laufe der Zeit passiert.",
+  "total": "Erfasste Impulse",
+  "interrupted": "Unterbrochen",
+  "reduction": "Durchschnittliche Reduktion",
+  "best": "Effektivster Ansatz",
+  "triggerTitle": "Häufiger Auslöser",
+  "recentTitle": "Letzte Sitzungen",
+  "empty": "Noch keine Sitzungen."
+},
+
   "home": {
     "title": "Du brauchst nicht mehr Willenskraft.",
     "subtitle": "Du brauchst eine Möglichkeit, den Moment zu unterbrechen.",
     "button": "UNTERBRECHEN",
-    "privacy": "Privat. Kein Konto erforderlich."
+    "privacy": "Privat. Kein Konto erforderlich.",
+    "insights": "DEINE MUSTER ANZEIGEN"
   },
 
   "behavior": {
