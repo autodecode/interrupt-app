@@ -6,11 +6,24 @@
     "done": "LISTO"
   },
 
+  "insights": {
+  "title": "Tus patrones",
+  "subtitle": "INTERRUPT aprende de lo que ocurre con el tiempo.",
+  "total": "Impulsos registrados",
+  "interrupted": "Interrumpidos",
+  "reduction": "Reducción media",
+  "best": "Enfoque más eficaz",
+  "triggerTitle": "Desencadenante frecuente",
+  "recentTitle": "Sesiones recientes",
+  "empty": "Aún no hay sesiones."
+},
+
   "home": {
     "title": "No necesitas más fuerza de voluntad.",
     "subtitle": "Necesitas una forma de interrumpir el momento.",
     "button": "INTERRUMPIR",
-    "privacy": "Privado. Sin cuenta."
+    "privacy": "Privado. Sin cuenta.",
+    "insights": "VER TUS PATRONES"
   },
 
   "behavior": {
