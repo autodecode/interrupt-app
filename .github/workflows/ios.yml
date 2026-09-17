@@ -53,11 +53,15 @@ jobs:
         run: |
           npx cap sync ios
 
-      - name: Build iOS
+      - name: Show iOS project structure
+        run: |
+          find ios/App -maxdepth 2 -type f | sort
+
+      - name: Build iOS Simulator app
         working-directory: ios/App
         run: |
           xcodebuild \
-            -workspace App.xcworkspace \
+            -project App.xcodeproj \
             -scheme App \
             -sdk iphonesimulator \
             -configuration Debug \
