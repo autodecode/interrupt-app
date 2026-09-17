@@ -1,0 +1,101 @@
+name: Build INTERRUPT Android
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Prepare web application
+        run: |
+          rm -rf www
+          mkdir -p www
+
+          cp index.html www/
+          cp app.js www/
+          cp style.css www/
+
+          if [ -d core ]; then
+            cp -r core www/
+          fi
+
+          if [ -d locales ]; then
+            cp -r locales www/
+          fi
+
+          if [ -f manifest.json ]; then
+            cp manifest.json www/
+          fi
+
+          if [ -d icons ]; then
+            cp -r icons www/
+          fi
+
+      - name: Initialize Capacitor
+        run: |
+          npx cap init INTERRUPT com.interrupt.app --web-dir www
+          npx cap add android
+
+      - name: Copy native source
+        run: |
+          mkdir -p android/app/src/main/java
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main
+
+          cp -r android-native/src/main/java/* \
+            android/app/src/main/java/
+
+          cp -r android-native/src/main/assets/* \
+            android/app/src/main/assets/
+
+          cp android-native/src/main/AndroidManifest.xml \
+            android/app/src/main/AndroidManifest.xml
+
+      - name: Verify native source
+        run: |
+          test -f android/app/src/main/java/com/interrupt/app/protection/InterruptVpnService.java
+          test -f android/app/src/main/java/com/interrupt/app/protection/HevTunnelController.java
+          test -f android/app/src/main/java/hev/htproxy/TProxyService.java
+          test -f android/app/src/main/java/hev/socks5/Socks5Service.java
+          test -f android/app/src/main/assets/hev/tunnel.yml
+          test -f android/app/src/main/assets/hev/socks5.yml
+
+      - name: Sync Capacitor
+        run: |
+          npx cap sync android
+
+      - name: Build Android
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: interrupt-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
