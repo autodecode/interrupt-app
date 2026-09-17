@@ -3,7 +3,8 @@
     "interrupt": "INTERRUMPIR",
     "continue": "CONTINUAR",
     "back": "ATRÁS",
-    "done": "HECHO"
+    "done": "LISTO",
+    "learnMore": "MÁS INFORMACIÓN"
   },
 
   "insights": {
@@ -15,43 +16,78 @@
     "best": "Enfoque más eficaz",
     "triggerTitle": "Desencadenante frecuente",
     "recentTitle": "Sesiones recientes",
-    "empty": "Aún no hay sesiones."
+    "empty": "Aún no hay sesiones.",
+
+    "learning": "LO QUE INTERRUPT ESTÁ APRENDIENDO",
+    "recent": "RENDIMIENTO RECIENTE",
+    "pattern": "TU PATRÓN MÁS FUERTE",
+
+    "bestRecent": "Rendimiento reciente",
+    "bestOverall": "Rendimiento general",
+
+    "uses": "usos",
+    "success": "éxito",
+
+    "commonBehavior": "Comportamiento más frecuente",
+    "commonExpectation": "Expectativa más frecuente",
+    "commonTrigger": "Desencadenante más frecuente",
+
+    "noPattern": "Todavía no hay suficientes situaciones repetidas para identificar un patrón claro.",
+
+    "patternPositive": "{intervention} ha mostrado un resultado positivo cuando este tipo de impulso tiene una intensidad {band}.",
+    "patternMixed": "{intervention} ha mostrado un resultado mixto cuando este tipo de impulso tiene una intensidad {band}.",
+
+    "recentText": "{name} ha sido tu enfoque más eficaz recientemente, con una reducción media de {reduction}.",
+
+    "overallText": "{name} tiene la mayor reducción media de tu historial registrado: {reduction}.",
+
+    "none": "Todavía no hay suficientes datos.",
+
+    "proTitle": "INTERRUPT Pro",
+
+    "proOverall": "Descubre qué intervenciones funcionan mejor para ti de forma constante a partir de tu historial a largo plazo.",
+
+    "proPattern": "Descubre patrones más profundos entre tus impulsos, el contexto, la intensidad y las intervenciones que utilizas.",
+
+    "proProtection": "Comprende cómo interactúan tus ajustes de protección y tu historial de interrupciones a lo largo del tiempo.",
+
+    "proMessage": "Pro convertirá tu historial en patrones personales más profundos y te mostrará qué funciona de forma constante para ti."
   },
 
   "home": {
     "title": "No necesitas más fuerza de voluntad.",
     "subtitle": "Necesitas una forma de interrumpir el momento.",
     "button": "INTERRUMPIR",
-    "privacy": "Privado. No necesitas una cuenta.",
+    "privacy": "Privado. No requiere cuenta.",
     "insights": "VER TUS PATRONES"
   },
 
   "behavior": {
     "title": "¿Qué estás a punto de hacer?",
-    "subtitle": "Elige qué es lo que te está atrayendo ahora mismo.",
+    "subtitle": "Elige lo que te está atrayendo en este momento.",
     "otherLabel": "¿Qué es?",
     "otherPlaceholder": "Escríbelo aquí"
   },
 
   "behaviors": {
-    "gamble": "Apostar",
-    "scroll": "Desplazarme",
+    "gamble": "Jugar",
+    "scroll": "Desplazarte",
     "smoke": "Fumar",
     "eat": "Comer",
     "buy": "Comprar algo",
-    "watch": "Mirar",
+    "watch": "Ver algo",
     "check": "Comprobar algo",
     "other": "Otra cosa"
   },
 
   "intensity": {
-    "title": "¿Qué tan fuerte es el impulso ahora mismo?",
-    "subtitle": "0 significa que apenas está presente. 10 significa extremadamente fuerte."
+    "title": "¿Qué tan fuerte es el impulso ahora?",
+    "subtitle": "0 significa que apenas está presente. 10 significa que es extremadamente fuerte."
   },
 
   "expectation": {
-    "title": "¿Qué esperas obtener de ello?",
-    "subtitle": "¿Qué estás buscando realmente ahora mismo?",
+    "title": "¿Qué esperas que te dé?",
+    "subtitle": "¿Qué estás buscando realmente en este momento?",
     "otherLabel": "¿Qué estás buscando?",
     "otherPlaceholder": "Escríbelo aquí"
   },
@@ -74,7 +110,7 @@
   },
 
   "outcome": {
-    "title": "¿Qué pasó?",
+    "title": "¿Qué ocurrió?",
     "subtitle": "Pase lo que pase, tu respuesta ayuda a INTERRUPT a aprender."
   },
 
@@ -85,7 +121,7 @@
     },
     "delayed": {
       "title": "Lo retrasé",
-      "description": "Me di algo de tiempo antes de actuar."
+      "description": "Me di un poco de tiempo antes de actuar."
     },
     "acted": {
       "title": "Lo hice de todos modos",
@@ -100,7 +136,7 @@
   "result": {
     "intervention": "Intervención",
     "behavior": "Comportamiento",
-    "tryAnother": "Probar otra vez",
+    "tryAnother": "Probar otra",
 
     "interruptedTitle": "Interrumpiste el momento.",
     "delayedTitle": "Creaste cierta distancia.",
@@ -108,7 +144,7 @@
     "unsureTitle": "El momento pasó.",
 
     "messages": {
-      "lower": "El impulso se hizo más débil.",
+      "lower": "El impulso se hizo más tranquilo.",
       "same": "El impulso no cambió esta vez.",
       "higher": "El impulso se hizo más fuerte. Eso también es información útil."
     }
@@ -119,69 +155,51 @@
   },
 
   "interventions": {
-
     "categories": {
-      "defusion": "CREAR DISTANCIA",
-      "cognitive": "MIRAR DE NUEVO",
-      "urge_surfing": "OBSERVAR",
-      "delay": "RETRASAR",
-      "future": "MIRAR HACIA ADELANTE",
-      "environment": "CAMBIAR EL ENTORNO",
-      "need": "ENCONTRAR LA NECESIDAD",
-      "trigger": "ROMPER LA CADENA",
-      "attention": "CAMBIAR LA ATENCIÓN",
+      "defusion": "CREA DISTANCIA",
+      "cognitive": "MÍRALO DE NUEVO",
+      "urge_surfing": "OBSERVA",
+      "delay": "RETRASA",
+      "future": "MIRA HACIA DELANTE",
+      "environment": "CAMBIA TU ENTORNO",
+      "need": "ENCUENTRA LA NECESIDAD",
+      "trigger": "ROMPE LA CADENA",
+      "attention": "CAMBIA EL FOCO",
       "personal": "LO QUE FUNCIONÓ ANTES"
     },
 
     "nameIt": {
-      "title": "PONLE NOMBRE",
-
+      "title": "NÓMBRALO",
       "instruction": "Separemos el impulso de ti.",
-
-      "firstPrompt": "Completa esto: «Tengo el impulso de…»",
-
+      "firstPrompt": "Completa: «Tengo el impulso de…»",
       "placeholder": "Tengo el impulso de...",
-
-      "secondPrompt": "Ahora prueba esto: «Mi cerebro me está diciendo que…»",
-
-      "placeholder2": "Mi cerebro me está diciendo que..."
+      "secondPrompt": "Ahora prueba esto: «Mi cerebro me dice que…»",
+      "placeholder2": "Mi cerebro me dice que..."
     },
 
     "promise": {
       "title": "LA PROMESA",
-
       "intro": "Tu cerebro te está haciendo una oferta.",
-
       "expected": "Ahora mismo espera:",
-
       "durationQuestion": "Si lo haces, ¿cuánto tiempo esperas que dure la sensación?",
-
       "durationPlaceholder": "Unos minutos, una hora, casi todo el día...",
-
-      "afterQuestion": "¿Y qué suele pasar después?",
-
-      "afterPlaceholder": "¿Qué pasa después?"
+      "afterQuestion": "¿Y qué suele ocurrir después?",
+      "afterPlaceholder": "¿Qué ocurre después?"
     },
 
     "wave": {
       "title": "SURFEA LA OLA",
-
       "instruction": "No luches contra el impulso. Obsérvalo.",
-
       "locationPrompt": "¿Dónde lo sientes?",
-
       "locations": {
         "chest": "Pecho",
         "stomach": "Estómago",
         "head": "Cabeza",
         "hands": "Manos",
-        "everywhere": "En todas partes"
+        "everywhere": "Por todas partes"
       },
-
       "timerIntro": "Quédate con la sensación durante 60 segundos.",
-
       "finished": "¿Ha cambiado algo?",
-
       "weaker": "Se hizo más débil",
       "changed": "Cambió",
       "same": "Se mantuvo igual",
@@ -190,61 +208,42 @@
 
     "delay": {
       "title": "AHORA NO",
-
       "instruction": "No tienes que decidirlo para siempre.",
-
       "promise": "Simplemente no lo hagas durante los próximos 10 minutos.",
-
       "start": "EMPEZAR 10:00",
-
-      "waiting": "No tienes que hacer nada. Simplemente deja pasar los diez minutos.",
-
-      "finished": "Los diez minutos han terminado.",
-
-      "stillWant": "Todavía quiero hacerlo",
+      "waiting": "No tienes que hacer nada. Deja que pasen los diez minutos.",
+      "finished": "Han pasado los diez minutos.",
+      "stillWant": "Todavía lo quiero",
       "weaker": "Es más débil",
       "gone": "Ha desaparecido",
       "alreadyDid": "Ya lo hice"
     },
 
     "fastForward": {
-      "title": "ADELANTAR",
-
+      "title": "ADELANTA",
       "intro": "Imagina que ya lo has hecho.",
-
       "tenMinutes": "10 minutos después...",
-
       "tenPlaceholder": "¿Cómo te sientes?",
-
       "tomorrow": "Mañana...",
-
       "tomorrowPlaceholder": "¿Cómo te sientes mañana?",
-
-      "next": "¿Qué pasa después?",
-
+      "next": "¿Qué ocurre después?",
       "nextPlaceholder": "¿Qué ocurre después de eso?"
     },
 
     "changeScene": {
       "title": "CAMBIA DE ESCENA",
-
       "step1": "Levántate.",
       "step2": "Deja el dispositivo o el objeto.",
       "step3": "Ve a otro lugar.",
       "step4": "Quédate allí durante dos minutos.",
-
       "ready": "ESTOY EN OTRO LUGAR",
-
       "wait": "Quédate aquí durante dos minutos."
     },
 
     "actualNeed": {
       "title": "¿QUÉ NECESITAS REALMENTE?",
-
-      "intro": "Olvida el comportamiento por un momento.",
-
+      "intro": "Deja el comportamiento a un lado por un momento.",
       "question": "¿Qué necesitas realmente?",
-
       "options": {
         "stimulation": "Estimulación",
         "relief": "Alivio",
@@ -255,14 +254,13 @@
         "rest": "Descanso",
         "unknown": "No lo sé"
       },
-
       "suggestions": {
         "stimulation": "Dale a tu cerebro algo nuevo durante 90 segundos.",
         "relief": "Respira lentamente y relaja los hombros de forma consciente.",
         "comfort": "Ve a un lugar físicamente cómodo y date dos minutos de tranquilidad.",
         "escape": "Aléjate de la situación durante dos minutos.",
-        "connection": "Envía un mensaje sencillo a alguien en quien confíes.",
-        "control": "Elige una pequeña cosa a tu alrededor que puedas controlar ahora mismo.",
+        "connection": "Envía un mensaje sencillo a alguien de confianza.",
+        "control": "Elige una cosa pequeña a tu alrededor que puedas controlar ahora mismo.",
         "rest": "Deja todo durante dos minutos y permítete parar.",
         "unknown": "No necesitas saberlo todavía. Simplemente crea dos minutos de distancia."
       }
@@ -270,9 +268,7 @@
 
     "breakChain": {
       "title": "ROMPE LA CADENA",
-
       "question": "¿Qué ocurrió justo antes del impulso?",
-
       "options": {
         "boredom": "Aburrimiento",
         "stress": "Estrés",
@@ -283,50 +279,35 @@
         "habit": "Fue automático",
         "nothing_obvious": "Nada evidente"
       },
-
-      "result": "Eso es útil. Ahora interrumpe la cadena aquí.",
-
+      "result": "Es útil saberlo. Ahora interrumpe la cadena aquí.",
       "changeScene": "CAMBIAR DE ESCENA"
     },
 
     "twoFutures": {
       "title": "DOS FUTUROS",
-
-      "intro": "Mira los dos caminos sin juzgar ninguno de ellos.",
-
+      "intro": "Mira los dos caminos sin juzgar ninguno.",
       "act": "SI ACTÚO",
-
       "actPlaceholder": "¿Qué ocurre?",
-
       "dont": "SI NO LO HAGO",
-
       "dontPlaceholder": "¿Qué ocurre en su lugar?"
     },
 
     "switch90": {
       "title": "CAMBIO DE 90 SEGUNDOS",
-
       "instruction": "No pienses. Simplemente haz otra cosa durante 90 segundos.",
-
       "task1": "Encuentra cinco cosas azules a tu alrededor.",
       "task2": "Lava una taza.",
       "task3": "Levántate y camina un poco.",
       "task4": "Cuenta diez objetos a tu alrededor.",
-
       "start": "EMPEZAR 90 SEGUNDOS"
     },
 
     "realityCheck": {
       "title": "COMPROBACIÓN DE LA REALIDAD",
-
       "question": "¿Qué crees que ocurrirá si lo haces?",
-
       "placeholder": "Creo que...",
-
       "certainty": "¿Qué tan seguro estás?",
-
-      "past": "¿Ha ocurrido realmente de forma constante en el pasado?",
-
+      "past": "¿Ha ocurrido realmente así de forma constante antes?",
       "yes": "SÍ",
       "no": "NO",
       "sometimes": "A VECES"
@@ -334,12 +315,9 @@
 
     "previousSuccess": {
       "title": "¿QUÉ FUNCIONÓ LA ÚLTIMA VEZ?",
-
       "intro": "Ya has estado aquí antes.",
-
       "message": "La última vez, este enfoque ayudó a reducir el impulso.",
-
-      "try": "INTÉNTALO DE NUEVO"
+      "try": "PROBAR DE NUEVO"
     },
 
     "generic": {
