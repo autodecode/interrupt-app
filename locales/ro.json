@@ -54,6 +54,30 @@
     "proMessage": "Pro va transforma istoricul tău în tipare personale mai profunde și îți va arăta ce funcționează în mod constant pentru tine."
   },
 
+  "pro": {
+    "title": "Înțelege ce funcționează pentru tine.",
+    "description": "Mergi dincolo de istoricul de bază. Descoperă care intervenții funcționează cel mai bine pentru tiparele tale în timp.",
+    "button": "DESCOPERĂ PRO",
+
+    "screenTitle": "Tiparele tale devin personale.",
+    "screenSubtitle": "Cu cât INTERRUPT învață mai mult, cu atât poate înțelege mai precis ce funcționează pentru tine.",
+
+    "featureAdaptiveTitle": "Recomandări adaptive",
+    "featureAdaptiveText": "Recomandări bazate pe propriul tău istoric și context.",
+
+    "featurePatternsTitle": "Tipare profunde",
+    "featurePatternsText": "Vezi ce legături există în timp între situații, impulsuri și intervențiile pe care le folosești.",
+
+    "featureLongTermTitle": "Perspective pe termen lung",
+    "featureLongTermText": "Înțelege ce se schimbă, ce se repetă și ce te ajută în mod constant.",
+
+    "featureComparisonTitle": "Compararea intervențiilor",
+    "featureComparisonText": "Compară diferite abordări folosind rezultatele tale reale.",
+
+    "comingSoon": "PRO VA FI DISPONIBIL ÎN CURÂND",
+    "comingSoonText": "Validăm care funcții sunt cele mai utile înainte de a deschide accesul."
+  },
+
   "home": {
     "title": "Nu ai nevoie de mai multă voință.",
     "subtitle": "Ai nevoie de o modalitate de a întrerupe momentul.",
