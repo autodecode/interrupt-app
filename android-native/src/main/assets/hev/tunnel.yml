@@ -1,0 +1,20 @@
+tunnel:
+  name: tun0
+  mtu: 1500
+  multi-queue: false
+  ipv4: 10.111.0.2
+  ipv6: 'fd00:1:1:1::2'
+  icmp: 'off'
+
+socks5:
+  port: 1080
+  address: 127.0.0.1
+  udp: 'udp'
+  pipeline: false
+
+misc:
+  connect-timeout: 10000
+  tcp-read-write-timeout: 300000
+  udp-read-write-timeout: 60000
+  log-level: warn
+  max-session-count: 0
