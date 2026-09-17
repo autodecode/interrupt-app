@@ -4,7 +4,7 @@
     "continue": "CONTINUE",
     "back": "BACK",
     "done": "DONE",
-    "learnMore": "Learn more"
+    "learnMore": "LEARN MORE"
   },
 
   "insights": {
@@ -16,7 +16,42 @@
     "best": "Most effective approach",
     "triggerTitle": "Common trigger",
     "recentTitle": "Recent sessions",
-    "empty": "No sessions yet."
+    "empty": "No sessions yet.",
+
+    "learning": "WHAT INTERRUPT IS LEARNING",
+    "recent": "RECENT PERFORMANCE",
+    "pattern": "YOUR STRONGEST PATTERN",
+
+    "bestRecent": "Recent performance",
+    "bestOverall": "Overall performance",
+
+    "uses": "uses",
+    "success": "success",
+
+    "commonBehavior": "Most common behavior",
+    "commonExpectation": "Most common expectation",
+    "commonTrigger": "Most common trigger",
+
+    "noPattern": "Not enough repeated situations yet to identify a strong pattern.",
+
+    "patternPositive": "{intervention} has shown a positive result when this type of urge is {band} intensity.",
+    "patternMixed": "{intervention} has shown a mixed result when this type of urge is {band} intensity.",
+
+    "recentText": "{name} has been your strongest recent approach, with an average reduction of {reduction}.",
+
+    "overallText": "{name} has the strongest overall reduction in your recorded history: {reduction}.",
+
+    "none": "Not enough data yet.",
+
+    "proTitle": "INTERRUPT Pro",
+
+    "proOverall": "See which interventions consistently work best for you across your longer-term history.",
+
+    "proPattern": "Discover deeper patterns between your urges, contexts, intensity and the interventions you use.",
+
+    "proProtection": "Understand how your protection settings and interruption history interact over time.",
+
+    "proMessage": "Pro will turn your history into deeper personal patterns and show you what consistently works for you."
   },
 
   "home": {
@@ -102,10 +137,12 @@
     "intervention": "Intervention",
     "behavior": "Behavior",
     "tryAnother": "Try Another",
+
     "interruptedTitle": "You interrupted the moment.",
     "delayedTitle": "You created some distance.",
     "actedTitle": "The urge won this time.",
     "unsureTitle": "The moment passed.",
+
     "messages": {
       "lower": "The urge got quieter.",
       "same": "The urge didn't move this time.",
