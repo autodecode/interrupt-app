@@ -54,6 +54,24 @@
     "proMessage": "Pro verwandelt deinen Verlauf in tiefere persönliche Muster und zeigt dir, was für dich dauerhaft funktioniert."
   },
 
+  "pro": {
+    "title": "Entdecke, was für dich funktioniert.",
+    "description": "Gehe über deinen grundlegenden Verlauf hinaus. Entdecke, welche Interventionen im Laufe der Zeit am besten zu deinen Mustern passen.",
+    "button": "PRO ENTDECKEN",
+    "screenTitle": "Deine Muster werden persönlich.",
+    "screenSubtitle": "Je mehr INTERRUPT lernt, desto genauer kann es verstehen, was für dich funktioniert.",
+    "featureAdaptiveTitle": "Adaptive Empfehlungen",
+    "featureAdaptiveText": "Empfehlungen auf Grundlage deines eigenen Verlaufs und Kontexts.",
+    "featurePatternsTitle": "Tiefere Muster",
+    "featurePatternsText": "Erkenne, welche Situationen, Impulse und Interventionen im Laufe der Zeit miteinander verbunden sind.",
+    "featureLongTermTitle": "Langfristige Erkenntnisse",
+    "featureLongTermText": "Verstehe, was sich verändert, was sich wiederholt und was dir dauerhaft hilft.",
+    "featureComparisonTitle": "Interventionen vergleichen",
+    "featureComparisonText": "Vergleiche verschiedene Ansätze anhand deiner tatsächlichen Ergebnisse.",
+    "comingSoon": "PRO KOMMT BALD",
+    "comingSoonText": "Wir prüfen derzeit, welche Funktionen am nützlichsten sind, bevor wir den Zugang öffnen."
+  },
+
   "home": {
     "title": "Du brauchst nicht mehr Willenskraft.",
     "subtitle": "Du brauchst eine Möglichkeit, den Moment zu unterbrechen.",
