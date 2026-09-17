@@ -25,13 +25,107 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager "platforms;android-35"
+          sdkmanager "build-tools;35.0.0"
+          sdkmanager "ndk;27.2.12479018"
+
+      - name: Build HEV native libraries
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.2.12479018
+        run: |
+          set -e
+
+          mkdir -p native-build
+          cd native-build
+
+          git clone --recursive \
+            --branch 2.17.1 \
+            https://github.com/heiher/hev-socks5-tunnel.git \
+            hev-socks5-tunnel
+
+          git clone --recursive \
+            https://github.com/heiher/hev-socks5-server.git \
+            hev-socks5-server
+
+          mkdir -p jni-tunnel
+
+          printf '%s\n' \
+            'include $(call all-subdir-makefiles)' \
+            > jni-tunnel/Android.mk
+
+          "$ANDROID_NDK_HOME/ndk-build" \
+            NDK_PROJECT_PATH=. \
+            APP_BUILD_SCRIPT="$PWD/jni-tunnel/Android.mk" \
+            APP_ABI="armeabi-v7a arm64-v8a x86 x86_64" \
+            APP_PLATFORM=android-29 \
+            NDK_LIBS_OUT="$PWD/tunnel-libs" \
+            NDK_OUT="$PWD/tunnel-obj"
+
+          mkdir -p jni-server
+
+          printf '%s\n' \
+            'include $(call all-subdir-makefiles)' \
+            > jni-server/Android.mk
+
+          "$ANDROID_NDK_HOME/ndk-build" \
+            NDK_PROJECT_PATH=. \
+            APP_BUILD_SCRIPT="$PWD/jni-server/Android.mk" \
+            APP_ABI="armeabi-v7a arm64-v8a x86 x86_64" \
+            APP_PLATFORM=android-29 \
+            APP_CFLAGS="-DPKGNAME=hev/socks5 -DCLSNAME=Socks5Service" \
+            NDK_LIBS_OUT="$PWD/server-libs" \
+            NDK_OUT="$PWD/server-obj"
+
+      - name: Verify HEV libraries
+        run: |
+          set -e
+
+          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
+
+            test -f \
+              "native-build/tunnel-libs/$abi/libhev-socks5-tunnel.so"
+
+            test -f \
+              "native-build/server-libs/$abi/libhev-socks5-server.so"
+
+          done
+
+      - name: Install HEV libraries
+        run: |
+          set -e
+
+          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
+
+            mkdir -p \
+              "android-native/src/main/jniLibs/$abi"
+
+            cp \
+              "native-build/tunnel-libs/$abi/libhev-socks5-tunnel.so" \
+              "android-native/src/main/jniLibs/$abi/"
+
+            cp \
+              "native-build/server-libs/$abi/libhev-socks5-server.so" \
+              "android-native/src/main/jniLibs/$abi/"
+
+          done
+
       - name: Install Capacitor
         run: |
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install \
+            @capacitor/core \
+            @capacitor/cli \
+            @capacitor/android
 
       - name: Prepare web application
         run: |
+          set -e
+
           rm -rf www
           mkdir -p www
 
@@ -60,35 +154,67 @@ jobs:
           npx cap init INTERRUPT com.interrupt.app --web-dir www
           npx cap add android
 
-      - name: Copy native source
+      - name: Install native INTERRUPT source
         run: |
+          set -e
+
           mkdir -p android/app/src/main/java
           mkdir -p android/app/src/main/assets
-          mkdir -p android/app/src/main
+          mkdir -p android/app/src/main/jniLibs
 
-          cp -r android-native/src/main/java/* \
+          cp -r \
+            android-native/src/main/java/* \
             android/app/src/main/java/
 
-          cp -r android-native/src/main/assets/* \
+          cp -r \
+            android-native/src/main/assets/* \
             android/app/src/main/assets/
 
-          cp android-native/src/main/AndroidManifest.xml \
+          cp -r \
+            android-native/src/main/jniLibs/* \
+            android/app/src/main/jniLibs/
+
+          cp \
+            android-native/src/main/AndroidManifest.xml \
             android/app/src/main/AndroidManifest.xml
 
       - name: Verify native source
         run: |
-          test -f android/app/src/main/java/com/interrupt/app/protection/InterruptVpnService.java
-          test -f android/app/src/main/java/com/interrupt/app/protection/HevTunnelController.java
-          test -f android/app/src/main/java/hev/htproxy/TProxyService.java
-          test -f android/app/src/main/java/hev/socks5/Socks5Service.java
-          test -f android/app/src/main/assets/hev/tunnel.yml
-          test -f android/app/src/main/assets/hev/socks5.yml
+          set -e
+
+          test -f \
+            android/app/src/main/java/com/interrupt/app/protection/InterruptVpnService.java
+
+          test -f \
+            android/app/src/main/java/com/interrupt/app/protection/HevTunnelController.java
+
+          test -f \
+            android/app/src/main/java/hev/htproxy/TProxyService.java
+
+          test -f \
+            android/app/src/main/java/hev/socks5/Socks5Service.java
+
+          test -f \
+            android/app/src/main/assets/hev/tunnel.yml
+
+          test -f \
+            android/app/src/main/assets/hev/socks5.yml
+
+          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
+
+            test -f \
+              "android/app/src/main/jniLibs/$abi/libhev-socks5-tunnel.so"
+
+            test -f \
+              "android/app/src/main/jniLibs/$abi/libhev-socks5-server.so"
+
+          done
 
       - name: Sync Capacitor
         run: |
           npx cap sync android
 
-      - name: Build Android
+      - name: Build APK
         working-directory: android
         run: |
           chmod +x gradlew
