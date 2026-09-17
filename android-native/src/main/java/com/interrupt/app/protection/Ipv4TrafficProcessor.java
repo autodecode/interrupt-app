@@ -51,12 +51,11 @@ public final class Ipv4TrafficProcessor {
 
 
         /*
-         * Only UDP traffic can currently contain the
-         * DNS queries handled by DnsProtectionEngine.
+         * At this layer we only inspect UDP traffic.
          *
-         * TCP and all other IPv4 protocols are deliberately
-         * not consumed here. The VPN transport layer will
-         * decide how unsupported traffic is handled.
+         * TCP and other protocols are intentionally left
+         * untouched and will be handled by the VPN transport
+         * layer.
          */
         if (!ipv4.isUdp()) {
             return null;
@@ -76,19 +75,24 @@ public final class Ipv4TrafficProcessor {
         }
 
 
+        /*
+         * Do not assume that every UDP packet on port 53
+         * contains a DNS query. DnsProtectionEngine performs
+         * the actual DNS packet validation.
+         */
         if (!udp.isDnsRequest()) {
             return null;
         }
 
 
-        byte[] dnsPayload =
+        byte[] dnsRequest =
                 udp.getPayload();
 
 
         byte[] dnsResponse =
                 dnsProtectionEngine.process(
-                        dnsPayload,
-                        dnsPayload.length
+                        dnsRequest,
+                        dnsRequest.length
                 );
 
 
@@ -98,13 +102,44 @@ public final class Ipv4TrafficProcessor {
 
 
         /*
-         * At this stage we have a DNS response payload,
-         * but it cannot simply be written back as-is.
+         * The response travels in the opposite direction:
          *
-         * The next networking layer will construct the
-         * corresponding UDP/IP response packet and fix
-         * the checksums before writing it to the TUN device.
+         * request source      -> request destination
+         * response source    <- request destination
+         * response destination<- request source
+         *
+         * The UDP ports are reversed in exactly the same way.
          */
-        return dnsResponse;
+        byte[] responseSource =
+                ipv4.getDestinationAddress();
+
+
+        byte[] responseDestination =
+                ipv4.getSourceAddress();
+
+
+        int responseSourcePort =
+                udp.getDestinationPort();
+
+
+        int responseDestinationPort =
+                udp.getSourcePort();
+
+
+        /*
+         * Rebuild a complete IPv4 + UDP packet.
+         *
+         * UdpIpv4PacketBuilder calculates both:
+         *
+         * - IPv4 header checksum
+         * - UDP checksum including the IPv4 pseudo-header
+         */
+        return UdpIpv4PacketBuilder.buildResponse(
+                responseSource,
+                responseDestination,
+                responseSourcePort,
+                responseDestinationPort,
+                dnsResponse
+        );
     }
 }
