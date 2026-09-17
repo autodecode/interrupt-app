@@ -32,6 +32,12 @@ jobs:
             npx cap init INTERRUPT com.interrupt.app --web-dir .
           fi
 
+      - name: Remove incomplete Android platform
+        run: |
+          if [ -d android ] && [ ! -f android/app/src/main/assets/capacitor.plugins.json ]; then
+            rm -rf android
+          fi
+
       - name: Add Android platform
         run: |
           if [ ! -d android ]; then
