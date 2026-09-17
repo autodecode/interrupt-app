@@ -25,20 +25,62 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install Android SDK and NDK
+      - name: Configure Android SDK
         run: |
           set -e
 
-          yes | sdkmanager --licenses > /dev/null || true
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
 
-          sdkmanager "platform-tools"
-          sdkmanager "platforms;android-35"
-          sdkmanager "build-tools;35.0.0"
-          sdkmanager "ndk;27.2.12479018"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+
+          test -d "$ANDROID_SDK_ROOT"
+
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager"
+          fi
+
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$ANDROID_SDK_ROOT/cmdline-tools" -name sdkmanager -type f 2>/dev/null | head -n 1)"
+          fi
+
+          if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
+            echo "sdkmanager not found"
+            find "$ANDROID_SDK_ROOT" -maxdepth 5 -type f -name sdkmanager -print || true
+            exit 1
+          fi
+
+          SDK_DIR="$(dirname "$(dirname "$SDKMANAGER")")"
+
+          echo "$SDK_DIR/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+
+          echo "SDKMANAGER=$SDKMANAGER"
+
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+
+          "$SDKMANAGER" "platform-tools"
+          "$SDKMANAGER" "platforms;android-35"
+          "$SDKMANAGER" "build-tools;35.0.0"
+          "$SDKMANAGER" "ndk;27.2.12479018"
+
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.2.12479018" >> "$GITHUB_ENV"
+
+      - name: Verify Android toolchain
+        run: |
+          set -e
+
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+
+          test -x "$ANDROID_NDK_HOME/ndk-build"
+
+          "$ANDROID_NDK_HOME/ndk-build" --version
 
       - name: Build HEV tunnel
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.2.12479018
         run: |
           set -e
 
@@ -59,8 +101,6 @@ jobs:
             NDK_OUT="$PWD/tunnel-obj"
 
       - name: Build HEV SOCKS5 server
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.2.12479018
         run: |
           set -e
 
