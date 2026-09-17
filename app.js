@@ -997,7 +997,7 @@ const text=languageTexts[currentLanguage]||languageTexts.en;
 let message;
 
 if(recommendation.reduction>0){
-if(recommendation.successes===1)message=text.last;
+if(recommendation.uses===1)message=text.last;
 else if(recommendation.confidence==="high"||recommendation.recencyWeightedSuccessRate>=.7)message=text.repeat;
 else message=text.similar
 }
@@ -1661,27 +1661,59 @@ const cutoff=Date.now()-days*86400000;
 return getEngineHistory().filter(item=>new Date(item.completedAt||item.startedAt||0).getTime()>=cutoff)
 }
 
-function getBestIntervention(history){
-if(!history.length)return null;
 
-const stats=INTERRUPT_ADAPTIVE.buildStats(history);
-let best=null;
+/* -------------------------------------------------
+   ADAPTIVE ANALYTICS
+------------------------------------------------- */
 
-Object.entries(stats).forEach(([id,data])=>{
-if(!best||data.recencyWeightedImpact>best.recencyWeightedImpact){
-best={
-id,
-uses:data.uses,
-averageImpact:data.averageImpact,
-recencyWeightedImpact:data.recencyWeightedImpact,
-successRate:data.successRate,
-negativeRate:data.negativeRate,
-confidence:data.confidence
+function getInsightStats(history){
+if(!Array.isArray(history)||!history.length)return{};
+return INTERRUPT_ADAPTIVE.buildStats(history,{})
 }
-}
-});
 
-return best
+function getInsightBest(history){
+if(!Array.isArray(history)||!history.length)return null;
+
+const stats=getInsightStats(history);
+
+const scored=INTERVENTIONS
+.map(intervention=>({
+intervention,
+score:INTERRUPT_ADAPTIVE.scoreIntervention(
+intervention,
+stats,
+[],
+5
+),
+stats:stats[intervention]||null
+}))
+.filter(item=>item.stats)
+.sort((a,b)=>b.score-a.score);
+
+if(!scored.length)return null;
+
+const best=scored[0];
+
+return{
+intervention:best.intervention,
+score:best.score,
+uses:best.stats.uses,
+averageImpact:best.stats.averageImpact,
+successRate:best.stats.successRate,
+negativeRate:best.stats.negativeRate,
+recencyWeightedImpact:best.stats.recencyWeightedImpact,
+recencyWeightedSuccessRate:best.stats.recencyWeightedSuccessRate,
+contextRelevance:best.stats.contextRelevance,
+reliability:best.stats.reliability,
+confidence:best.stats.confidence,
+last:best.stats.last,
+lastSuccessful:best.stats.successful
+.sort(
+(a,b)=>
+new Date(b.completedAt||b.startedAt||0)-
+new Date(a.completedAt||a.startedAt||0)
+)[0]||null
+}
 }
 
 function getMostCommon(history,key){
@@ -1700,57 +1732,17 @@ if(!best||count>best.count)best={value,count}
 return best
 }
 
-function getBestContextPattern(history){
-if(!history.length)return null;
-
-const groups={};
-
-history.forEach(item=>{
-if(!item.intervention||!item.behavior)return;
-
-const behavior=item.behavior;
-const expectation=item.expectation||"unknown";
-const band=INTERRUPT_ADAPTIVE.getIntensityBand(item.intensityBefore);
-const key=`${behavior}|${expectation}|${band}`;
-
-if(!groups[key]){
-groups[key]={
-behavior,
-expectation,
-band,
-count:0,
-impact:0,
-positive:0
-}
+function getInsightPatterns(history){
+return INTERRUPT_ADAPTIVE.getContextPatterns(history,2)
 }
 
-const group=groups[key];
-const impact=item.intensityBefore-item.intensityAfter;
-
-group.count++;
-group.impact+=impact;
-
-if(impact>0)group.positive++
-});
-
-let best=null;
-
-Object.values(groups).forEach(group=>{
-if(group.count<2)return;
-
-group.averageImpact=group.impact/group.count;
-group.successRate=group.positive/group.count;
-
-if(
-!best||
-group.averageImpact>best.averageImpact||
-group.averageImpact===best.averageImpact&&group.count>best.count
-){
-best=group
+function getBestInsightPattern(history){
+const patterns=getInsightPatterns(history);
+return patterns[0]||null
 }
-});
 
-return best
+function getPatternIntervention(pattern){
+return pattern?.bestIntervention?.intervention||null
 }
 
 function createInsightSection(title,text){
@@ -1843,17 +1835,18 @@ const reduction=totalBefore>0
 :0;
 
 const recentHistory=getRecentHistory(30);
-const recentBest=getBestIntervention(recentHistory);
-const overallBest=getBestIntervention(history);
+const recentBest=getInsightBest(recentHistory);
+const overallBest=getInsightBest(history);
 const commonBehavior=getMostCommon(history,"behavior");
 const commonExpectation=getMostCommon(history,"expectation");
 const commonTrigger=getMostCommon(history,"trigger");
-const pattern=getBestContextPattern(history);
+const pattern=getBestInsightPattern(history);
+const patternIntervention=getPatternIntervention(pattern);
 
 if($("insightTotal"))$("insightTotal").textContent=total;
 if($("insightInterrupted"))$("insightInterrupted").textContent=interrupted;
 if($("insightReduction"))$("insightReduction").textContent=`${reduction>0?"−":""}${Math.abs(reduction)}%`;
-if($("insightBest"))$("insightBest").textContent=overallBest?interventionTitle(overallBest.id):"—";
+if($("insightBest"))$("insightBest").textContent=overallBest?interventionTitle(overallBest.intervention):"—";
 if($("insightTrigger"))$("insightTrigger").textContent=commonTrigger?getLabel("trigger",commonTrigger.value):"—";
 
 const recent=$("recentSessions");
@@ -1898,9 +1891,9 @@ createInsightSection(
 t("insights.recent","RECENT PERFORMANCE"),
 t(
 "insights.recentText",
-`${interventionTitle(recentBest.id)} has been your strongest recent approach, with an average reduction of ${reductionText}.`,
+`${interventionTitle(recentBest.intervention)} has been your strongest recent approach, with an average reduction of ${reductionText}.`,
 {
-name:interventionTitle(recentBest.id),
+name:interventionTitle(recentBest.intervention),
 reduction:reductionText
 }
 )
@@ -1919,9 +1912,9 @@ createInsightSection(
 t("insights.learning","WHAT INTERRUPT IS LEARNING"),
 t(
 "insights.overallText",
-`${interventionTitle(overallBest.id)} has the strongest overall reduction in your recorded history: ${reductionText}.`,
+`${interventionTitle(overallBest.intervention)} has the strongest overall reduction in your recorded history: ${reductionText}.`,
 {
-name:interventionTitle(overallBest.id),
+name:interventionTitle(overallBest.intervention),
 reduction:reductionText
 }
 )
@@ -1939,38 +1932,25 @@ t("insights.proOverall","Unlock long-term performance insights from your history
 
 if(hasFeature("deepPatterns")){
 if(pattern){
-const matching=history.filter(item=>
-item.behavior===pattern.behavior&&
-(item.expectation||"unknown")===pattern.expectation&&
-INTERRUPT_ADAPTIVE.getIntensityBand(item.intensityBefore)===pattern.band
-);
-
-const patternStats=INTERRUPT_ADAPTIVE.buildStats(matching);
-
-const intervention=
-Object.entries(patternStats)
-.sort((a,b)=>b[1].recencyWeightedImpact-a[1].recencyWeightedImpact)[0]?.[0]||
-overallBest?.id;
-
 const patternText=pattern.averageImpact>0
 ?t(
 "insights.patternPositive",
-`${intervention?interventionTitle(intervention):"—"} has shown a positive result when this type of urge is ${pattern.band} intensity.`,
+`${patternIntervention?interventionTitle(patternIntervention):"—"} has shown a positive result when this type of urge is ${pattern.intensityBand} intensity.`,
 {
-intervention:intervention?interventionTitle(intervention):"—",
+intervention:patternIntervention?interventionTitle(patternIntervention):"—",
 behavior:getLabel("behavior",pattern.behavior),
 expectation:getLabel("expectation",pattern.expectation),
-band:pattern.band
+band:pattern.intensityBand
 }
 )
 :t(
 "insights.patternMixed",
-`${intervention?interventionTitle(intervention):"—"} has shown a mixed result when this type of urge is ${pattern.band} intensity.`,
+`${patternIntervention?interventionTitle(patternIntervention):"—"} has shown a mixed result when this type of urge is ${pattern.intensityBand} intensity.`,
 {
-intervention:intervention?interventionTitle(intervention):"—",
+intervention:patternIntervention?interventionTitle(patternIntervention):"—",
 behavior:getLabel("behavior",pattern.behavior),
 expectation:getLabel("expectation",pattern.expectation),
-band:pattern.band
+band:pattern.intensityBand
 }
 );
 
@@ -2168,12 +2148,48 @@ getAdaptiveStats,
 getRecommendation,
 getPreviousSuccessRecommendation,
 
+getProfiles:()=>{
+return INTERRUPT_ADAPTIVE.getInterventionProfiles(
+getEngineHistory(),
+getAdaptiveContext(),
+INTERVENTIONS
+)
+},
+
+getPatterns:()=>{
+return INTERRUPT_ADAPTIVE.getContextPatterns(
+getEngineHistory(),
+2
+)
+},
+
+getLearningSummary:()=>{
+return INTERRUPT_ADAPTIVE.getLearningSummary(
+getEngineHistory(),
+getAdaptiveContext(),
+INTERVENTIONS
+)
+},
+
+getBestIntervention:()=>{
+return getInsightBest(getEngineHistory())
+},
+
 getInsights:()=>{
 renderInsights();
 return{
 sessions:getCompletedSessions(),
 history:getEngineHistory(),
-stats:INTERRUPT_ADAPTIVE.buildStats(getEngineHistory()),
+stats:INTERRUPT_ADAPTIVE.buildStats(getEngineHistory(),{}),
+profiles:INTERRUPT_ADAPTIVE.getInterventionProfiles(
+getEngineHistory(),
+{},
+INTERVENTIONS
+),
+patterns:INTERRUPT_ADAPTIVE.getContextPatterns(
+getEngineHistory(),
+2
+),
 protection:getProtectionStats()
 }
 },
