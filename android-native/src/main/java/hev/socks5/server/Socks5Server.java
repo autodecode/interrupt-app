@@ -1,19 +1,19 @@
-package hev.socks5.server;
+package hev.socks5;
 
-public final class Socks5Server {
+public final class Socks5Service {
 
     static {
         System.loadLibrary("hev-socks5-server");
     }
 
-    private Socks5Server() {
+    private Socks5Service() {
     }
 
-    public static native boolean StartService(
+    public static native boolean Socks5StartService(
             String configPath
     );
 
-    public static native boolean StopService();
+    public static native boolean Socks5StopService();
 
-    public static native boolean IsRunning();
+    public static native boolean Socks5IsRunning();
 }
