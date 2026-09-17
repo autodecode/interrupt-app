@@ -3,7 +3,8 @@
     "interrupt": "UNTERBRECHEN",
     "continue": "WEITER",
     "back": "ZURÜCK",
-    "done": "FERTIG"
+    "done": "FERTIG",
+    "learnMore": "MEHR ERFAHREN"
   },
 
   "insights": {
@@ -13,9 +14,44 @@
     "interrupted": "Unterbrochen",
     "reduction": "Durchschnittliche Reduktion",
     "best": "Wirksamster Ansatz",
-    "triggerTitle": "Häufiger Auslöser",
+    "triggerTitle": "Häufigster Auslöser",
     "recentTitle": "Letzte Sitzungen",
-    "empty": "Noch keine Sitzungen."
+    "empty": "Noch keine Sitzungen.",
+
+    "learning": "WAS INTERRUPT LERNT",
+    "recent": "AKTUELLE LEISTUNG",
+    "pattern": "DEIN STÄRKSTES MUSTER",
+
+    "bestRecent": "Aktuelle Leistung",
+    "bestOverall": "Gesamtleistung",
+
+    "uses": "Anwendungen",
+    "success": "Erfolg",
+
+    "commonBehavior": "Häufigstes Verhalten",
+    "commonExpectation": "Häufigste Erwartung",
+    "commonTrigger": "Häufigster Auslöser",
+
+    "noPattern": "Es gibt noch nicht genügend wiederholte Situationen, um ein klares Muster zu erkennen.",
+
+    "patternPositive": "{intervention} hat positive Ergebnisse gezeigt, wenn dieser Impuls eine {band} Intensität hat.",
+    "patternMixed": "{intervention} hat gemischte Ergebnisse gezeigt, wenn dieser Impuls eine {band} Intensität hat.",
+
+    "recentText": "{name} war zuletzt dein stärkster Ansatz, mit einer durchschnittlichen Reduktion von {reduction}.",
+
+    "overallText": "{name} zeigt die stärkste durchschnittliche Reduktion in deinem bisherigen Verlauf: {reduction}.",
+
+    "none": "Noch nicht genügend Daten.",
+
+    "proTitle": "INTERRUPT Pro",
+
+    "proOverall": "Sieh, welche Interventionen über deinen längeren Verlauf hinweg dauerhaft am besten für dich funktionieren.",
+
+    "proPattern": "Entdecke tiefere Muster zwischen deinen Impulsen, ihrem Kontext, ihrer Intensität und den Interventionen, die du verwendest.",
+
+    "proProtection": "Verstehe, wie deine Schutzeinstellungen und dein Unterbrechungsverlauf sich im Laufe der Zeit beeinflussen.",
+
+    "proMessage": "Pro verwandelt deinen Verlauf in tiefere persönliche Muster und zeigt dir, was für dich dauerhaft funktioniert."
   },
 
   "home": {
@@ -80,8 +116,8 @@
 
   "outcomes": {
     "interrupted": {
-      "title": "Ich habe es unterbrochen",
-      "description": "Ich habe mich entschieden, nicht nach dem Impuls zu handeln."
+      "title": "Ich habe ihn unterbrochen",
+      "description": "Ich habe mich entschieden, nicht auf den Impuls zu reagieren."
     },
     "delayed": {
       "title": "Ich habe es aufgeschoben",
@@ -100,7 +136,7 @@
   "result": {
     "intervention": "Intervention",
     "behavior": "Verhalten",
-    "tryAnother": "Noch einmal versuchen",
+    "tryAnother": "Eine andere ausprobieren",
 
     "interruptedTitle": "Du hast den Moment unterbrochen.",
     "delayedTitle": "Du hast etwas Abstand geschaffen.",
@@ -108,9 +144,9 @@
     "unsureTitle": "Der Moment ist vorbei.",
 
     "messages": {
-      "lower": "Der Impuls wurde schwächer.",
+      "lower": "Der Impuls ist schwächer geworden.",
       "same": "Der Impuls hat sich diesmal nicht verändert.",
-      "higher": "Der Impuls wurde stärker. Auch das ist nützliche Information."
+      "higher": "Der Impuls ist stärker geworden. Auch das ist eine nützliche Information."
     }
   },
 
@@ -119,88 +155,64 @@
   },
 
   "interventions": {
-
     "categories": {
       "defusion": "ABSTAND SCHAFFEN",
       "cognitive": "NOCH EINMAL HINSCHAUEN",
       "urge_surfing": "BEOBACHTEN",
       "delay": "AUFSCHIEBEN",
       "future": "VORAUSSCHAUEN",
-      "environment": "UMGEBUNG VERÄNDERN",
+      "environment": "DEINE UMGEBUNG ÄNDERN",
       "need": "DAS BEDÜRFNIS FINDEN",
       "trigger": "DIE KETTE UNTERBRECHEN",
-      "attention": "AUFMERKSAMKEIT VERLAGERN",
-      "personal": "WAS SCHON FUNKTIONIERT HAT"
+      "attention": "AUFMERKSAMKEIT VERSCHIEBEN",
+      "personal": "WAS FRÜHER FUNKTIONIERT HAT"
     },
 
     "nameIt": {
       "title": "BENENNE ES",
-
-      "instruction": "Trenne den Impuls von dir.",
-
-      "firstPrompt": "Vervollständige: „Ich verspüre den Impuls, …“",
-
-      "placeholder": "Ich verspüre den Impuls, ...",
-
-      "secondPrompt": "Versuche es jetzt so: „Mein Gehirn sagt mir, ich soll …“",
-
-      "placeholder2": "Mein Gehirn sagt mir, ich soll ..."
+      "instruction": "Trennen wir den Impuls von dir.",
+      "firstPrompt": "Vervollständige: „Ich habe den Impuls, …“",
+      "placeholder": "Ich habe den Impuls, ...",
+      "secondPrompt": "Versuche jetzt: „Mein Gehirn sagt mir, dass ich … soll“",
+      "placeholder2": "Mein Gehirn sagt mir, dass ich ... soll"
     },
 
     "promise": {
       "title": "DAS VERSPRECHEN",
-
       "intro": "Dein Gehirn macht dir ein Angebot.",
-
       "expected": "Im Moment erwartet es:",
-
-      "durationQuestion": "Wenn du es tust, wie lange wird das Gefühl deiner Erwartung nach anhalten?",
-
+      "durationQuestion": "Wenn du es tust, wie lange wird das Gefühl deiner Meinung nach anhalten?",
       "durationPlaceholder": "Ein paar Minuten, eine Stunde, den größten Teil des Tages...",
-
       "afterQuestion": "Und was passiert normalerweise danach?",
-
       "afterPlaceholder": "Was passiert als Nächstes?"
     },
 
     "wave": {
-      "title": "DIE WELLE REITEN",
-
-      "instruction": "Kämpfe nicht gegen den Impuls. Beobachte ihn.",
-
+      "title": "AUF DER WELLE REITEN",
+      "instruction": "Bekämpfe den Impuls nicht. Beobachte ihn.",
       "locationPrompt": "Wo spürst du ihn?",
-
       "locations": {
         "chest": "Brust",
-        "stomach": "Bauch",
+        "stomach": "Magen",
         "head": "Kopf",
         "hands": "Hände",
         "everywhere": "Überall"
       },
-
       "timerIntro": "Bleib 60 Sekunden bei dieser Empfindung.",
-
       "finished": "Hat sich etwas verändert?",
-
       "weaker": "Er wurde schwächer",
       "changed": "Er hat sich verändert",
-      "same": "Er ist gleich geblieben",
+      "same": "Er blieb gleich",
       "stronger": "Er wurde stärker"
     },
 
     "delay": {
       "title": "NICHT JETZT",
-
       "instruction": "Du musst dich nicht für immer entscheiden.",
-
       "promise": "Tu es einfach in den nächsten 10 Minuten nicht.",
-
-      "start": "START 10:00",
-
+      "start": "10:00 STARTEN",
       "waiting": "Du musst nichts tun. Lass einfach die zehn Minuten verstreichen.",
-
       "finished": "Die zehn Minuten sind vorbei.",
-
       "stillWant": "Ich will es immer noch",
       "weaker": "Es ist schwächer",
       "gone": "Es ist weg",
@@ -209,44 +221,31 @@
 
     "fastForward": {
       "title": "VORSPULEN",
-
       "intro": "Stell dir vor, du hast es bereits getan.",
-
       "tenMinutes": "10 Minuten später...",
-
       "tenPlaceholder": "Wie fühlst du dich?",
-
       "tomorrow": "Morgen...",
-
       "tomorrowPlaceholder": "Wie fühlst du dich morgen?",
-
       "next": "Was passiert als Nächstes?",
-
       "nextPlaceholder": "Was passiert danach?"
     },
 
     "changeScene": {
-      "title": "WECHSLE DIE UMGEBUNG",
-
+      "title": "SZENE WECHSELN",
       "step1": "Steh auf.",
       "step2": "Leg das Gerät oder den Gegenstand weg.",
       "step3": "Geh an einen anderen Ort.",
       "step4": "Bleib dort zwei Minuten.",
-
       "ready": "ICH BIN WOANDERS",
-
       "wait": "Bleib zwei Minuten hier."
     },
 
     "actualNeed": {
       "title": "WAS BRAUCHST DU WIRKLICH?",
-
       "intro": "Vergiss das Verhalten für einen Moment.",
-
       "question": "Was brauchst du wirklich?",
-
       "options": {
-        "stimulation": "Anregung",
+        "stimulation": "Stimulation",
         "relief": "Erleichterung",
         "comfort": "Trost",
         "escape": "Flucht",
@@ -255,24 +254,21 @@
         "rest": "Ruhe",
         "unknown": "Ich weiß es nicht"
       },
-
       "suggestions": {
         "stimulation": "Gib deinem Gehirn 90 Sekunden lang etwas Neues.",
         "relief": "Atme langsam und entspanne bewusst deine Schultern.",
         "comfort": "Geh an einen körperlich angenehmen Ort und gönn dir zwei ruhige Minuten.",
         "escape": "Entferne dich für zwei Minuten von der Situation.",
-        "connection": "Schicke einer Person, der du vertraust, eine einfache Nachricht.",
-        "control": "Wähle eine kleine Sache um dich herum, die du jetzt kontrollieren kannst.",
-        "rest": "Leg alles für zwei Minuten weg und erlaube dir, einfach aufzuhören.",
+        "connection": "Schreib eine kurze Nachricht an jemanden, dem du vertraust.",
+        "control": "Wähle eine kleine Sache in deiner Umgebung, die du jetzt kontrollieren kannst.",
+        "rest": "Leg für zwei Minuten alles weg und erlaube dir, einfach aufzuhören.",
         "unknown": "Du musst es noch nicht wissen. Schaffe einfach zwei Minuten Abstand."
       }
     },
 
     "breakChain": {
       "title": "DIE KETTE UNTERBRECHEN",
-
-      "question": "Was ist unmittelbar vor dem Impuls passiert?",
-
+      "question": "Was ist direkt vor dem Impuls passiert?",
       "options": {
         "boredom": "Langeweile",
         "stress": "Stress",
@@ -283,62 +279,44 @@
         "habit": "Es war automatisch",
         "nothing_obvious": "Nichts Offensichtliches"
       },
-
       "result": "Das ist nützlich. Unterbrich die Kette jetzt genau hier.",
-
-      "changeScene": "UMGEBUNG WECHSELN"
+      "changeScene": "SZENE WECHSELN"
     },
 
     "twoFutures": {
       "title": "ZWEI ZUKÜNFTE",
-
-      "intro": "Betrachte beide Wege, ohne einen davon zu beurteilen.",
-
+      "intro": "Betrachte beide Wege, ohne einen davon zu bewerten.",
       "act": "WENN ICH ES TUE",
-
       "actPlaceholder": "Was passiert?",
-
       "dont": "WENN ICH ES NICHT TUE",
-
       "dontPlaceholder": "Was passiert stattdessen?"
     },
 
     "switch90": {
       "title": "90-SEKUNDEN-WECHSEL",
-
       "instruction": "Nicht nachdenken. Mach einfach 90 Sekunden lang etwas anderes.",
-
-      "task1": "Finde fünf blaue Dinge um dich herum.",
-      "task2": "Wasche eine Tasse.",
+      "task1": "Finde fünf blaue Dinge in deiner Umgebung.",
+      "task2": "Spüle eine Tasse.",
       "task3": "Steh auf und geh ein wenig herum.",
       "task4": "Zähle zehn Gegenstände um dich herum.",
-
       "start": "90 SEKUNDEN STARTEN"
     },
 
     "realityCheck": {
       "title": "REALITÄTSCHECK",
-
       "question": "Was glaubst du, wird passieren, wenn du es tust?",
-
       "placeholder": "Ich denke...",
-
-      "certainty": "Wie sicher bist du dir?",
-
-      "past": "Ist das tatsächlich schon früher regelmäßig passiert?",
-
+      "certainty": "Wie sicher bist du?",
+      "past": "Ist das tatsächlich schon einmal regelmäßig so passiert?",
       "yes": "JA",
       "no": "NEIN",
       "sometimes": "MANCHMAL"
     },
 
     "previousSuccess": {
-      "title": "WAS HAT LETZTES MAL FUNKTIONIERT?",
-
+      "title": "WAS HAT BEIM LETZTEN MAL FUNKTIONIERT?",
       "intro": "Du warst schon einmal hier.",
-
-      "message": "Letztes Mal hat dieser Ansatz geholfen, den Impuls zu reduzieren.",
-
+      "message": "Beim letzten Mal hat dieser Ansatz geholfen, den Impuls zu reduzieren.",
       "try": "NOCH EINMAL VERSUCHEN"
     },
 
