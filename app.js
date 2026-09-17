@@ -27,21 +27,73 @@ const $=id=>document.getElementById(id);
 function getEntitlements(){return typeof INTERRUPT_ENTITLEMENTS!=="undefined"?INTERRUPT_ENTITLEMENTS:null}
 function hasFeature(feature){const e=getEntitlements();return !!(e&&typeof e.hasFeature==="function"&&e.hasFeature(feature))}
 function isPro(){const e=getEntitlements();return !!(e&&typeof e.isPro==="function"&&e.isPro())}
-function createProGate(title,text){
-const box=document.createElement("div");box.className="insight-section pro-gate";
-box.innerHTML=`<h3>${escapeHTML(title)}</h3><p>${escapeHTML(text)}</p><button type="button" class="primary-button pro-gate-button">${escapeHTML(t("common.learnMore","Learn more"))}</button>`;
-box.querySelector("button").addEventListener("click",showProMessage);return box
+
+function createProButton(className="primary-button"){
+const button=document.createElement("button");
+button.type="button";
+button.className=className;
+button.textContent=t("insights.proTitle","INTERRUPT Pro");
+button.addEventListener("click",showProMessage);
+return button
 }
+
+function createProGate(title,text){
+const box=document.createElement("div");
+box.className="insight-section pro-gate";
+box.innerHTML=`<h3>${escapeHTML(title)}</h3><p>${escapeHTML(text)}</p>`;
+box.appendChild(createProButton("primary-button pro-gate-button"));
+return box
+}
+
 function showProMessage(){
-const messages={
-en:{title:"INTERRUPT Pro",text:"Pro will turn your history into deeper personal patterns and show you what consistently works for you."},
-ro:{title:"INTERRUPT Pro",text:"Pro va transforma istoricul tău în tipare personale mai profunde și îți va arăta ce funcționează în mod constant pentru tine."},
-fr:{title:"INTERRUPT Pro",text:"Pro transformera votre historique en schémas personnels plus profonds et montrera ce qui fonctionne réellement pour vous."},
-de:{title:"INTERRUPT Pro",text:"Pro verwandelt deinen Verlauf in tiefere persönliche Muster und zeigt dir, was für dich zuverlässig funktioniert."},
-es:{title:"INTERRUPT Pro",text:"Pro convertirá tu historial en patrones personales más profundos y mostrará qué funciona de forma constante para ti."},
-it:{title:"INTERRUPT Pro",text:"Pro trasformerà la tua cronologia in schemi personali più profondi e mostrerà cosa funziona davvero per te."}
-};
-const copy=messages[currentLanguage]||messages.en;alert(`${copy.title}\n\n${copy.text}`)
+if(isPro()){
+alert(`${t("insights.proTitle","INTERRUPT Pro")}\n\n${t("insights.proMessage","Pro will turn your history into deeper personal patterns and show you what consistently works for you.")}`);
+return
+}
+const existing=$("proOverlay");
+if(existing){existing.hidden=false;return}
+
+const overlay=document.createElement("div");
+overlay.id="proOverlay";
+overlay.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box";
+
+const panel=document.createElement("div");
+panel.style.cssText="width:min(100%,520px);max-height:90vh;overflow:auto;background:var(--background,#111);color:var(--text,#fff);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:26px;box-sizing:border-box;box-shadow:0 20px 60px rgba(0,0,0,.45)";
+
+panel.innerHTML=`
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px">
+<h2 style="margin:0">${escapeHTML(t("insights.proTitle","INTERRUPT Pro"))}</h2>
+<button type="button" class="pro-close" aria-label="Close" style="border:0;background:none;color:inherit;font-size:28px;cursor:pointer;line-height:1">×</button>
+</div>
+<p style="font-size:1.05rem;line-height:1.6;margin-top:0">${escapeHTML(t("insights.proMessage","Pro will turn your history into deeper personal patterns and show you what consistently works for you."))}</p>
+<div style="margin:24px 0">
+<div style="padding:16px 0;border-top:1px solid rgba(255,255,255,.1)">
+<strong>${escapeHTML(t("insights.bestOverall","Overall performance"))}</strong>
+<p style="margin-bottom:0;opacity:.78">${escapeHTML(t("insights.proOverall","Unlock long-term performance insights from your history."))}</p>
+</div>
+<div style="padding:16px 0;border-top:1px solid rgba(255,255,255,.1)">
+<strong>${escapeHTML(t("insights.pattern","YOUR STRONGEST PATTERN"))}</strong>
+<p style="margin-bottom:0;opacity:.78">${escapeHTML(t("insights.proPattern","Unlock deeper patterns across behavior, expectation and intensity."))}</p>
+</div>
+<div style="padding:16px 0;border-top:1px solid rgba(255,255,255,.1)">
+<strong>${escapeHTML(t("insights.proTitle","INTERRUPT Pro"))}</strong>
+<p style="margin-bottom:0;opacity:.78">${escapeHTML(t("insights.proProtection","Unlock advanced Protection learning and context patterns."))}</p>
+</div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button type="button" class="primary-button pro-coming-soon">${escapeHTML(t("common.learnMore","Learn more"))}</button>
+</div>
+<p style="font-size:.82rem;opacity:.55;margin:18px 0 0">${escapeHTML(t("insights.proComingSoon","Pro access will be available soon."))}</p>
+`;
+
+overlay.appendChild(panel);
+document.body.appendChild(overlay);
+
+panel.querySelector(".pro-close").addEventListener("click",()=>overlay.remove());
+overlay.addEventListener("click",event=>{if(event.target===overlay)overlay.remove()});
+panel.querySelector(".pro-coming-soon").addEventListener("click",()=>{
+alert(`${t("insights.proTitle","INTERRUPT Pro")}\n\n${t("insights.proComingSoon","Pro access will be available soon.")}`)
+});
 }
 
 function getPath(object,path){if(!object||!path)return undefined;return path.split(".").reduce((value,key)=>value?.[key],object)}
@@ -58,8 +110,23 @@ function goBack(name){if(name)showScreen(name)}
 async function fetchJSON(file){const response=await fetch(file,{cache:"no-store"});if(!response.ok)throw new Error(`HTTP ${response.status}`);return response.json()}
 async function loadLanguage(language){if(!LANGUAGES[language])language="en";try{if(!Object.keys(englishTranslations).length)englishTranslations=await fetchJSON(LANGUAGES.en.file);if(language==="en")translations=englishTranslations;else try{translations=await fetchJSON(LANGUAGES[language].file)}catch(error){console.warn(`Could not load ${language}. Falling back to English.`,error);translations=englishTranslations;language="en"}currentLanguage=language;localStorage.setItem(STORAGE.language,language);updateLanguageUI();applyTranslations()}catch(error){console.error("Could not load translations:",error);if(language!=="en"&&Object.keys(englishTranslations).length){translations=englishTranslations;currentLanguage="en";updateLanguageUI();applyTranslations()}}}
 function updateLanguageUI(){const language=LANGUAGES[currentLanguage]||LANGUAGES.en;$("currentLanguageFlag").textContent=language.flag;$("currentLanguageCode").textContent=language.code;document.querySelectorAll(".language-option").forEach(option=>option.classList.toggle("selected",option.dataset.language===currentLanguage));document.documentElement.lang=currentLanguage}
-function applyTranslations(){document.querySelectorAll("[data-i18n]").forEach(element=>{const value=t(element.dataset.i18n);if(typeof value==="string")element.textContent=value});document.querySelectorAll("[data-i18n-placeholder]").forEach(element=>{const value=t(element.dataset.i18nPlaceholder);if(typeof value==="string")element.placeholder=value});updateDynamicIntervention();if($("screen-insights")?.classList.contains("screen-active"))renderInsights()}
+function applyTranslations(){document.querySelectorAll("[data-i18n]").forEach(element=>{const value=t(element.dataset.i18n);if(typeof value==="string")element.textContent=value});document.querySelectorAll("[data-i18n-placeholder]").forEach(element=>{const value=t(element.dataset.i18nPlaceholder);if(typeof value==="string")element.placeholder=value});updateDynamicIntervention();updateProEntryPoints();if($("screen-insights")?.classList.contains("screen-active"))renderInsights()}
 function toggleLanguageMenu(force){const menu=$("languageMenu"),button=$("languageButton");const open=typeof force==="boolean"?force:menu.hidden;menu.hidden=!open;button.setAttribute("aria-expanded",String(open))}
+
+function updateProEntryPoints(){
+const existing=$("homeProButton");
+if(existing){existing.textContent=t("insights.proTitle","INTERRUPT Pro");existing.hidden=isPro()}
+const insightsButton=$("insightsButton");
+if(insightsButton&&!$("insightsProButton")){
+const button=createProButton("secondary-button");
+button.id="insightsProButton";
+button.style.marginTop="12px";
+insightsButton.insertAdjacentElement("afterend",button)
+}
+const insightsProButton=$("insightsProButton");
+if(insightsProButton){insightsProButton.textContent=t("insights.proTitle","INTERRUPT Pro");insightsProButton.hidden=isPro()}
+}
+
 function selectBehavior(button){document.querySelectorAll("#behaviorOptions .choice-button").forEach(item=>item.classList.remove("selected"));button.classList.add("selected");const value=button.dataset.behavior;session.behavior=value;if(value==="other"){$("otherBehaviorContainer").hidden=false;$("otherBehaviorInput").focus();session.behaviorLabel="";$("behaviorContinueButton").disabled=true}else{$("otherBehaviorContainer").hidden=true;session.behaviorLabel=button.querySelector("[data-i18n]")?.textContent.trim()||value;$("behaviorContinueButton").disabled=false}}
 function validateOtherBehavior(){const value=$("otherBehaviorInput").value.trim();if(session.behavior==="other"){session.behaviorLabel=value;$("behaviorContinueButton").disabled=!value.length}}
 function selectExpectation(button){document.querySelectorAll("#expectationOptions .choice-button").forEach(item=>item.classList.remove("selected"));button.classList.add("selected");const value=button.dataset.expectation;session.expectation=value;if(value==="other"){$("otherExpectationContainer").hidden=false;$("otherExpectationInput").focus();session.expectationLabel="";$("expectationContinueButton").disabled=true}else{$("otherExpectationContainer").hidden=true;session.expectationLabel=button.querySelector("[data-i18n]")?.textContent.trim()||value;$("expectationContinueButton").disabled=false}}
@@ -71,7 +138,7 @@ function protectionCall(method,...args){const protection=getProtection();return 
 function getProtectionEvents(){const protection=getProtection();if(!protection)return[];try{if(typeof protection.getEvents==="function"){const result=protection.getEvents();if(Array.isArray(result))return result}const raw=localStorage.getItem("interrupt_protection_events");const data=JSON.parse(raw||"[]");return Array.isArray(data)?data:[]}catch{return[]}}
 function initProtection(){try{protectionCall("getSettings");inspectCurrentProtection()}catch(error){console.warn("Protection initialization failed:",error)}}
 function inspectCurrentProtection(){const protection=getProtection();if(!protection)return null;try{const result=protection.inspectUrl?protection.inspectUrl(location.href):protection.inspectHost?protection.inspectHost(location.hostname):null;if(!result||!result.category)return null;session.protectionCategory=result.category;session.protectionDomain=result.host||result.domain||location.hostname;session.protectionMode=result.mode||protectionCall("getSettings")?.mode||"medium";const behavior=PROTECTION_BEHAVIOR[result.category];if(behavior&&(!session.behavior||session.behavior==="other"))session.behavior=behavior;return result}catch(error){console.warn("Protection inspection failed:",error);return null}}
-function recordProtectionEvent(data={}){const protection=getProtection();if(!protection)return null;try{const result=protectionCall("appendEvent",{...data,sessionId:data.sessionId||session.id,behavior:data.behavior||session.behavior,category:data.category||session.protectionCategory,host:data.host||data.domain||session.protectionDomain,mode:data.mode||session.protectionMode,timestamp:data.timestamp||new Date().toISOString()});return result}catch(error){console.warn("Protection event failed:",error);return null}}
+function recordProtectionEvent(data={}){const protection=getProtection();if(!protection)return null;try{return protectionCall("appendEvent",{...data,sessionId:data.sessionId||session.id,behavior:data.behavior||session.behavior,category:data.category||session.protectionCategory,host:data.host||data.domain||session.protectionDomain,mode:data.mode||session.protectionMode,timestamp:data.timestamp||new Date().toISOString()})}catch(error){console.warn("Protection event failed:",error);return null}}
 function inspectProtectionUrl(url){const result=protectionCall("inspectUrl",url);if(result?.category){session.protectionCategory=result.category;session.protectionDomain=result.host||result.domain||null;session.protectionMode=result.mode||protectionCall("getSettings")?.mode||"medium";const behavior=PROTECTION_BEHAVIOR[result.category];if(behavior)session.behavior=behavior;recordProtectionEvent({type:"inspect",url,host:session.protectionDomain,category:result.category})}return result}
 function getProtectionSettings(){return protectionCall("getSettings")}
 function setProtectionEnabled(value){return protectionCall("setEnabled",!!value)}
@@ -82,9 +149,7 @@ function removeProtectionDomain(domain){return protectionCall("removeDomain",dom
 function getProtectionDomains(){return protectionCall("getDomains")||[]}
 
 function getProtectionStats(){
-const events=getProtectionEvents(),saved=getSavedSessions();
-const outcomeEvents=events.filter(e=>e?.type==="reassess"&&Number.isFinite(Number(e.intensityBefore))&&Number.isFinite(Number(e.intensityAfter)));
-const attempts=[],attemptKeys=new Set(),categories={},domains={},modes={};
+const events=getProtectionEvents(),saved=getSavedSessions(),outcomeEvents=events.filter(e=>e?.type==="reassess"&&Number.isFinite(Number(e.intensityBefore))&&Number.isFinite(Number(e.intensityAfter))),attempts=[],attemptKeys=new Set(),categories={},domains={},modes={};
 const addAttempt=(item,key)=>{if(!item||!Number.isFinite(Number(item.intensityBefore))||!Number.isFinite(Number(item.intensityAfter)))return;const id=key||item.id||`${item.sessionId||""}|${item.intervention||""}|${item.intensityBefore}|${item.intensityAfter}|${item.timestamp||item.completedAt||""}`;if(attemptKeys.has(id))return;attemptKeys.add(id);attempts.push(item)};
 outcomeEvents.forEach(e=>addAttempt(e,`event:${e.id||`${e.sessionId||""}|${e.timestamp||""}`}`));
 if(!outcomeEvents.length)saved.forEach(item=>(item.attemptHistory||[]).forEach(a=>{if(a?.protectionCategory||item.protectionCategory)addAttempt({...a,protectionCategory:a.protectionCategory||item.protectionCategory,protectionDomain:a.protectionDomain||item.protectionDomain,protectionMode:a.protectionMode||item.protectionMode},`attempt:${item.id}|${a.id||""}`)}));
@@ -253,23 +318,62 @@ let totalBefore=0,totalAfter=0;sessions.forEach(item=>{totalBefore+=Number(item.
 const reduction=totalBefore>0?Math.round((totalBefore-totalAfter)/totalBefore*100):0,recentHistory=getRecentHistory(30),recentBest=getBestIntervention(recentHistory),overallBest=getBestIntervention(history),commonBehavior=getMostCommon(history,"behavior"),commonExpectation=getMostCommon(history,"expectation"),commonTrigger=getMostCommon(history,"trigger"),pattern=getBestContextPattern(history);
 $("insightTotal").textContent=total;$("insightInterrupted").textContent=interrupted;$("insightReduction").textContent=`${reduction>0?"−":""}${Math.abs(reduction)}%`;$("insightBest").textContent=overallBest?interventionTitle(overallBest.id):"—";$("insightTrigger").textContent=commonTrigger?getLabel("trigger",commonTrigger.value):"—";
 const recent=$("recentSessions");recent.innerHTML="";
-if(!sessions.length){const empty=document.createElement("p");empty.textContent=t("insights.empty",copy.none);recent.appendChild(empty);if(hasFeature("advancedContext"))renderProtectionInsights(recent);else recent.appendChild(createProGate(copy.proTitle,copy.proProtection));return}
-if(recentBest){const reductionText=recentBest.recencyWeightedImpact>0?`−${recentBest.recencyWeightedImpact.toFixed(1)}`:recentBest.recencyWeightedImpact.toFixed(1);recent.appendChild(createInsightSection(copy.recent,copy.recentText(interventionTitle(recentBest.id),reductionText)))}
+
+if(!isPro()){
+const proBanner=document.createElement("div");
+proBanner.className="insight-section pro-banner";
+const title=document.createElement("h3");
+title.textContent=t("insights.proTitle","INTERRUPT Pro");
+const text=document.createElement("p");
+text.textContent=t("insights.proMessage","Pro will turn your history into deeper personal patterns and show you what consistently works for you.");
+proBanner.append(title,text,createProButton("primary-button"));
+recent.appendChild(proBanner);
+}
+
+if(!sessions.length){
+const empty=document.createElement("p");
+empty.textContent=t("insights.empty",copy.none);
+recent.appendChild(empty);
+if(hasFeature("advancedContext"))renderProtectionInsights(recent);
+return
+}
+
+if(recentBest){
+const reductionText=recentBest.recencyWeightedImpact>0?`−${recentBest.recencyWeightedImpact.toFixed(1)}`:recentBest.recencyWeightedImpact.toFixed(1);
+recent.appendChild(createInsightSection(copy.recent,copy.recentText(interventionTitle(recentBest.id),reductionText)))
+}
+
 if(hasFeature("longTermInsights")){
-if(overallBest){const reductionText=overallBest.averageImpact>0?`−${overallBest.averageImpact.toFixed(1)}`:overallBest.averageImpact.toFixed(1);recent.appendChild(createInsightSection(copy.learning,copy.overallText(interventionTitle(overallBest.id),reductionText)))}
+if(overallBest){
+const reductionText=overallBest.averageImpact>0?`−${overallBest.averageImpact.toFixed(1)}`:overallBest.averageImpact.toFixed(1);
+recent.appendChild(createInsightSection(copy.learning,copy.overallText(interventionTitle(overallBest.id),reductionText)))
+}
 }else recent.appendChild(createProGate(copy.bestOverall,copy.proOverall));
+
 if(hasFeature("deepPatterns")){
 if(pattern){
 const matching=history.filter(item=>item.behavior===pattern.behavior&&(item.expectation||"unknown")===pattern.expectation&&INTERRUPT_ADAPTIVE.getIntensityBand(item.intensityBefore)===pattern.band),patternStats=INTERRUPT_ADAPTIVE.buildStats(matching),intervention=Object.entries(patternStats).sort((a,b)=>b[1].recencyWeightedImpact-a[1].recencyWeightedImpact)[0]?.[0]||overallBest?.id;
-recent.appendChild(createInsightSection(copy.pattern,copy.patternText(getLabel("behavior",pattern.behavior),getLabel("expectation",pattern.expectation),pattern.band,intervention?interventionTitle(intervention):"—",pattern.averageImpact)));
+recent.appendChild(createInsightSection(copy.pattern,copy.patternText(getLabel("behavior",pattern.behavior),getLabel("expectation",pattern.expectation),pattern.band,intervention?interventionTitle(intervention):"—",pattern.averageImpact)))
 }else recent.appendChild(createInsightSection(copy.pattern,copy.noPattern));
 }else recent.appendChild(createProGate(copy.pattern,copy.proPattern));
+
 const facts=document.createElement("div");facts.className="insights-facts";
 [[copy.commonBehavior,commonBehavior?getLabel("behavior",commonBehavior.value):"—"],[copy.commonExpectation,commonExpectation?getLabel("expectation",commonExpectation.value):"—"],[copy.commonTrigger,commonTrigger?getLabel("trigger",commonTrigger.value):"—"]].forEach(([label,value])=>{const row=document.createElement("div");row.className="recent-session";row.innerHTML=`<div class="recent-session-main"><div class="recent-session-behavior">${escapeHTML(label)}</div><div class="recent-session-intervention">${escapeHTML(value)}</div></div>`;facts.appendChild(row)});
 recent.appendChild(facts);
-if(hasFeature("advancedContext"))renderProtectionInsights(recent);else recent.appendChild(createProGate(copy.proTitle,copy.proProtection));
-const title=document.createElement("h3");title.textContent=t("insights.recentTitle","RECENT SESSIONS");recent.appendChild(title);
-sessions.slice(0,5).forEach(item=>{const row=document.createElement("div");row.className="recent-session";const difference=Number(item.intensityBefore)-Number(item.intensityAfter),change=difference>0?`−${difference}`:difference<0?`+${Math.abs(difference)}`:"0";row.innerHTML=`<div class="recent-session-main"><div class="recent-session-behavior">${escapeHTML(item.behaviorLabel||item.behavior||"—")}</div><div class="recent-session-intervention">${escapeHTML(interventionTitle(item.intervention))}</div></div><div class="recent-session-change">${item.intensityBefore} → ${item.intensityAfter} (${change})</div>`;recent.appendChild(row)})
+
+if(hasFeature("advancedContext"))renderProtectionInsights(recent);
+
+const title=document.createElement("h3");
+title.textContent=t("insights.recentTitle","RECENT SESSIONS");
+recent.appendChild(title);
+
+sessions.slice(0,5).forEach(item=>{
+const row=document.createElement("div");
+row.className="recent-session";
+const difference=Number(item.intensityBefore)-Number(item.intensityAfter),change=difference>0?`−${difference}`:difference<0?`+${Math.abs(difference)}`:"0";
+row.innerHTML=`<div class="recent-session-main"><div class="recent-session-behavior">${escapeHTML(item.behaviorLabel||item.behavior||"—")}</div><div class="recent-session-intervention">${escapeHTML(interventionTitle(item.intervention))}</div></div><div class="recent-session-change">${item.intensityBefore} → ${item.intensityAfter} (${change})</div>`;
+recent.appendChild(row)
+})
 }
 
 function initializeEvents(){
@@ -315,10 +419,10 @@ getPlan:()=>getEntitlements()?.getPlan(),
 getPlanInfo:()=>getEntitlements()?.getPlanInfo(),
 isPro,
 hasFeature,
-setPro:()=>getEntitlements()?.debug?.setPro(),
-setFree:()=>getEntitlements()?.debug?.setFree(),
-trial:()=>getEntitlements()?.debug?.trial(),
-reset:()=>getEntitlements()?.debug?.reset()
+setPro:()=>{const result=getEntitlements()?.debug?.setPro();updateProEntryPoints();return result},
+setFree:()=>{const result=getEntitlements()?.debug?.setFree();updateProEntryPoints();return result},
+trial:()=>{const result=getEntitlements()?.debug?.trial();updateProEntryPoints();return result},
+reset:()=>{const result=getEntitlements()?.debug?.reset();updateProEntryPoints();return result}
 },
 protection:{
 getSettings:getProtectionSettings,
@@ -345,5 +449,15 @@ navigator.serviceWorker.register("./service-worker.js").catch(error=>console.war
 }
 }
 
-async function initialize(){registerServiceWorker();initializeEvents();exposeDebug();const savedLanguage=localStorage.getItem(STORAGE.language)||"en";resetSession();await loadLanguage(savedLanguage);initProtection()}
+async function initialize(){
+registerServiceWorker();
+initializeEvents();
+exposeDebug();
+const savedLanguage=localStorage.getItem(STORAGE.language)||"en";
+resetSession();
+await loadLanguage(savedLanguage);
+initProtection();
+updateProEntryPoints();
+}
+
 document.addEventListener("DOMContentLoaded",initialize);
