@@ -26,23 +26,26 @@ jobs:
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
+      - name: Prepare web assets
+        run: |
+          rm -rf www android
+          mkdir -p www
+          cp index.html www/
+          cp app.js www/
+          cp style.css www/
+          cp -r core www/
+          cp -r locales www/
+          if [ -f manifest.json ]; then cp manifest.json www/; fi
+          if [ -f sw.js ]; then cp sw.js www/; fi
+          if [ -d icons ]; then cp -r icons www/; fi
+
       - name: Initialize Capacitor
         run: |
-          if [ ! -f capacitor.config.json ] && [ ! -f capacitor.config.ts ]; then
-            npx cap init INTERRUPT com.interrupt.app --web-dir .
-          fi
-
-      - name: Remove incomplete Android platform
-        run: |
-          if [ -d android ] && [ ! -f android/app/src/main/assets/capacitor.plugins.json ]; then
-            rm -rf android
-          fi
+          npx cap init INTERRUPT com.interrupt.app --web-dir www
 
       - name: Add Android platform
         run: |
-          if [ ! -d android ]; then
-            npx cap add android
-          fi
+          npx cap add android
 
       - name: Sync web application
         run: |
