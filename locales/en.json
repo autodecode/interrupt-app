@@ -3,20 +3,21 @@
     "interrupt": "INTERRUPT",
     "continue": "CONTINUE",
     "back": "BACK",
-    "done": "DONE"
+    "done": "DONE",
+    "learnMore": "Learn more"
   },
 
   "insights": {
-  "title": "Your patterns",
-  "subtitle": "INTERRUPT learns from what happens over time.",
-  "total": "Urges recorded",
-  "interrupted": "Interrupted",
-  "reduction": "Average reduction",
-  "best": "Most effective approach",
-  "triggerTitle": "Common trigger",
-  "recentTitle": "Recent sessions",
-  "empty": "No sessions yet."
-},
+    "title": "Your patterns",
+    "subtitle": "INTERRUPT learns from what happens over time.",
+    "total": "Urges recorded",
+    "interrupted": "Interrupted",
+    "reduction": "Average reduction",
+    "best": "Most effective approach",
+    "triggerTitle": "Common trigger",
+    "recentTitle": "Recent sessions",
+    "empty": "No sessions yet."
+  },
 
   "home": {
     "title": "You don't need more willpower.",
@@ -101,12 +102,10 @@
     "intervention": "Intervention",
     "behavior": "Behavior",
     "tryAnother": "Try Another",
-
     "interruptedTitle": "You interrupted the moment.",
     "delayedTitle": "You created some distance.",
     "actedTitle": "The urge won this time.",
     "unsureTitle": "The moment passed.",
-
     "messages": {
       "lower": "The urge got quieter.",
       "same": "The urge didn't move this time.",
@@ -119,7 +118,6 @@
   },
 
   "interventions": {
-
     "categories": {
       "defusion": "CREATE DISTANCE",
       "cognitive": "LOOK AGAIN",
@@ -135,41 +133,27 @@
 
     "nameIt": {
       "title": "NAME IT",
-
       "instruction": "Let's separate the urge from you.",
-
       "firstPrompt": "Complete this: “I am having the urge to…”",
-
       "placeholder": "I am having the urge to...",
-
       "secondPrompt": "Now try this: “My brain is telling me to…”",
-
       "placeholder2": "My brain is telling me to..."
     },
 
     "promise": {
       "title": "THE PROMISE",
-
       "intro": "Your brain is making you an offer.",
-
       "expected": "Right now it expects:",
-
       "durationQuestion": "If you do it, how long do you expect the feeling to last?",
-
       "durationPlaceholder": "A few minutes, an hour, most of the day...",
-
       "afterQuestion": "And what usually happens after that?",
-
       "afterPlaceholder": "What happens next?"
     },
 
     "wave": {
       "title": "RIDE THE WAVE",
-
       "instruction": "Don't fight the urge. Watch it.",
-
       "locationPrompt": "Where do you feel it?",
-
       "locations": {
         "chest": "Chest",
         "stomach": "Stomach",
@@ -177,11 +161,8 @@
         "hands": "Hands",
         "everywhere": "Everywhere"
       },
-
       "timerIntro": "Stay with the sensation for 60 seconds.",
-
       "finished": "Did anything change?",
-
       "weaker": "It got weaker",
       "changed": "It changed",
       "same": "It stayed the same",
@@ -190,17 +171,11 @@
 
     "delay": {
       "title": "NOT NOW",
-
       "instruction": "You don't have to decide forever.",
-
       "promise": "Just don't do it for the next 10 minutes.",
-
       "start": "START 10:00",
-
       "waiting": "You don't have to do anything. Just let the ten minutes pass.",
-
       "finished": "The ten minutes are over.",
-
       "stillWant": "I still want it",
       "weaker": "It's weaker",
       "gone": "It's gone",
@@ -209,42 +184,29 @@
 
     "fastForward": {
       "title": "FAST FORWARD",
-
       "intro": "Imagine you've already done it.",
-
       "tenMinutes": "10 minutes later...",
-
       "tenPlaceholder": "How do you feel?",
-
       "tomorrow": "Tomorrow...",
-
       "tomorrowPlaceholder": "How do you feel tomorrow?",
-
       "next": "What happens next?",
-
       "nextPlaceholder": "What happens after that?"
     },
 
     "changeScene": {
       "title": "CHANGE THE SCENE",
-
       "step1": "Stand up.",
       "step2": "Put the device or object down.",
       "step3": "Go somewhere different.",
       "step4": "Stay there for two minutes.",
-
       "ready": "I'M SOMEWHERE ELSE",
-
       "wait": "Stay here for two minutes."
     },
 
     "actualNeed": {
       "title": "WHAT DO YOU ACTUALLY NEED?",
-
       "intro": "Forget the behavior for a second.",
-
       "question": "What do you actually need?",
-
       "options": {
         "stimulation": "Stimulation",
         "relief": "Relief",
@@ -255,7 +217,6 @@
         "rest": "Rest",
         "unknown": "I don't know"
       },
-
       "suggestions": {
         "stimulation": "Give your brain something new for 90 seconds.",
         "relief": "Take a slow breath and deliberately relax your shoulders.",
@@ -270,9 +231,7 @@
 
     "breakChain": {
       "title": "BREAK THE CHAIN",
-
       "question": "What happened right before the urge?",
-
       "options": {
         "boredom": "Boredom",
         "stress": "Stress",
@@ -283,50 +242,35 @@
         "habit": "It was automatic",
         "nothing_obvious": "Nothing obvious"
       },
-
       "result": "That's useful. Now interrupt the chain here.",
-
       "changeScene": "CHANGE MY SCENE"
     },
 
     "twoFutures": {
       "title": "TWO FUTURES",
-
       "intro": "Look at the two paths without judging either one.",
-
       "act": "IF I ACT",
-
       "actPlaceholder": "What happens?",
-
       "dont": "IF I DON'T",
-
       "dontPlaceholder": "What happens instead?"
     },
 
     "switch90": {
       "title": "90 SECOND SWITCH",
-
       "instruction": "No thinking. Just do something else for 90 seconds.",
-
       "task1": "Find five things around you that are blue.",
       "task2": "Wash one cup.",
       "task3": "Stand up and walk around.",
       "task4": "Count ten objects around you.",
-
       "start": "START 90 SECONDS"
     },
 
     "realityCheck": {
       "title": "REALITY CHECK",
-
       "question": "What do you think will happen if you do it?",
-
       "placeholder": "I think...",
-
       "certainty": "How certain are you?",
-
       "past": "Has this actually happened consistently before?",
-
       "yes": "YES",
       "no": "NO",
       "sometimes": "SOMETIMES"
@@ -334,11 +278,8 @@
 
     "previousSuccess": {
       "title": "WHAT WORKED LAST TIME?",
-
       "intro": "You've been here before.",
-
       "message": "Last time, this approach helped reduce the urge.",
-
       "try": "TRY IT AGAIN"
     },
 
