@@ -12,15 +12,8 @@ import android.os.ParcelFileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
-public class InterruptVpnService extends VpnService {
+public final class InterruptVpnService extends VpnService {
 
     public static final String ACTION_START =
             "com.interrupt.app.protection.START";
@@ -31,25 +24,8 @@ public class InterruptVpnService extends VpnService {
     private static final String CHANNEL_ID =
             "interrupt_protection";
 
-    private static final int NOTIFICATION_ID = 4101;
-
-    private static final String VPN_ADDRESS =
-            "10.111.0.2";
-
-    private static final int VPN_PREFIX =
-            24;
-
-    private static final String DNS_ADDRESS =
-            "10.111.0.1";
-
-    private static final String UPSTREAM_DNS =
-            "1.1.1.1";
-
-    private static final int DNS_PORT =
-            53;
-
-    private static final int BUFFER_SIZE =
-            32767;
+    private static final int NOTIFICATION_ID =
+            4101;
 
     private ParcelFileDescriptor vpnInterface;
 
@@ -57,7 +33,9 @@ public class InterruptVpnService extends VpnService {
 
     private volatile boolean running;
 
-    private DatagramSocket dnsSocket;
+    private ProtectionController protectionController;
+
+    private VpnPacketProcessor packetProcessor;
 
 
     @Override
@@ -157,6 +135,7 @@ public class InterruptVpnService extends VpnService {
 
 
         if (manager != null) {
+
             manager.createNotificationChannel(
                     channel
             );
@@ -173,23 +152,121 @@ public class InterruptVpnService extends VpnService {
 
         try {
 
+            protectionController =
+                    ProtectionController
+                            .getInstance(this);
+
+
+            /*
+             * The native VPN must only run while Protection
+             * is explicitly enabled.
+             */
+            if (!protectionController.isEnabled()) {
+
+                stopSelf();
+
+                return;
+            }
+
+
+            ProtectionDecisionEngine decisionEngine =
+                    new ProtectionDecisionEngine(
+                            protectionController
+                    );
+
+
+            DnsForwarder dnsForwarder =
+                    new DnsForwarder(
+                            VpnConfiguration.UPSTREAM_DNS,
+                            VpnConfiguration.UPSTREAM_DNS_PORT,
+                            VpnConfiguration.DNS_TIMEOUT_MS,
+                            this
+                    );
+
+
+            DnsProtectionEngine dnsProtectionEngine =
+                    new DnsProtectionEngine(
+                            decisionEngine,
+                            dnsForwarder
+                    );
+
+
+            Ipv4TrafficProcessor ipv4Processor =
+                    new Ipv4TrafficProcessor(
+                            dnsProtectionEngine
+                    );
+
+
+            Ipv6TrafficProcessor ipv6Processor =
+                    new Ipv6TrafficProcessor(
+                            dnsProtectionEngine
+                    );
+
+
+            packetProcessor =
+                    new VpnPacketProcessor(
+                            ipv4Processor,
+                            ipv6Processor
+                    );
+
+
             VpnService.Builder builder =
                     new VpnService.Builder()
                             .setSession(
                                     "INTERRUPT Protection"
                             )
-                            .setMtu(1500)
-                            .addAddress(
-                                    VPN_ADDRESS,
-                                    VPN_PREFIX
-                            )
-                            .addRoute(
-                                    "0.0.0.0",
-                                    0
-                            )
-                            .addDnsServer(
-                                    DNS_ADDRESS
+                            .setMtu(
+                                    VpnConfiguration.MTU
                             );
+
+
+            /*
+             * Virtual IPv4 interface.
+             */
+            builder.addAddress(
+                    VpnConfiguration.IPV4_ADDRESS,
+                    VpnConfiguration.IPV4_PREFIX_LENGTH
+            );
+
+
+            /*
+             * Virtual IPv6 interface.
+             */
+            builder.addAddress(
+                    VpnConfiguration.IPV6_ADDRESS,
+                    VpnConfiguration.IPV6_PREFIX_LENGTH
+            );
+
+
+            /*
+             * Full-tunnel IPv4 routing.
+             */
+            builder.addRoute(
+                    VpnConfiguration.IPV4_ROUTE,
+                    VpnConfiguration.IPV4_ROUTE_PREFIX_LENGTH
+            );
+
+
+            /*
+             * Full-tunnel IPv6 routing.
+             */
+            builder.addRoute(
+                    VpnConfiguration.IPV6_ROUTE,
+                    VpnConfiguration.IPV6_ROUTE_PREFIX_LENGTH
+            );
+
+
+            /*
+             * DNS endpoints exposed inside the VPN.
+             */
+            builder.addDnsServer(
+                    VpnConfiguration.IPV4_DNS
+            );
+
+
+            builder.addDnsServer(
+                    VpnConfiguration.IPV6_DNS
+            );
 
 
             vpnInterface =
@@ -197,6 +274,8 @@ public class InterruptVpnService extends VpnService {
 
 
             if (vpnInterface == null) {
+
+                packetProcessor = null;
 
                 stopSelf();
 
@@ -228,25 +307,31 @@ public class InterruptVpnService extends VpnService {
 
     private void processPackets() {
 
-        if (vpnInterface == null) {
+        ParcelFileDescriptor currentInterface =
+                vpnInterface;
+
+
+        if (currentInterface == null) {
             return;
         }
 
 
         byte[] buffer =
-                new byte[BUFFER_SIZE];
+                new byte[
+                        VpnConfiguration.PACKET_BUFFER_SIZE
+                ];
 
 
         try (
                 FileInputStream input =
                         new FileInputStream(
-                                vpnInterface
+                                currentInterface
                                         .getFileDescriptor()
                         );
 
                 FileOutputStream output =
                         new FileOutputStream(
-                                vpnInterface
+                                currentInterface
                                         .getFileDescriptor()
                         )
         ) {
@@ -273,8 +358,8 @@ public class InterruptVpnService extends VpnService {
         } catch (IOException ignored) {
 
             /*
-             * Expected when the VPN interface
-             * is closed during shutdown.
+             * Closing the ParcelFileDescriptor during
+             * shutdown normally terminates the blocking read.
              */
         }
     }
@@ -286,523 +371,50 @@ public class InterruptVpnService extends VpnService {
             FileOutputStream output
     ) {
 
-        if (length < 20) {
-            return;
-        }
-
-
-        int version =
-                (packet[0] >> 4) & 0x0F;
-
-
-        if (version != 4) {
-
-            /*
-             * IPv6 handling will be implemented
-             * together with the complete packet
-             * forwarding layer.
-             */
-            return;
-        }
-
-
-        int headerLength =
-                (packet[0] & 0x0F) * 4;
-
-
         if (
-                headerLength < 20
+                packet == null
                 ||
-                headerLength > length
+                length <= 0
+                ||
+                length > packet.length
+                ||
+                packetProcessor == null
         ) {
             return;
         }
 
 
-        int protocol =
-                packet[9] & 0xFF;
-
-
-        /*
-         * UDP
-         */
-        if (protocol != 17) {
-            return;
-        }
-
-
-        if (length < headerLength + 8) {
-            return;
-        }
-
-
-        int sourcePort =
-                readUnsignedShort(
-                        packet,
-                        headerLength
-                );
-
-
-        int destinationPort =
-                readUnsignedShort(
-                        packet,
-                        headerLength + 2
-                );
-
-
-        /*
-         * DNS query.
-         */
-        if (
-                destinationPort == DNS_PORT
-        ) {
-
-            handleDnsPacket(
-                    packet,
-                    length,
-                    headerLength,
-                    sourcePort,
-                    output
-            );
-        }
-    }
-
-
-    private void handleDnsPacket(
-            byte[] packet,
-            int length,
-            int ipHeaderLength,
-            int sourcePort,
-            FileOutputStream output
-    ) {
-
-        int udpHeader =
-                ipHeaderLength;
-
-
-        int dnsOffset =
-                udpHeader + 8;
-
-
-        if (dnsOffset >= length) {
-            return;
-        }
-
-
-        int dnsLength =
-                length - dnsOffset;
-
-
-        byte[] dnsRequest =
-                new byte[dnsLength];
-
-
-        System.arraycopy(
-                packet,
-                dnsOffset,
-                dnsRequest,
-                0,
-                dnsLength
-        );
-
-
-        DnsPacket.Query query =
-                DnsPacket.parseQuery(
-                        dnsRequest,
-                        dnsRequest.length
-                );
-
-
-        if (query == null) {
-            return;
-        }
-
-
-        if (
-                ProtectionConfig
-                        .isProtectedDomain(
-                                query.hostname
-                        )
-        ) {
+        try {
 
             byte[] response =
-                    DnsPacket
-                            .buildNxDomainResponse(
-                                    dnsRequest,
-                                    dnsRequest.length
-                            );
+                    packetProcessor.process(
+                            packet,
+                            length
+                    );
 
 
+            /*
+             * A non-null response means the packet was
+             * actually handled by the Protection packet
+             * layer, currently DNS interception.
+             */
             if (response != null) {
 
-                sendDnsResponse(
-                        packet,
-                        ipHeaderLength,
-                        sourcePort,
-                        response,
-                        output
+                output.write(
+                        response
                 );
+
+                output.flush();
             }
-
-
-            return;
-        }
-
-
-        forwardDnsQuery(
-                packet,
-                ipHeaderLength,
-                sourcePort,
-                dnsRequest,
-                output
-        );
-    }
-
-
-    private void forwardDnsQuery(
-            byte[] originalPacket,
-            int ipHeaderLength,
-            int sourcePort,
-            byte[] dnsRequest,
-            FileOutputStream output
-    ) {
-
-        DatagramSocket socket =
-                null;
-
-
-        try {
-
-            socket =
-                    new DatagramSocket();
-
-
-            protect(socket);
-
-
-            InetAddress upstream =
-                    InetAddress.getByName(
-                            UPSTREAM_DNS
-                    );
-
-
-            DatagramPacket request =
-                    new DatagramPacket(
-                            dnsRequest,
-                            dnsRequest.length,
-                            upstream,
-                            DNS_PORT
-                    );
-
-
-            socket.setSoTimeout(3000);
-
-
-            socket.send(request);
-
-
-            byte[] responseBuffer =
-                    new byte[4096];
-
-
-            DatagramPacket response =
-                    new DatagramPacket(
-                            responseBuffer,
-                            responseBuffer.length
-                    );
-
-
-            socket.receive(response);
-
-
-            byte[] dnsResponse =
-                    new byte[
-                            response.getLength()
-                    ];
-
-
-            System.arraycopy(
-                    response.getData(),
-                    response.getOffset(),
-                    dnsResponse,
-                    0,
-                    response.getLength()
-            );
-
-
-            sendDnsResponse(
-                    originalPacket,
-                    ipHeaderLength,
-                    sourcePort,
-                    dnsResponse,
-                    output
-            );
 
 
         } catch (IOException ignored) {
 
             /*
-             * DNS timeout/failure.
-             *
-             * The request is simply not returned
-             * to the application.
+             * A malformed/failed packet must not terminate
+             * the VPN service itself.
              */
-
-        } finally {
-
-            if (socket != null) {
-                socket.close();
-            }
         }
-    }
-
-
-    private void sendDnsResponse(
-            byte[] requestPacket,
-            int ipHeaderLength,
-            int destinationPort,
-            byte[] dnsResponse,
-            FileOutputStream output
-    ) {
-
-        /*
-         * The application originally sent:
-         *
-         * source = application
-         * destination = DNS
-         *
-         * The response must therefore be:
-         *
-         * source = DNS
-         * destination = application
-         */
-
-        int udpLength =
-                8 + dnsResponse.length;
-
-
-        int ipLength =
-                20 + udpLength;
-
-
-        byte[] response =
-                new byte[ipLength];
-
-
-        ByteBuffer buffer =
-                ByteBuffer.wrap(response)
-                        .order(
-                                ByteOrder.BIG_ENDIAN
-                        );
-
-
-        /*
-         * IPv4 header.
-         */
-        buffer.put(
-                (byte) 0x45
-        );
-
-
-        buffer.put(
-                (byte) 0
-        );
-
-
-        buffer.putShort(
-                (short) ipLength
-        );
-
-
-        buffer.putShort(
-                (short) 0
-        );
-
-
-        buffer.putShort(
-                (short) 0x4000
-        );
-
-
-        buffer.put(
-                (byte) 64
-        );
-
-
-        buffer.put(
-                (byte) 17
-        );
-
-
-        buffer.putShort(
-                (short) 0
-        );
-
-
-        /*
-         * Source:
-         * virtual DNS server.
-         */
-        putIpv4Address(
-                buffer,
-                DNS_ADDRESS
-        );
-
-
-        /*
-         * Destination:
-         * original application source address.
-         */
-        buffer.put(
-                requestPacket,
-                12,
-                4
-        );
-
-
-        /*
-         * UDP header.
-         */
-        buffer.putShort(
-                (short) DNS_PORT
-        );
-
-
-        buffer.putShort(
-                (short) destinationPort
-        );
-
-
-        buffer.putShort(
-                (short) udpLength
-        );
-
-
-        buffer.putShort(
-                (short) 0
-        );
-
-
-        buffer.put(
-                dnsResponse
-        );
-
-
-        /*
-         * IPv4 checksum.
-         */
-        int ipChecksum =
-                checksum(
-                        response,
-                        0,
-                        20
-                );
-
-
-        response[10] =
-                (byte) (ipChecksum >> 8);
-
-        response[11] =
-                (byte) ipChecksum;
-
-
-        /*
-         * UDP checksum is optional for IPv4.
-         * Zero is valid.
-         */
-
-
-        try {
-
-            output.write(
-                    response
-            );
-
-            output.flush();
-
-        } catch (IOException ignored) {
-        }
-    }
-
-
-    private static void putIpv4Address(
-            ByteBuffer buffer,
-            String address
-    ) throws IOException {
-
-        byte[] bytes =
-                InetAddress
-                        .getByName(address)
-                        .getAddress();
-
-
-        buffer.put(bytes);
-    }
-
-
-    private static int readUnsignedShort(
-            byte[] data,
-            int offset
-    ) {
-
-        return (
-                ((data[offset] & 0xFF) << 8)
-                |
-                (data[offset + 1] & 0xFF)
-        );
-    }
-
-
-    private static int checksum(
-            byte[] data,
-            int offset,
-            int length
-    ) {
-
-        long sum = 0;
-
-
-        int end =
-                offset + length;
-
-
-        for (
-                int i = offset;
-                i < end - 1;
-                i += 2
-        ) {
-
-            sum +=
-                    ((data[i] & 0xFF) << 8)
-                    |
-                    (data[i + 1] & 0xFF);
-
-
-            while ((sum >> 16) != 0) {
-                sum =
-                        (sum & 0xFFFF)
-                        +
-                        (sum >> 16);
-            }
-        }
-
-
-        if ((length & 1) != 0) {
-
-            sum +=
-                    (data[end - 1] & 0xFF) << 8;
-
-
-            while ((sum >> 16) != 0) {
-                sum =
-                        (sum & 0xFFFF)
-                        +
-                        (sum >> 16);
-            }
-        }
-
-
-        return (int) (~sum) & 0xFFFF;
     }
 
 
@@ -811,32 +423,44 @@ public class InterruptVpnService extends VpnService {
         running = false;
 
 
-        if (packetThread != null) {
+        Thread currentThread =
+                packetThread;
 
-            packetThread.interrupt();
 
-            packetThread = null;
+        packetThread = null;
+
+
+        if (
+                currentThread != null
+                &&
+                currentThread != Thread.currentThread()
+        ) {
+
+            currentThread.interrupt();
         }
 
 
-        if (dnsSocket != null) {
-
-            dnsSocket.close();
-
-            dnsSocket = null;
-        }
+        ParcelFileDescriptor currentInterface =
+                vpnInterface;
 
 
-        if (vpnInterface != null) {
+        vpnInterface = null;
+
+
+        if (currentInterface != null) {
 
             try {
-                vpnInterface.close();
+
+                currentInterface.close();
+
             } catch (IOException ignored) {
             }
-
-
-            vpnInterface = null;
         }
+
+
+        packetProcessor = null;
+
+        protectionController = null;
     }
 
 
@@ -855,15 +479,5 @@ public class InterruptVpnService extends VpnService {
         stopVpn();
 
         super.onRevoke();
-    }
-
-
-    private void protect(
-            DatagramSocket socket
-    ) {
-
-        super.protect(
-                socket
-        );
     }
 }
