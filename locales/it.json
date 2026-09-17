@@ -54,6 +54,24 @@
     "proMessage": "Pro trasformerà la tua cronologia in schemi personali più profondi e ti mostrerà cosa funziona davvero per te nel tempo."
   },
 
+  "pro": {
+    "title": "Scopri cosa funziona per te.",
+    "description": "Vai oltre la tua cronologia di base. Scopri quali interventi funzionano meglio per i tuoi schemi nel tempo.",
+    "button": "SCOPRI PRO",
+    "screenTitle": "I tuoi schemi diventano personali.",
+    "screenSubtitle": "Più INTERRUPT impara, più precisamente può capire cosa funziona per te.",
+    "featureAdaptiveTitle": "Raccomandazioni adattive",
+    "featureAdaptiveText": "Raccomandazioni basate sulla tua cronologia e sul tuo contesto.",
+    "featurePatternsTitle": "Schemi approfonditi",
+    "featurePatternsText": "Scopri quali situazioni, impulsi e interventi sono collegati nel tempo.",
+    "featureLongTermTitle": "Approfondimenti a lungo termine",
+    "featureLongTermText": "Comprendi cosa cambia, cosa si ripete e cosa ti aiuta in modo costante.",
+    "featureComparisonTitle": "Confronto degli interventi",
+    "featureComparisonText": "Confronta diversi approcci usando i tuoi risultati reali.",
+    "comingSoon": "PRO ARRIVA PRESTO",
+    "comingSoonText": "Stiamo verificando quali funzionalità siano più utili prima di aprire l'accesso."
+  },
+
   "home": {
     "title": "Non hai bisogno di più forza di volontà.",
     "subtitle": "Hai bisogno di un modo per interrompere il momento.",
