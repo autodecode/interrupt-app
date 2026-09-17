@@ -54,6 +54,30 @@
     "proMessage": "Pro will turn your history into deeper personal patterns and show you what consistently works for you."
   },
 
+  "pro": {
+    "title": "Understand what works for you.",
+    "description": "Go beyond your basic history. Discover which interventions work best for your patterns over time.",
+    "button": "EXPLORE PRO",
+
+    "screenTitle": "Your patterns become personal.",
+    "screenSubtitle": "The more INTERRUPT learns, the more specifically it can understand what works for you.",
+
+    "featureAdaptiveTitle": "Adaptive recommendations",
+    "featureAdaptiveText": "Recommendations based on your own history and context.",
+
+    "featurePatternsTitle": "Deep patterns",
+    "featurePatternsText": "See which situations, urges and interventions connect over time.",
+
+    "featureLongTermTitle": "Long-term insights",
+    "featureLongTermText": "Understand what changes, what repeats and what consistently helps.",
+
+    "featureComparisonTitle": "Intervention comparison",
+    "featureComparisonText": "Compare approaches using your own real-world results.",
+
+    "comingSoon": "PRO IS COMING SOON",
+    "comingSoonText": "We're validating which features are most useful before opening access."
+  },
+
   "home": {
     "title": "You don't need more willpower.",
     "subtitle": "You need a way to interrupt the moment.",
