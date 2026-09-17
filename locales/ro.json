@@ -3,7 +3,8 @@
     "interrupt": "ÎNTRERUPE",
     "continue": "CONTINUĂ",
     "back": "ÎNAPOI",
-    "done": "GATA"
+    "done": "GATA",
+    "learnMore": "AFLĂ MAI MULTE"
   },
 
   "insights": {
@@ -15,26 +16,61 @@
     "best": "Cea mai eficientă abordare",
     "triggerTitle": "Declanșator frecvent",
     "recentTitle": "Sesiuni recente",
-    "empty": "Nicio sesiune încă."
+    "empty": "Nicio sesiune încă.",
+
+    "learning": "CE ÎNVAȚĂ INTERRUPT",
+    "recent": "PERFORMANȚĂ RECENTĂ",
+    "pattern": "CEL MAI PUTERNIC TIPAR AL TĂU",
+
+    "bestRecent": "Performanță recentă",
+    "bestOverall": "Performanță generală",
+
+    "uses": "utilizări",
+    "success": "succes",
+
+    "commonBehavior": "Comportamentul cel mai frecvent",
+    "commonExpectation": "Așteptarea cea mai frecventă",
+    "commonTrigger": "Declanșatorul cel mai frecvent",
+
+    "noPattern": "Încă nu există suficiente situații repetate pentru a identifica un tipar clar.",
+
+    "patternPositive": "{intervention} a avut rezultate pozitive atunci când acest tip de impuls are o intensitate {band}.",
+    "patternMixed": "{intervention} a avut rezultate mixte atunci când acest tip de impuls are o intensitate {band}.",
+
+    "recentText": "{name} a fost cea mai eficientă abordare recentă, cu o reducere medie de {reduction}.",
+
+    "overallText": "{name} are cea mai mare reducere medie din istoricul tău înregistrat: {reduction}.",
+
+    "none": "Încă nu există suficiente date.",
+
+    "proTitle": "INTERRUPT Pro",
+
+    "proOverall": "Vezi care intervenții funcționează cel mai bine pentru tine în mod constant, pe baza istoricului pe termen lung.",
+
+    "proPattern": "Descoperă tipare mai profunde între impulsurile tale, context, intensitate și intervențiile pe care le folosești.",
+
+    "proProtection": "Înțelege cum interacționează setările tale de protecție cu istoricul întreruperilor în timp.",
+
+    "proMessage": "Pro va transforma istoricul tău în tipare personale mai profunde și îți va arăta ce funcționează în mod constant pentru tine."
   },
 
   "home": {
     "title": "Nu ai nevoie de mai multă voință.",
     "subtitle": "Ai nevoie de o modalitate de a întrerupe momentul.",
     "button": "ÎNTRERUPE",
-    "privacy": "Privat. Nu este necesar niciun cont.",
+    "privacy": "Privat. Fără cont.",
     "insights": "VEZI-ȚI TIPARELE"
   },
 
   "behavior": {
     "title": "Ce ești pe cale să faci?",
-    "subtitle": "Alege ce te atrage chiar acum.",
-    "otherLabel": "Ce este?",
+    "subtitle": "Alege ceea ce te atrage în acest moment.",
+    "otherLabel": "Ce anume?",
     "otherPlaceholder": "Scrie aici"
   },
 
   "behaviors": {
-    "gamble": "Să joc jocuri de noroc",
+    "gamble": "Să joc la jocuri de noroc",
     "scroll": "Să derulez",
     "smoke": "Să fumez",
     "eat": "Să mănânc",
@@ -46,12 +82,12 @@
 
   "intensity": {
     "title": "Cât de puternic este impulsul acum?",
-    "subtitle": "0 înseamnă abia prezent. 10 înseamnă extrem de puternic."
+    "subtitle": "0 înseamnă abia sesizabil. 10 înseamnă extrem de puternic."
   },
 
   "expectation": {
     "title": "Ce te aștepți să îți ofere?",
-    "subtitle": "Ce cauți de fapt chiar acum?",
+    "subtitle": "Ce cauți de fapt în acest moment?",
     "otherLabel": "Ce cauți?",
     "otherPlaceholder": "Scrie aici"
   },
@@ -75,13 +111,13 @@
 
   "outcome": {
     "title": "Ce s-a întâmplat?",
-    "subtitle": "Indiferent ce s-a întâmplat, răspunsul tău ajută INTERRUPT să învețe."
+    "subtitle": "Indiferent ce s-a întâmplat, răspunsul tău îl ajută pe INTERRUPT să învețe."
   },
 
   "outcomes": {
     "interrupted": {
       "title": "L-am întrerupt",
-      "description": "Am ales să nu acționez în urma impulsului."
+      "description": "Am ales să nu acționez în baza impulsului."
     },
     "delayed": {
       "title": "L-am amânat",
@@ -89,7 +125,7 @@
     },
     "acted": {
       "title": "Am făcut-o oricum",
-      "description": "Impulsul a câștigat de data aceasta."
+      "description": "Impulsul a câștigat de data asta."
     },
     "unsure": {
       "title": "Nu sunt sigur",
@@ -100,16 +136,16 @@
   "result": {
     "intervention": "Intervenție",
     "behavior": "Comportament",
-    "tryAnother": "Încearcă din nou",
+    "tryAnother": "Încearcă alta",
 
     "interruptedTitle": "Ai întrerupt momentul.",
     "delayedTitle": "Ai creat puțină distanță.",
-    "actedTitle": "Impulsul a câștigat de data aceasta.",
+    "actedTitle": "Impulsul a câștigat de data asta.",
     "unsureTitle": "Momentul a trecut.",
 
     "messages": {
       "lower": "Impulsul s-a mai liniștit.",
-      "same": "Impulsul nu s-a schimbat de data aceasta.",
+      "same": "Impulsul nu s-a schimbat de data asta.",
       "higher": "Impulsul a devenit mai puternic. Și asta este o informație utilă."
     }
   },
@@ -119,7 +155,6 @@
   },
 
   "interventions": {
-
     "categories": {
       "defusion": "CREEAZĂ DISTANȚĂ",
       "cognitive": "PRIVEȘTE DIN NOU",
@@ -135,41 +170,27 @@
 
     "nameIt": {
       "title": "NUMEȘTE-L",
-
       "instruction": "Hai să separăm impulsul de tine.",
-
       "firstPrompt": "Completează: „Am impulsul să…”",
-
       "placeholder": "Am impulsul să...",
-
       "secondPrompt": "Acum încearcă: „Creierul meu îmi spune să…”",
-
       "placeholder2": "Creierul meu îmi spune să..."
     },
 
     "promise": {
       "title": "PROMISIUNEA",
-
       "intro": "Creierul tău îți face o ofertă.",
-
       "expected": "În acest moment se așteaptă la:",
-
       "durationQuestion": "Dacă o faci, cât timp te aștepți să dureze senzația?",
-
       "durationPlaceholder": "Câteva minute, o oră, cea mai mare parte a zilei...",
-
       "afterQuestion": "Și ce se întâmplă de obicei după aceea?",
-
       "afterPlaceholder": "Ce se întâmplă apoi?"
     },
 
     "wave": {
-      "title": "PRINDE VALUL",
-
-      "instruction": "Nu lupta cu impulsul. Observă-l.",
-
+      "title": "CĂLĂREȘTE VALUL",
+      "instruction": "Nu lupta cu impulsul. Privește-l.",
       "locationPrompt": "Unde îl simți?",
-
       "locations": {
         "chest": "Piept",
         "stomach": "Stomac",
@@ -177,11 +198,8 @@
         "hands": "Mâini",
         "everywhere": "Peste tot"
       },
-
       "timerIntro": "Rămâi cu senzația timp de 60 de secunde.",
-
       "finished": "S-a schimbat ceva?",
-
       "weaker": "A devenit mai slab",
       "changed": "S-a schimbat",
       "same": "A rămas la fel",
@@ -190,61 +208,42 @@
 
     "delay": {
       "title": "NU ACUM",
-
       "instruction": "Nu trebuie să decizi pentru totdeauna.",
-
-      "promise": "Doar nu o face în următoarele 10 minute.",
-
+      "promise": "Pur și simplu nu o face în următoarele 10 minute.",
       "start": "ÎNCEPE 10:00",
-
       "waiting": "Nu trebuie să faci nimic. Lasă doar cele zece minute să treacă.",
-
       "finished": "Cele zece minute au trecut.",
-
       "stillWant": "Încă vreau",
-      "weaker": "Este mai slab",
-      "gone": "A trecut",
+      "weaker": "E mai slab",
+      "gone": "A dispărut",
       "alreadyDid": "Am făcut-o deja"
     },
 
     "fastForward": {
       "title": "DERULEAZĂ ÎNAINTE",
-
       "intro": "Imaginează-ți că ai făcut-o deja.",
-
       "tenMinutes": "10 minute mai târziu...",
-
       "tenPlaceholder": "Cum te simți?",
-
       "tomorrow": "Mâine...",
-
       "tomorrowPlaceholder": "Cum te simți mâine?",
-
       "next": "Ce se întâmplă apoi?",
-
       "nextPlaceholder": "Ce se întâmplă după aceea?"
     },
 
     "changeScene": {
-      "title": "SCHIMBĂ DECORUL",
-
+      "title": "SCHIMBĂ SCENA",
       "step1": "Ridică-te.",
       "step2": "Lasă jos dispozitivul sau obiectul.",
       "step3": "Mergi în alt loc.",
       "step4": "Rămâi acolo timp de două minute.",
-
       "ready": "SUNT ÎN ALTĂ PARTE",
-
       "wait": "Rămâi aici timp de două minute."
     },
 
     "actualNeed": {
       "title": "DE CE AI NEVOIE DE FAPT?",
-
       "intro": "Lasă comportamentul deoparte pentru o clipă.",
-
       "question": "De ce ai nevoie de fapt?",
-
       "options": {
         "stimulation": "Stimulare",
         "relief": "Ușurare",
@@ -255,78 +254,60 @@
         "rest": "Odihnă",
         "unknown": "Nu știu"
       },
-
       "suggestions": {
         "stimulation": "Oferă-i creierului ceva nou timp de 90 de secunde.",
         "relief": "Respiră lent și relaxează-ți intenționat umerii.",
-        "comfort": "Mergi într-un loc confortabil și oferă-ți două minute de liniște.",
+        "comfort": "Mergi într-un loc confortabil și acordă-ți două minute de liniște.",
         "escape": "Îndepărtează-te de situație timp de două minute.",
-        "connection": "Trimite un mesaj simplu unei persoane în care ai încredere.",
+        "connection": "Trimite un mesaj simplu cuiva în care ai încredere.",
         "control": "Alege un lucru mic din jurul tău pe care îl poți controla chiar acum.",
         "rest": "Lasă totul deoparte timp de două minute și permite-ți să te oprești.",
-        "unknown": "Nu trebuie să știi încă. Creează pur și simplu două minute de distanță."
+        "unknown": "Nu trebuie să știi încă. Creează doar două minute de distanță."
       }
     },
 
     "breakChain": {
       "title": "RUPE LANȚUL",
-
       "question": "Ce s-a întâmplat chiar înainte de impuls?",
-
       "options": {
         "boredom": "Plictiseală",
         "stress": "Stres",
         "something_seen": "Am văzut ceva",
         "argument": "O ceartă",
         "alone": "Eram singur",
-        "phone": "Mi-am luat telefonul",
+        "phone": "Am pus mâna pe telefon",
         "habit": "A fost automat",
         "nothing_obvious": "Nimic evident"
       },
-
-      "result": "Este util. Acum întrerupe lanțul aici.",
-
-      "changeScene": "SCHIMBĂ DECORUL"
+      "result": "E util. Acum întrerupe lanțul aici.",
+      "changeScene": "SCHIMBĂ-MI SCENA"
     },
 
     "twoFutures": {
       "title": "DOUĂ VIITORURI",
-
-      "intro": "Privește cele două drumuri fără să judeci vreunul dintre ele.",
-
+      "intro": "Privește cele două drumuri fără să judeci vreunul.",
       "act": "DACĂ ACȚIONEZ",
-
       "actPlaceholder": "Ce se întâmplă?",
-
-      "dont": "DACĂ NU ACȚIONEZ",
-
+      "dont": "DACĂ NU O FAC",
       "dontPlaceholder": "Ce se întâmplă în schimb?"
     },
 
     "switch90": {
       "title": "SCHIMBARE DE 90 DE SECUNDE",
-
-      "instruction": "Nu te gândi. Fă pur și simplu altceva timp de 90 de secunde.",
-
+      "instruction": "Fără să te gândești. Fă doar altceva timp de 90 de secunde.",
       "task1": "Găsește cinci lucruri albastre în jurul tău.",
       "task2": "Spală o cană.",
       "task3": "Ridică-te și plimbă-te puțin.",
       "task4": "Numără zece obiecte din jurul tău.",
-
       "start": "ÎNCEPE 90 DE SECUNDE"
     },
 
     "realityCheck": {
       "title": "VERIFICAREA REALITĂȚII",
-
       "question": "Ce crezi că se va întâmpla dacă o faci?",
-
       "placeholder": "Cred că...",
-
       "certainty": "Cât de sigur ești?",
-
-      "past": "S-a întâmplat într-adevăr în mod constant și înainte?",
-
+      "past": "S-a întâmplat asta în mod constant și înainte?",
       "yes": "DA",
       "no": "NU",
       "sometimes": "UNEORI"
@@ -334,11 +315,8 @@
 
     "previousSuccess": {
       "title": "CE A FUNCȚIONAT DATA TRECUTĂ?",
-
       "intro": "Ai mai fost aici.",
-
       "message": "Data trecută, această abordare a ajutat la reducerea impulsului.",
-
       "try": "ÎNCEARCĂ DIN NOU"
     },
 
