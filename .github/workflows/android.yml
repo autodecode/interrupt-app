@@ -4,9 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -28,13 +26,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android NDK
+      - name: Install Android SDK and NDK
         run: |
           sdkmanager "platforms;android-35"
           sdkmanager "build-tools;35.0.0"
           sdkmanager "ndk;27.2.12479018"
 
-      - name: Build HEV native libraries
+      - name: Build HEV tunnel
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.2.12479018
         run: |
@@ -48,33 +46,30 @@ jobs:
             https://github.com/heiher/hev-socks5-tunnel.git \
             hev-socks5-tunnel
 
-          git clone --recursive \
-            https://github.com/heiher/hev-socks5-server.git \
-            hev-socks5-server
-
-          mkdir -p jni-tunnel
-
-          printf '%s\n' \
-            'include $(call all-subdir-makefiles)' \
-            > jni-tunnel/Android.mk
-
           "$ANDROID_NDK_HOME/ndk-build" \
-            NDK_PROJECT_PATH=. \
-            APP_BUILD_SCRIPT="$PWD/jni-tunnel/Android.mk" \
+            NDK_PROJECT_PATH="$PWD/hev-socks5-tunnel" \
+            APP_BUILD_SCRIPT="$PWD/hev-socks5-tunnel/Android.mk" \
             APP_ABI="armeabi-v7a arm64-v8a x86 x86_64" \
             APP_PLATFORM=android-29 \
             NDK_LIBS_OUT="$PWD/tunnel-libs" \
             NDK_OUT="$PWD/tunnel-obj"
 
-          mkdir -p jni-server
+      - name: Build HEV SOCKS5 server
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/27.2.12479018
+        run: |
+          set -e
 
-          printf '%s\n' \
-            'include $(call all-subdir-makefiles)' \
-            > jni-server/Android.mk
+          cd native-build
+
+          git clone --recursive \
+            --branch 2.7.0 \
+            https://github.com/heiher/hev-socks5-server.git \
+            hev-socks5-server
 
           "$ANDROID_NDK_HOME/ndk-build" \
-            NDK_PROJECT_PATH=. \
-            APP_BUILD_SCRIPT="$PWD/jni-server/Android.mk" \
+            NDK_PROJECT_PATH="$PWD/hev-socks5-server" \
+            APP_BUILD_SCRIPT="$PWD/hev-socks5-server/Android.mk" \
             APP_ABI="armeabi-v7a arm64-v8a x86 x86_64" \
             APP_PLATFORM=android-29 \
             APP_CFLAGS="-DPKGNAME=hev/socks5 -DCLSNAME=Socks5Service" \
@@ -86,13 +81,11 @@ jobs:
           set -e
 
           for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-
             test -f \
               "native-build/tunnel-libs/$abi/libhev-socks5-tunnel.so"
 
             test -f \
               "native-build/server-libs/$abi/libhev-socks5-server.so"
-
           done
 
       - name: Install HEV libraries
@@ -199,16 +192,6 @@ jobs:
 
           test -f \
             android/app/src/main/assets/hev/socks5.yml
-
-          for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-
-            test -f \
-              "android/app/src/main/jniLibs/$abi/libhev-socks5-tunnel.so"
-
-            test -f \
-              "android/app/src/main/jniLibs/$abi/libhev-socks5-server.so"
-
-          done
 
       - name: Sync Capacitor
         run: |
