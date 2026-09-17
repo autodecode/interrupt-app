@@ -54,6 +54,24 @@
     "proMessage": "Pro convertirá tu historial en patrones personales más profundos y te mostrará qué funciona de forma constante para ti."
   },
 
+  "pro": {
+    "title": "Descubre qué funciona para ti.",
+    "description": "Ve más allá de tu historial básico. Descubre qué intervenciones funcionan mejor para tus patrones a lo largo del tiempo.",
+    "button": "DESCUBRIR PRO",
+    "screenTitle": "Tus patrones se vuelven personales.",
+    "screenSubtitle": "Cuanto más aprende INTERRUPT, más precisamente puede comprender qué funciona para ti.",
+    "featureAdaptiveTitle": "Recomendaciones adaptativas",
+    "featureAdaptiveText": "Recomendaciones basadas en tu propio historial y contexto.",
+    "featurePatternsTitle": "Patrones profundos",
+    "featurePatternsText": "Descubre qué situaciones, impulsos e intervenciones están relacionados a lo largo del tiempo.",
+    "featureLongTermTitle": "Perspectivas a largo plazo",
+    "featureLongTermText": "Comprende qué cambia, qué se repite y qué te ayuda de forma constante.",
+    "featureComparisonTitle": "Comparación de intervenciones",
+    "featureComparisonText": "Compara distintos enfoques utilizando tus resultados reales.",
+    "comingSoon": "PRO LLEGARÁ PRONTO",
+    "comingSoonText": "Estamos validando qué funciones son más útiles antes de abrir el acceso."
+  },
+
   "home": {
     "title": "No necesitas más fuerza de voluntad.",
     "subtitle": "Necesitas una forma de interrumpir el momento.",
