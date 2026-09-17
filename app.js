@@ -25,6 +25,7 @@ it:{gambling:"Gioco d'azzardo",pornography:"Pornografia",socialMedia:"Social med
 };
 
 let translations={},englishTranslations={},currentLanguage="en";
+let proReturnScreen="home";
 
 let session={
 id:null,
@@ -97,20 +98,16 @@ if($("interruptProStyles"))return;
 const style=document.createElement("style");
 style.id="interruptProStyles";
 style.textContent=`
-.pro-entry{margin-top:16px}
-.pro-entry p{margin:.5rem 0 1rem}
-.pro-entry-badge{display:inline-block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;opacity:.65;margin-bottom:6px}
-.pro-banner{position:relative}
 .pro-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
 .pro-panel{width:min(100%,540px);max-height:90vh;overflow:auto;background:var(--background,#111);color:var(--text,#fff);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:26px;box-sizing:border-box;box-shadow:0 20px 60px rgba(0,0,0,.45)}
 .pro-panel-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
 .pro-panel-header h2{margin:0}
 .pro-close{border:0;background:none;color:inherit;font-size:28px;cursor:pointer;line-height:1;padding:2px 6px}
-.pro-feature{padding:16px 0;border-top:1px solid rgba(255,255,255,.1)}
-.pro-feature strong{display:block;margin-bottom:5px}
-.pro-feature p{margin:0;opacity:.78;line-height:1.55}
+.pro-panel .pro-feature{padding:16px 0;border-top:1px solid rgba(255,255,255,.1)}
+.pro-panel .pro-feature strong{display:block;margin-bottom:5px}
+.pro-panel .pro-feature p{margin:0;opacity:.78;line-height:1.55}
 .pro-panel-footer{margin-top:20px}
-.pro-coming-soon{font-size:.82rem;opacity:.55;margin-top:14px}
+.pro-panel .pro-coming-soon{font-size:.82rem;opacity:.55;margin-top:14px}
 `;
 document.head.appendChild(style)
 }
@@ -127,10 +124,13 @@ return button
 function createProGate(title,text){
 const box=document.createElement("div");
 box.className="insight-section pro-gate";
+
 const heading=document.createElement("h3");
 const paragraph=document.createElement("p");
+
 heading.textContent=title;
 paragraph.textContent=text;
+
 box.append(heading,paragraph,createProButton("primary-button pro-gate-button"));
 return box
 }
@@ -227,6 +227,18 @@ close.addEventListener("click",closeProMessage);
 overlay.addEventListener("click",event=>{
 if(event.target===overlay)closeProMessage()
 })
+}
+
+function openProScreen(returnScreen="home"){
+proReturnScreen=returnScreen;
+closeProMessage();
+showScreen("pro")
+}
+
+function closeProScreen(){
+const target=proReturnScreen==="insights"?"insights":"home";
+if(target==="insights")renderInsights();
+showScreen(target)
 }
 
 function getSavedSessions(){
@@ -400,69 +412,11 @@ button.setAttribute("aria-expanded",String(open))
 function updateProEntryPoints(){
 ensureProStyles();
 
-const home=$("screen-home");
+const homeCard=$("homeProCard");
+const insightsCard=$("proCard");
 
-if(home){
-let homeEntry=$("homeProEntry");
-
-if(!homeEntry){
-homeEntry=document.createElement("div");
-homeEntry.id="homeProEntry";
-homeEntry.className="insight-section pro-entry";
-
-const startButton=$("startButton");
-const insightsButton=$("insightsButton");
-
-if(insightsButton){
-insightsButton.insertAdjacentElement("afterend",homeEntry)
-}else if(startButton){
-startButton.insertAdjacentElement("afterend",homeEntry)
-}else{
-home.appendChild(homeEntry)
-}
-}
-
-homeEntry.innerHTML="";
-
-const badge=document.createElement("div");
-badge.className="pro-entry-badge";
-badge.textContent="PRO";
-
-const title=document.createElement("h3");
-title.textContent=t("insights.proTitle","INTERRUPT Pro");
-
-const paragraph=document.createElement("p");
-paragraph.textContent=isPro()
-?t("insights.proMessage","Pro will turn your history into deeper personal patterns and show you what consistently works for you.")
-:t("insights.proMessage","Pro will turn your history into deeper personal patterns and show you what consistently works for you.");
-
-const button=createProButton("primary-button");
-
-if(isPro()){
-button.textContent=t("common.done","Done");
-button.addEventListener("click",closeProMessage);
-}
-
-homeEntry.append(badge,title,paragraph,button)
-}
-
-const insightsButton=$("insightsButton");
-
-if(insightsButton&&!$("insightsProButton")){
-const button=createProButton("secondary-button");
-button.id="insightsProButton";
-button.style.marginTop="12px";
-insightsButton.insertAdjacentElement("afterend",button)
-}
-
-const insightsProButton=$("insightsProButton");
-
-if(insightsProButton){
-insightsProButton.textContent=isPro()
-?t("insights.proTitle","INTERRUPT Pro")
-:t("insights.proTitle","INTERRUPT Pro");
-insightsProButton.hidden=false
-}
+if(homeCard)homeCard.hidden=false;
+if(insightsCard)insightsCard.hidden=false
 }
 
 function selectBehavior(button){
@@ -825,12 +779,7 @@ if(!item)return;
 
 if(Array.isArray(item.attemptHistory)&&item.attemptHistory.length){
 item.attemptHistory.forEach(attempt=>{
-if(
-attempt&&
-attempt.intervention&&
-typeof attempt.intensityBefore==="number"&&
-typeof attempt.intensityAfter==="number"
-){
+if(attempt&&attempt.intervention&&typeof attempt.intensityBefore==="number"&&typeof attempt.intensityAfter==="number"){
 history.push({
 ...item,
 ...attempt,
@@ -846,7 +795,6 @@ protectionMode:attempt.protectionMode??item.protectionMode
 })
 }
 });
-
 return
 }
 
@@ -2134,6 +2082,16 @@ showScreen("insights")
 $("insightsDoneButton").addEventListener("click",()=>{
 showScreen("home")
 });
+
+$("homeProButton")?.addEventListener("click",()=>{
+openProScreen("home")
+});
+
+$("proButton")?.addEventListener("click",()=>{
+openProScreen("insights")
+});
+
+$("proBackButton")?.addEventListener("click",closeProScreen);
 
 document.querySelectorAll(".language-option").forEach(option=>{
 option.addEventListener("click",async()=>{
