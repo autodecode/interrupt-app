@@ -11,8 +11,6 @@ public final class Ipv6Packet {
     public static final int NEXT_HEADER_TCP = 6;
     public static final int NEXT_HEADER_UDP = 17;
 
-    public static final int NEXT_HEADER_FRAGMENT = 44;
-
     private final byte[] packet;
     private final int length;
 
@@ -70,25 +68,27 @@ public final class Ipv6Packet {
         }
 
 
-        int payloadLength =
+        int declaredPayloadLength =
                 unsignedShort(
                         packet,
                         4
                 );
 
 
+        /*
+         * IPv6 supports a payload length of zero for
+         * certain jumbogram configurations. Those are
+         * deliberately not handled by this packet engine.
+         */
         if (
-                payloadLength < 0
+                declaredPayloadLength == 0
                 ||
-                BASE_HEADER_LENGTH + payloadLength
+                BASE_HEADER_LENGTH
+                        + declaredPayloadLength
                         > length
         ) {
             return null;
         }
-
-
-        int nextHeader =
-                packet[6] & 0xFF;
 
 
         byte[] sourceAddress =
@@ -117,35 +117,38 @@ public final class Ipv6Packet {
         );
 
 
-        /*
-         * Extension headers change where the transport
-         * payload begins.
-         *
-         * We do not guess through arbitrary extension
-         * chains here. The VPN layer will treat packets
-         * requiring extension-header traversal separately.
-         *
-         * Fragment headers are especially important because
-         * inspecting an incomplete fragment as DNS would be
-         * unsafe.
-         */
-        if (
-                nextHeader == NEXT_HEADER_FRAGMENT
-        ) {
+        int initialNextHeader =
+                packet[6] & 0xFF;
+
+
+        int payloadEnd =
+                BASE_HEADER_LENGTH
+                        + declaredPayloadLength;
+
+
+        Ipv6ExtensionHeaders.Result extensionResult =
+                Ipv6ExtensionHeaders.parse(
+                        packet,
+                        BASE_HEADER_LENGTH,
+                        payloadEnd,
+                        initialNextHeader
+                );
+
+
+        if (extensionResult == null) {
             return null;
         }
-
-
-        int payloadOffset =
-                BASE_HEADER_LENGTH;
 
 
         return new Ipv6Packet(
                 packet,
                 length,
-                payloadOffset,
-                payloadLength,
-                nextHeader,
+                extensionResult
+                        .getPayloadOffset(),
+                extensionResult
+                        .getPayloadLength(),
+                extensionResult
+                        .getTransportProtocol(),
                 sourceAddress,
                 destinationAddress
         );
@@ -230,13 +233,8 @@ public final class Ipv6Packet {
 
     public byte[] copyPacket() {
 
-        int packetLength =
-                BASE_HEADER_LENGTH
-                        + payloadLength;
-
-
         byte[] result =
-                new byte[packetLength];
+                new byte[length];
 
 
         System.arraycopy(
@@ -244,7 +242,7 @@ public final class Ipv6Packet {
                 0,
                 result,
                 0,
-                packetLength
+                length
         );
 
 
