@@ -7,11 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.VpnService;
 import android.os.Build;
+import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 public final class InterruptVpnService extends VpnService {
 
@@ -29,14 +26,11 @@ public final class InterruptVpnService extends VpnService {
 
     private ParcelFileDescriptor vpnInterface;
 
-    private Thread packetThread;
-
-    private volatile boolean running;
+    private HevTunnelController hevController;
 
     private ProtectionController protectionController;
 
-    private VpnPacketProcessor packetProcessor;
-
+    private volatile boolean running;
 
     @Override
     public int onStartCommand(
@@ -53,30 +47,25 @@ public final class InterruptVpnService extends VpnService {
                 )
         ) {
 
-            stopVpn();
+            stopProtection();
 
             stopSelf();
 
             return START_NOT_STICKY;
         }
 
-
         startProtectionForeground();
 
-
         if (!running) {
-            startVpn();
+            startProtection();
         }
-
 
         return START_STICKY;
     }
 
-
     private void startProtectionForeground() {
 
         createNotificationChannel();
-
 
         Notification notification =
                 new Notification.Builder(
@@ -95,13 +84,11 @@ public final class InterruptVpnService extends VpnService {
                         .setOngoing(true)
                         .build();
 
-
         startForeground(
                 NOTIFICATION_ID,
                 notification
         );
     }
-
 
     private void createNotificationChannel() {
 
@@ -113,7 +100,6 @@ public final class InterruptVpnService extends VpnService {
             return;
         }
 
-
         NotificationChannel channel =
                 new NotificationChannel(
                         CHANNEL_ID,
@@ -121,11 +107,9 @@ public final class InterruptVpnService extends VpnService {
                         NotificationManager.IMPORTANCE_LOW
                 );
 
-
         channel.setDescription(
                 "INTERRUPT Protection status"
         );
-
 
         NotificationManager manager =
                 (NotificationManager)
@@ -133,22 +117,18 @@ public final class InterruptVpnService extends VpnService {
                                 Context.NOTIFICATION_SERVICE
                         );
 
-
         if (manager != null) {
-
             manager.createNotificationChannel(
                     channel
             );
         }
     }
 
-
-    private synchronized void startVpn() {
+    private synchronized void startProtection() {
 
         if (running) {
             return;
         }
-
 
         try {
 
@@ -156,11 +136,6 @@ public final class InterruptVpnService extends VpnService {
                     ProtectionController
                             .getInstance(this);
 
-
-            /*
-             * The native VPN must only run while Protection
-             * is explicitly enabled.
-             */
             if (!protectionController.isEnabled()) {
 
                 stopSelf();
@@ -168,47 +143,15 @@ public final class InterruptVpnService extends VpnService {
                 return;
             }
 
+            Intent prepareIntent =
+                    VpnService.prepare(this);
 
-            ProtectionDecisionEngine decisionEngine =
-                    new ProtectionDecisionEngine(
-                            protectionController
-                    );
+            if (prepareIntent != null) {
 
+                stopSelf();
 
-            DnsForwarder dnsForwarder =
-                    new DnsForwarder(
-                            VpnConfiguration.UPSTREAM_DNS,
-                            VpnConfiguration.UPSTREAM_DNS_PORT,
-                            VpnConfiguration.DNS_TIMEOUT_MS,
-                            this
-                    );
-
-
-            DnsProtectionEngine dnsProtectionEngine =
-                    new DnsProtectionEngine(
-                            decisionEngine,
-                            dnsForwarder
-                    );
-
-
-            Ipv4TrafficProcessor ipv4Processor =
-                    new Ipv4TrafficProcessor(
-                            dnsProtectionEngine
-                    );
-
-
-            Ipv6TrafficProcessor ipv6Processor =
-                    new Ipv6TrafficProcessor(
-                            dnsProtectionEngine
-                    );
-
-
-            packetProcessor =
-                    new VpnPacketProcessor(
-                            ipv4Processor,
-                            ipv6Processor
-                    );
-
+                return;
+            }
 
             VpnService.Builder builder =
                     new VpnService.Builder()
@@ -219,265 +162,112 @@ public final class InterruptVpnService extends VpnService {
                                     VpnConfiguration.MTU
                             );
 
-
-            /*
-             * Virtual IPv4 interface.
-             */
             builder.addAddress(
                     VpnConfiguration.IPV4_ADDRESS,
                     VpnConfiguration.IPV4_PREFIX_LENGTH
             );
 
-
-            /*
-             * Virtual IPv6 interface.
-             */
             builder.addAddress(
                     VpnConfiguration.IPV6_ADDRESS,
                     VpnConfiguration.IPV6_PREFIX_LENGTH
             );
 
-
-            /*
-             * Full-tunnel IPv4 routing.
-             */
             builder.addRoute(
                     VpnConfiguration.IPV4_ROUTE,
                     VpnConfiguration.IPV4_ROUTE_PREFIX_LENGTH
             );
 
-
-            /*
-             * Full-tunnel IPv6 routing.
-             */
             builder.addRoute(
                     VpnConfiguration.IPV6_ROUTE,
                     VpnConfiguration.IPV6_ROUTE_PREFIX_LENGTH
             );
 
-
-            /*
-             * DNS endpoints exposed inside the VPN.
-             */
-            builder.addDnsServer(
-                    VpnConfiguration.IPV4_DNS
-            );
-
-
-            builder.addDnsServer(
-                    VpnConfiguration.IPV6_DNS
-            );
-
-
             vpnInterface =
                     builder.establish();
 
-
             if (vpnInterface == null) {
-
-                packetProcessor = null;
 
                 stopSelf();
 
                 return;
             }
 
+            hevController =
+                    new HevTunnelController(
+                            this
+                    );
+
+            if (
+                    !hevController.start(
+                            vpnInterface
+                    )
+            ) {
+
+                stopProtection();
+
+                stopSelf();
+
+                return;
+            }
 
             running = true;
 
-
-            packetThread =
-                    new Thread(
-                            this::processPackets,
-                            "interrupt-vpn"
-                    );
-
-
-            packetThread.start();
-
-
         } catch (Exception error) {
 
-            stopVpn();
+            stopProtection();
 
             stopSelf();
         }
     }
 
-
-    private void processPackets() {
-
-        ParcelFileDescriptor currentInterface =
-                vpnInterface;
-
-
-        if (currentInterface == null) {
-            return;
-        }
-
-
-        byte[] buffer =
-                new byte[
-                        VpnConfiguration.PACKET_BUFFER_SIZE
-                ];
-
-
-        try (
-                FileInputStream input =
-                        new FileInputStream(
-                                currentInterface
-                                        .getFileDescriptor()
-                        );
-
-                FileOutputStream output =
-                        new FileOutputStream(
-                                currentInterface
-                                        .getFileDescriptor()
-                        )
-        ) {
-
-            while (running) {
-
-                int length =
-                        input.read(buffer);
-
-
-                if (length <= 0) {
-                    continue;
-                }
-
-
-                handlePacket(
-                        buffer,
-                        length,
-                        output
-                );
-            }
-
-
-        } catch (IOException ignored) {
-
-            /*
-             * Closing the ParcelFileDescriptor during
-             * shutdown normally terminates the blocking read.
-             */
-        }
-    }
-
-
-    private void handlePacket(
-            byte[] packet,
-            int length,
-            FileOutputStream output
-    ) {
-
-        if (
-                packet == null
-                ||
-                length <= 0
-                ||
-                length > packet.length
-                ||
-                packetProcessor == null
-        ) {
-            return;
-        }
-
-
-        try {
-
-            byte[] response =
-                    packetProcessor.process(
-                            packet,
-                            length
-                    );
-
-
-            /*
-             * A non-null response means the packet was
-             * actually handled by the Protection packet
-             * layer, currently DNS interception.
-             */
-            if (response != null) {
-
-                output.write(
-                        response
-                );
-
-                output.flush();
-            }
-
-
-        } catch (IOException ignored) {
-
-            /*
-             * A malformed/failed packet must not terminate
-             * the VPN service itself.
-             */
-        }
-    }
-
-
-    private synchronized void stopVpn() {
+    private synchronized void stopProtection() {
 
         running = false;
 
+        if (hevController != null) {
 
-        Thread currentThread =
-                packetThread;
+            hevController.stop();
 
-
-        packetThread = null;
-
-
-        if (
-                currentThread != null
-                &&
-                currentThread != Thread.currentThread()
-        ) {
-
-            currentThread.interrupt();
+            hevController = null;
         }
-
 
         ParcelFileDescriptor currentInterface =
                 vpnInterface;
 
-
         vpnInterface = null;
-
 
         if (currentInterface != null) {
 
             try {
-
                 currentInterface.close();
-
-            } catch (IOException ignored) {
+            } catch (Exception ignored) {
             }
         }
-
-
-        packetProcessor = null;
 
         protectionController = null;
     }
 
-
     @Override
     public void onDestroy() {
 
-        stopVpn();
+        stopProtection();
 
         super.onDestroy();
     }
 
-
     @Override
     public void onRevoke() {
 
-        stopVpn();
+        stopProtection();
 
         super.onRevoke();
+    }
+
+    @Override
+    public IBinder onBind(
+            Intent intent
+    ) {
+
+        return super.onBind(intent);
     }
 }
