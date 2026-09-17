@@ -54,6 +54,30 @@
     "proMessage": "Pro transformera votre historique en tendances personnelles plus approfondies et vous montrera ce qui fonctionne régulièrement pour vous."
   },
 
+  "pro": {
+    "title": "Comprenez ce qui fonctionne pour vous.",
+    "description": "Allez au-delà de votre historique de base. Découvrez quelles interventions fonctionnent le mieux pour vos tendances au fil du temps.",
+    "button": "DÉCOUVRIR PRO",
+
+    "screenTitle": "Vos tendances deviennent personnelles.",
+    "screenSubtitle": "Plus INTERRUPT apprend, plus il peut comprendre précisément ce qui fonctionne pour vous.",
+
+    "featureAdaptiveTitle": "Recommandations adaptatives",
+    "featureAdaptiveText": "Des recommandations basées sur votre propre historique et votre contexte.",
+
+    "featurePatternsTitle": "Tendances approfondies",
+    "featurePatternsText": "Voyez les liens qui apparaissent au fil du temps entre les situations, les impulsions et les interventions que vous utilisez.",
+
+    "featureLongTermTitle": "Perspectives à long terme",
+    "featureLongTermText": "Comprenez ce qui change, ce qui se répète et ce qui vous aide de manière constante.",
+
+    "featureComparisonTitle": "Comparaison des interventions",
+    "featureComparisonText": "Comparez différentes approches à partir de vos résultats réels.",
+
+    "comingSoon": "PRO ARRIVE BIENTÔT",
+    "comingSoonText": "Nous vérifions quelles fonctionnalités sont les plus utiles avant d'ouvrir l'accès."
+  },
+
   "home": {
     "title": "Vous n'avez pas besoin de plus de volonté.",
     "subtitle": "Vous avez besoin d'un moyen d'interrompre le moment.",
@@ -70,7 +94,7 @@
   },
 
   "behaviors": {
-    "gamble": "Jeux d'Argent",
+    "gamble": "Jeux d'argent",
     "scroll": "Faire défiler",
     "smoke": "Fumer",
     "eat": "Manger",
@@ -159,7 +183,7 @@
       "defusion": "CRÉER DE LA DISTANCE",
       "cognitive": "REGARDER AUTREMENT",
       "urge_surfing": "OBSERVER",
-      "delay": "REPousser",
+      "delay": "REPOUSSER",
       "future": "REGARDER PLUS LOIN",
       "environment": "CHANGER D'ENVIRONNEMENT",
       "need": "TROUVER LE BESOIN",
