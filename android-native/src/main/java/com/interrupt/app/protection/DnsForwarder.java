@@ -1,5 +1,7 @@
 package com.interrupt.app.protection;
 
+import android.net.VpnService;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -15,10 +17,10 @@ public final class DnsForwarder {
 
     private static final int MAX_DNS_PACKET_SIZE = 4096;
 
-
     private final InetAddress resolverAddress;
     private final int resolverPort;
     private final int timeoutMs;
+    private final VpnService vpnService;
 
 
     public DnsForwarder(
@@ -28,7 +30,8 @@ public final class DnsForwarder {
         this(
                 resolverAddress,
                 DEFAULT_PORT,
-                DEFAULT_TIMEOUT_MS
+                DEFAULT_TIMEOUT_MS,
+                null
         );
     }
 
@@ -36,7 +39,8 @@ public final class DnsForwarder {
     public DnsForwarder(
             String resolverAddress,
             int resolverPort,
-            int timeoutMs
+            int timeoutMs,
+            VpnService vpnService
     ) throws IOException {
 
         if (
@@ -77,11 +81,17 @@ public final class DnsForwarder {
                         resolverAddress
                 );
 
+
         this.resolverPort =
                 resolverPort;
 
+
         this.timeoutMs =
                 timeoutMs;
+
+
+        this.vpnService =
+                vpnService;
     }
 
 
@@ -116,6 +126,24 @@ public final class DnsForwarder {
                 DatagramSocket socket =
                         new DatagramSocket()
         ) {
+
+            /*
+             * Critical for VpnService:
+             *
+             * The upstream DNS socket must bypass the VPN
+             * tunnel, otherwise the VPN captures its own
+             * DNS forwarding traffic and creates a loop.
+             */
+            if (
+                    vpnService != null
+                    &&
+                    !vpnService.protect(socket)
+            ) {
+                throw new IOException(
+                        "Unable to protect DNS socket"
+                );
+            }
+
 
             socket.setSoTimeout(
                     timeoutMs
