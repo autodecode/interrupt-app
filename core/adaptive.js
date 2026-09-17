@@ -46,7 +46,6 @@ weight*=1.35;
 matches++;
 }
 
-/* Similar context is useful, but never dominates the whole history. */
 if(!matches)weight*=0.65;
 
 return weight;
@@ -142,25 +141,14 @@ stat.weightedSuccess/stat.weightedUses:0;
 
 stat.recencyWeight=stat.weightedUses;
 
-/*
-Confidence is based on real attempts, not weighted attempts.
-This prevents one recent result from becoming "high confidence".
-*/
 stat.confidence=
 stat.uses>=5?"high":
 stat.uses>=3?"moderate":
 "emerging";
 
-/*
-Reliability grows gradually with repeated evidence.
-*/
 stat.reliability=
 Math.min(1,stat.uses/5);
 
-/*
-Context relevance tells the scorer how much of this history
-actually resembles the current situation.
-*/
 stat.contextRelevance=
 stat.uses?
 Math.min(1,stat.contextWeight/(stat.uses*2)):0;
@@ -299,45 +287,25 @@ const stat=stats[intervention];
 
 if(stat){
 
-/*
-Blend long-term history with recent performance.
-Recent results have the stronger influence.
-*/
 score+=stat.averageImpact*2;
 score+=stat.recencyWeightedImpact*7;
 
 score+=stat.successRate*2;
 score+=stat.recencyWeightedSuccessRate*5;
 
-/*
-Repeated use provides evidence, but with diminishing returns.
-*/
 score+=Math.min(stat.uses,5);
 
-/*
-Confidence smoothing:
-weak evidence cannot completely dominate the decision.
-*/
 score*=0.65+(stat.reliability*0.35);
 
-/*
-Reward contextual relevance.
-*/
 if(stat.contextRelevance>=0.75)score+=2;
 else if(stat.contextRelevance>=0.5)score+=1;
 
-/*
-Positive history.
-*/
 if(stat.averageImpact>0)score+=stat.averageImpact;
 
 if(stat.successRate>=.75)score+=3;
 
 if(stat.successRate>=.5&&stat.uses>=3)score+=2;
 
-/*
-Negative history.
-*/
 if(stat.uses>=3){
 
 score-=stat.negativeRate*5;
@@ -353,9 +321,6 @@ score+=stat.recencyWeightedImpact*3;
 }
 }
 
-/*
-Strong repeated evidence.
-*/
 if(
 stat.uses>=5&&
 stat.successRate>=.7
@@ -370,28 +335,14 @@ stat.recencyWeightedSuccessRate>=.7
 score+=3;
 }
 
-/*
-Exploration:
-occasionally prefer less-tested interventions so the engine
-continues learning instead of permanently locking onto one method.
-*/
 if(stat.uses===0)score+=2.5;
 else if(stat.uses===1)score+=1.5;
 else if(stat.uses===2)score+=0.75;
 
 }else{
-
-/*
-Completely untested intervention.
-Give it a small exploration bonus, but not enough to
-override strong proven evidence.
-*/
 score+=2.5;
 }
 
-/*
-Intensity-specific preferences.
-*/
 if(
 intensity>=8&&
 ["delay","fastForward","realityCheck","changeScene"].includes(intervention)
@@ -409,6 +360,306 @@ score+=1;
 return score;
 }
 
+
+/* -------------------------------------------------
+   INTERVENTION PROFILES
+------------------------------------------------- */
+
+function getInterventionProfiles(
+history,
+context={},
+interventions=[]
+){
+const adaptive=getAdaptiveStats(history,context);
+const stats=adaptive.stats;
+const names=interventions.length
+?interventions
+:Object.keys(stats);
+
+return names.map(intervention=>{
+const stat=stats[intervention];
+
+if(!stat){
+return{
+intervention,
+uses:0,
+averageImpact:0,
+successRate:0,
+negativeRate:0,
+zeroRate:0,
+recencyWeightedImpact:0,
+recencyWeightedSuccessRate:0,
+contextRelevance:0,
+reliability:0,
+confidence:"emerging",
+bestImpact:null,
+worstImpact:null,
+last:null,
+lastSuccessful:null,
+score:scoreIntervention(
+intervention,
+stats,
+[],
+context.intensityBefore??5
+)
+};
+}
+
+const successful=adaptive.history
+.filter(
+item=>
+item.intervention===intervention&&
+item.intensityAfter<item.intensityBefore
+)
+.sort(
+(a,b)=>
+new Date(b.completedAt||b.startedAt)-
+new Date(a.completedAt||a.startedAt)
+);
+
+return{
+intervention,
+uses:stat.uses,
+averageImpact:stat.averageImpact,
+successRate:stat.successRate,
+negativeRate:stat.negativeRate,
+zeroRate:stat.zeroRate,
+averageNegativeImpact:stat.averageNegativeImpact,
+recencyWeightedImpact:stat.recencyWeightedImpact,
+recencyWeightedSuccessRate:stat.recencyWeightedSuccessRate,
+contextRelevance:stat.contextRelevance,
+reliability:stat.reliability,
+confidence:stat.confidence,
+bestImpact:stat.bestImpact,
+worstImpact:stat.worstImpact,
+last:stat.last,
+lastSuccessful:successful[0]||null,
+score:scoreIntervention(
+intervention,
+stats,
+[],
+context.intensityBefore??5
+)
+};
+});
+}
+
+
+/* -------------------------------------------------
+   CONTEXT PATTERNS
+------------------------------------------------- */
+
+function getContextPatterns(history,minUses=2){
+if(!Array.isArray(history))return[];
+
+const groups={};
+
+history.forEach(item=>{
+if(
+!item||
+!item.intervention||
+typeof item.intensityBefore!=="number"||
+typeof item.intensityAfter!=="number"
+)return;
+
+const behavior=item.behavior||"other";
+const expectation=item.expectation||"unknown";
+const intensityBand=getIntensityBand(item.intensityBefore);
+
+const key=[
+behavior,
+expectation,
+intensityBand
+].join("|");
+
+if(!groups[key]){
+groups[key]={
+behavior,
+expectation,
+intensityBand,
+uses:0,
+totalImpact:0,
+positive:0,
+negative:0,
+interventions:{},
+last:null
+};
+}
+
+const group=groups[key];
+const impact=item.intensityBefore-item.intensityAfter;
+
+group.uses++;
+group.totalImpact+=impact;
+
+if(impact>0)group.positive++;
+if(impact<0)group.negative++;
+
+if(!group.interventions[item.intervention]){
+group.interventions[item.intervention]={
+uses:0,
+totalImpact:0,
+positive:0
+};
+}
+
+const intervention=group.interventions[item.intervention];
+
+intervention.uses++;
+intervention.totalImpact+=impact;
+
+if(impact>0)intervention.positive++;
+
+if(
+!group.last||
+new Date(item.completedAt||item.startedAt)>
+new Date(group.last.completedAt||group.last.startedAt)
+){
+group.last=item;
+}
+});
+
+return Object.values(groups)
+.filter(group=>group.uses>=minUses)
+.map(group=>{
+const interventions=Object.entries(group.interventions)
+.map(([intervention,data])=>({
+intervention,
+uses:data.uses,
+averageImpact:data.totalImpact/data.uses,
+successRate:data.positive/data.uses
+}))
+.sort((a,b)=>{
+if(b.averageImpact!==a.averageImpact){
+return b.averageImpact-a.averageImpact;
+}
+return b.uses-a.uses;
+});
+
+const best=interventions[0]||null;
+
+return{
+behavior:group.behavior,
+expectation:group.expectation,
+intensityBand:group.intensityBand,
+uses:group.uses,
+averageImpact:group.totalImpact/group.uses,
+successRate:group.positive/group.uses,
+negativeRate:group.negative/group.uses,
+bestIntervention:best,
+interventions,
+last:group.last
+};
+})
+.sort((a,b)=>{
+if(b.averageImpact!==a.averageImpact){
+return b.averageImpact-a.averageImpact;
+}
+return b.uses-a.uses;
+});
+}
+
+
+/* -------------------------------------------------
+   BEST INTERVENTION
+------------------------------------------------- */
+
+function getBestIntervention(
+history,
+context={},
+preferredOrder=[],
+interventions=[]
+){
+const adaptive=getAdaptiveStats(history,context);
+
+if(!adaptive.history.length){
+return null;
+}
+
+const names=interventions.length
+?interventions
+:Object.keys(adaptive.stats);
+
+const scored=names.map(intervention=>({
+intervention,
+score:scoreIntervention(
+intervention,
+adaptive.stats,
+preferredOrder,
+context.intensityBefore??5
+),
+stats:adaptive.stats[intervention]||null
+}))
+.sort((a,b)=>b.score-a.score);
+
+if(!scored.length)return null;
+
+const best=scored[0];
+const stat=best.stats;
+
+return{
+intervention:best.intervention,
+score:best.score,
+uses:stat?.uses||0,
+averageImpact:stat?.averageImpact||0,
+successRate:stat?.successRate||0,
+recencyWeightedImpact:stat?.recencyWeightedImpact||0,
+recencyWeightedSuccessRate:stat?.recencyWeightedSuccessRate||0,
+contextRelevance:stat?.contextRelevance||0,
+reliability:stat?.reliability||0,
+confidence:stat?.confidence||"emerging",
+level:adaptive.level,
+last:stat?.last||null,
+lastSuccessful:stat?.successful?.length
+?stat.successful
+.sort(
+(a,b)=>
+new Date(b.completedAt||b.startedAt)-
+new Date(a.completedAt||a.startedAt)
+)[0]
+:null
+};
+}
+
+
+/* -------------------------------------------------
+   EXPLAINABLE SUMMARY
+------------------------------------------------- */
+
+function getLearningSummary(history,context={},interventions=[]){
+const adaptive=getAdaptiveStats(history,context);
+
+const profiles=getInterventionProfiles(
+history,
+context,
+interventions
+);
+
+const tested=profiles.filter(item=>item.uses>0);
+const successful=tested
+.filter(item=>item.successRate>0)
+.sort((a,b)=>{
+if(b.score!==a.score)return b.score-a.score;
+return b.averageImpact-a.averageImpact;
+});
+
+const patterns=getContextPatterns(
+adaptive.history,
+2
+);
+
+return{
+level:adaptive.level,
+sampleSize:adaptive.history.length,
+profiles,
+patterns,
+testedCount:tested.length,
+successfulCount:successful.length,
+best:successful[0]||null
+};
+}
+
+
 return{
 getIntensityBand,
 getRecencyWeight,
@@ -419,7 +670,11 @@ getAdaptiveHistory,
 getAdaptiveStats,
 getLastSuccessful,
 getRecommendation,
-scoreIntervention
+scoreIntervention,
+getInterventionProfiles,
+getContextPatterns,
+getBestIntervention,
+getLearningSummary
 };
 
 })();
