@@ -19,6 +19,9 @@ public class InterruptProtectionPlugin extends Plugin {
 
     private static final int VPN_REQUEST_CODE = 4102;
 
+    private PluginCall pendingEnableCall;
+
+
     @PluginMethod
     public void getStatus(
             PluginCall call
@@ -39,11 +42,12 @@ public class InterruptProtectionPlugin extends Plugin {
 
         result.put(
                 "running",
-                isVpnServiceRunning()
+                InterruptVpnService.isRunning()
         );
 
         call.resolve(result);
     }
+
 
     @PluginMethod
     public void enable(
@@ -69,6 +73,10 @@ public class InterruptProtectionPlugin extends Plugin {
 
         controller.enable();
 
+        /*
+         * Android requires explicit VPN consent the first
+         * time the application attempts to establish the VPN.
+         */
         Intent prepareIntent =
                 VpnService.prepare(
                         activity
@@ -87,32 +95,22 @@ public class InterruptProtectionPlugin extends Plugin {
             return;
         }
 
-        if (startProtectionService()) {
-
-            JSObject result =
-                    new JSObject();
-
-            result.put(
-                    "enabled",
-                    true
-            );
-
-            result.put(
-                    "running",
-                    true
-            );
-
-            call.resolve(result);
-
-        } else {
+        if (!startProtectionService()) {
 
             controller.disable();
 
             call.reject(
                     "Unable to start INTERRUPT Protection"
             );
+
+            return;
         }
+
+        resolveEnableCall(
+                call
+        );
     }
+
 
     @PluginMethod
     public void disable(
@@ -126,17 +124,22 @@ public class InterruptProtectionPlugin extends Plugin {
 
         controller.disable();
 
+        Context context =
+                getContext();
+
         Intent intent =
                 new Intent(
-                        getContext(),
+                        context,
                         InterruptVpnService.class
                 );
 
-        intent.setAction(
-                InterruptVpnService.ACTION_STOP
+        /*
+         * The service performs its complete cleanup from
+         * onDestroy(), including HEV and the TUN interface.
+         */
+        context.stopService(
+                intent
         );
-
-        getContext().startService(intent);
 
         JSObject result =
                 new JSObject();
@@ -154,7 +157,6 @@ public class InterruptProtectionPlugin extends Plugin {
         call.resolve(result);
     }
 
-    private PluginCall pendingEnableCall;
 
     @Override
     protected void handleOnActivityResult(
@@ -222,21 +224,39 @@ public class InterruptProtectionPlugin extends Plugin {
             return;
         }
 
+        resolveEnableCall(
+                call
+        );
+    }
+
+
+    private void resolveEnableCall(
+            PluginCall call
+    ) {
+
         JSObject result =
                 new JSObject();
 
+        ProtectionController controller =
+                ProtectionController.getInstance(
+                        getContext()
+                );
+
         result.put(
                 "enabled",
-                true
+                controller.isEnabled()
         );
 
         result.put(
                 "running",
-                true
+                InterruptVpnService.isRunning()
         );
 
-        call.resolve(result);
+        call.resolve(
+                result
+        );
     }
+
 
     private boolean startProtectionService() {
 
@@ -278,15 +298,5 @@ public class InterruptProtectionPlugin extends Plugin {
 
             return false;
         }
-    }
-
-    private boolean isVpnServiceRunning() {
-
-        ProtectionController controller =
-                ProtectionController.getInstance(
-                        getContext()
-                );
-
-        return controller.isEnabled();
     }
 }
