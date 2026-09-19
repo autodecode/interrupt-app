@@ -5,14 +5,20 @@ import android.content.Context;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public final class ProtectionController {
 
     private static volatile ProtectionController instance;
 
+    private static final long CONFIG_REFRESH_HOURS = 6;
+
     private final Context context;
     private final ProtectionStateStore stateStore;
     private final ProtectionEventStore eventStore;
+    private final ScheduledExecutorService configExecutor;
 
 
     private ProtectionController(
@@ -39,6 +45,11 @@ public final class ProtectionController {
                 new ProtectionEventStore(
                         this.context
                 );
+
+        this.configExecutor =
+                Executors.newSingleThreadScheduledExecutor();
+
+        startConfigurationRefresh();
     }
 
 
@@ -69,6 +80,36 @@ public final class ProtectionController {
         }
 
         return instance;
+    }
+
+
+    private void startConfigurationRefresh() {
+
+        /*
+         * Download the latest configuration immediately,
+         * then refresh it every six hours.
+         *
+         * Network work never runs on the main thread.
+         */
+        configExecutor.scheduleWithFixedDelay(
+                new Runnable() {
+                    @Override
+                    public void run() {
+
+                        try {
+                            ProtectionConfig.refresh();
+                        } catch (Exception ignored) {
+                            /*
+                             * The configuration store keeps
+                             * the last valid cached configuration.
+                             */
+                        }
+                    }
+                },
+                0,
+                CONFIG_REFRESH_HOURS,
+                TimeUnit.HOURS
+        );
     }
 
 
