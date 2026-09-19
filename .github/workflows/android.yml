@@ -122,8 +122,11 @@ jobs:
           set -e
 
           for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-            test -f "native-build/tunnel-libs/$abi/libhev-socks5-tunnel.so"
-            test -f "native-build/server-libs/$abi/libhev-socks5-server.so"
+            test -f \
+              "native-build/tunnel-libs/$abi/libhev-socks5-tunnel.so"
+
+            test -f \
+              "native-build/server-libs/$abi/libhev-socks5-server.so"
           done
 
       - name: Install HEV libraries
@@ -131,7 +134,8 @@ jobs:
           set -e
 
           for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-            mkdir -p "android-native/src/main/jniLibs/$abi"
+            mkdir -p \
+              "android-native/src/main/jniLibs/$abi"
 
             cp \
               "native-build/tunnel-libs/$abi/libhev-socks5-tunnel.so" \
@@ -221,6 +225,44 @@ jobs:
             android-native/src/main/java/com/interrupt/app/MainActivity.java \
             android/app/src/main/java/com/interrupt/app/MainActivity.java
 
+      - name: Install Android application icon
+        run: |
+          set -e
+
+          test -f icons/icon-512.png
+
+          for density in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            mkdir -p \
+              "android/app/src/main/res/mipmap-$density"
+
+            cp \
+              icons/icon-512.png \
+              "android/app/src/main/res/mipmap-$density/ic_launcher.png"
+          done
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          manifest = Path(
+              "android/app/src/main/AndroidManifest.xml"
+          )
+
+          text = manifest.read_text()
+
+          old = '<application\n        android:allowBackup="false"'
+
+          new = '<application\n        android:allowBackup="false"\n        android:icon="@mipmap/ic_launcher"\n        android:roundIcon="@mipmap/ic_launcher"'
+
+          if old not in text:
+              raise SystemExit(
+                  "Expected application declaration not found"
+              )
+
+          text = text.replace(old, new, 1)
+
+          manifest.write_text(text)
+          PY
+
       - name: Verify native source
         run: |
           set -e
@@ -245,6 +287,29 @@ jobs:
 
           test -f \
             android/app/src/main/assets/hev/socks5.yml
+
+          test -f \
+            android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+
+          test -f \
+            android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+
+          test -f \
+            android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+
+          test -f \
+            android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+
+          test -f \
+            android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
+          grep -q \
+            'android:icon="@mipmap/ic_launcher"' \
+            android/app/src/main/AndroidManifest.xml
+
+          grep -q \
+            'android:roundIcon="@mipmap/ic_launcher"' \
+            android/app/src/main/AndroidManifest.xml
 
           for abi in armeabi-v7a arm64-v8a x86 x86_64; do
             test -f \
