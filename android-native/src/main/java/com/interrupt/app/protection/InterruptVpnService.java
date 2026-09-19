@@ -150,6 +150,13 @@ public final class InterruptVpnService extends VpnService {
                 return;
             }
 
+            /*
+             * The Capacitor plugin normally handles the VPN
+             * permission request before starting this service.
+             *
+             * Keep this check here as a safety guard in case
+             * the service is started through another path.
+             */
             Intent prepareIntent =
                     VpnService.prepare(this);
 
@@ -170,38 +177,48 @@ public final class InterruptVpnService extends VpnService {
                             )
                             .setBlocking(false);
 
+            /*
+             * TUN IPv4 address.
+             */
             builder.addAddress(
                     VpnConfiguration.IPV4_ADDRESS,
                     VpnConfiguration.IPV4_PREFIX_LENGTH
             );
 
+            /*
+             * TUN IPv6 address.
+             */
             builder.addAddress(
                     VpnConfiguration.IPV6_ADDRESS,
                     VpnConfiguration.IPV6_PREFIX_LENGTH
             );
 
+            /*
+             * Full IPv4 tunnel.
+             */
             builder.addRoute(
                     VpnConfiguration.IPV4_ROUTE,
                     VpnConfiguration.IPV4_ROUTE_PREFIX_LENGTH
             );
 
+            /*
+             * Full IPv6 tunnel.
+             */
             builder.addRoute(
                     VpnConfiguration.IPV6_ROUTE,
                     VpnConfiguration.IPV6_ROUTE_PREFIX_LENGTH
             );
 
             /*
-             * HEV MapDNS lives on the VPN interface.
+             * HEV MapDNS is exposed through the IPv4 VPN
+             * address 10.111.0.1.
              *
-             * Applications therefore send DNS requests to
-             * HEV instead of the physical network resolver.
+             * Do not advertise an IPv6 DNS address because
+             * the current HEV MapDNS configuration does not
+             * provide an IPv6 DNS listener.
              */
             builder.addDnsServer(
                     VpnConfiguration.IPV4_DNS
-            );
-
-            builder.addDnsServer(
-                    VpnConfiguration.IPV6_DNS
             );
 
             vpnInterface =
@@ -214,6 +231,10 @@ public final class InterruptVpnService extends VpnService {
                 return;
             }
 
+            /*
+             * Start HEV and the local Java SOCKS5 policy
+             * server against the established TUN interface.
+             */
             hevController =
                     new HevTunnelController(
                             this
