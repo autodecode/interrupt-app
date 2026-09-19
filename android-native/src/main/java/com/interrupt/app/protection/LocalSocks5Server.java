@@ -9,14 +9,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -63,9 +62,6 @@ public final class LocalSocks5Server {
     private static final int REP_COMMAND_NOT_SUPPORTED =
             0x07;
 
-    private static final int REP_ADDRESS_TYPE_NOT_SUPPORTED =
-            0x08;
-
     private static final int MAX_DOMAIN_LENGTH =
             255;
 
@@ -78,7 +74,11 @@ public final class LocalSocks5Server {
     private static final int HANDSHAKE_TIMEOUT_MS =
             15000;
 
+    private static final int UDP_TIMEOUT_MS =
+            3000;
+
     private final VpnService vpnService;
+
     private final ProtectionController protectionController;
 
     private final ExecutorService executor =
@@ -106,7 +106,9 @@ public final class LocalSocks5Server {
             );
         }
 
-        this.vpnService = vpnService;
+        this.vpnService =
+                vpnService;
+
         this.protectionController =
                 protectionController;
     }
@@ -132,7 +134,9 @@ public final class LocalSocks5Server {
                     )
             );
 
-            serverSocket = socket;
+            serverSocket =
+                    socket;
+
             running = true;
 
             executor.execute(
@@ -156,6 +160,7 @@ public final class LocalSocks5Server {
             serverSocket = null;
 
             if (current != null) {
+
                 try {
                     current.close();
                 } catch (Exception ignored) {
@@ -221,11 +226,9 @@ public final class LocalSocks5Server {
 
             } catch (SocketException error) {
 
-                if (running) {
-                    continue;
+                if (!running) {
+                    break;
                 }
-
-                break;
 
             } catch (IOException error) {
 
@@ -282,7 +285,6 @@ public final class LocalSocks5Server {
 
                 handleConnect(
                         socket,
-                        input,
                         output,
                         request
                 );
@@ -333,12 +335,14 @@ public final class LocalSocks5Server {
 
         if (
                 methodCount <= 0
-                || methodCount > 255
+                ||
+                methodCount > 255
         ) {
             return false;
         }
 
-        boolean noAuthSupported = false;
+        boolean noAuthSupported =
+                false;
 
         for (
                 int i = 0;
@@ -403,6 +407,7 @@ public final class LocalSocks5Server {
                 input.readUnsignedByte();
 
         String hostname = null;
+
         InetAddress address = null;
 
         if (addressType == ATYP_IPV4) {
@@ -427,7 +432,8 @@ public final class LocalSocks5Server {
 
             if (
                     length <= 0
-                    || length > MAX_DOMAIN_LENGTH
+                    ||
+                    length > MAX_DOMAIN_LENGTH
             ) {
                 return null;
             }
@@ -440,8 +446,10 @@ public final class LocalSocks5Server {
             hostname =
                     new String(
                             bytes,
-                            java.nio.charset.StandardCharsets.UTF_8
-                    ).trim().toLowerCase();
+                            StandardCharsets.UTF_8
+                    )
+                            .trim()
+                            .toLowerCase();
 
             if (hostname.isEmpty()) {
                 return null;
@@ -482,27 +490,29 @@ public final class LocalSocks5Server {
 
     private void handleConnect(
             Socket client,
-            DataInputStream input,
             DataOutputStream output,
             SocksRequest request
     ) throws IOException {
 
-        String hostname =
-                request.hostname;
-
-        if (hostname != null) {
+        /*
+         * When HEV MapDNS is working correctly, a hostname
+         * request should arrive here as SOCKS5 ATYP_DOMAIN.
+         *
+         * Check the real hostname before any DNS resolution.
+         */
+        if (request.hostname != null) {
 
             String category =
                     protectionController
                             .getCategoryForDomain(
-                                    hostname
+                                    request.hostname
                             );
 
             if (category != null) {
 
                 protectionController
                         .recordBlockedDomain(
-                                hostname
+                                request.hostname
                         );
 
                 sendReply(
@@ -516,107 +526,99 @@ public final class LocalSocks5Server {
             }
         }
 
-        List<InetAddress> addresses =
-                resolveAddresses(request);
-
-        if (addresses.isEmpty()) {
-
-            sendReply(
-                    output,
-                    REP_GENERAL_FAILURE,
-                    null,
-                    0
-            );
-
-            return;
-        }
-
         Socket upstream =
-                null;
+                new Socket();
 
-        IOException lastError =
-                null;
+        try {
 
-        for (InetAddress address :
-                addresses) {
+            /*
+             * IMPORTANT:
+             *
+             * Protect the socket BEFORE connect().
+             *
+             * This prevents the upstream connection from
+             * being captured again by INTERRUPT's VPN.
+             *
+             * For hostname connections this also allows the
+             * socket's network context to be used for the
+             * hostname resolution rather than resolving the
+             * HEV MapDNS fake address and reconnecting to it.
+             */
+            if (
+                    !vpnService.protect(
+                            upstream
+                    )
+            ) {
 
-            Socket candidate =
-                    new Socket();
+                throw new IOException(
+                        "Unable to protect upstream socket"
+                );
+            }
 
-            try {
+            if (request.hostname != null) {
 
-                /*
-                 * This is critical.
-                 *
-                 * The upstream connection must bypass
-                 * the VPN, otherwise it would be captured
-                 * again by the same VPN and loop forever.
-                 */
-                if (
-                        !vpnService.protect(
-                                candidate
-                        )
-                ) {
-
-                    candidate.close();
-
-                    throw new IOException(
-                            "Unable to protect upstream socket"
-                    );
-                }
-
-                candidate.connect(
+                upstream.connect(
                         new InetSocketAddress(
-                                address,
+                                request.hostname,
                                 request.port
                         ),
                         CONNECT_TIMEOUT_MS
                 );
 
-                upstream =
-                        candidate;
+            } else if (
+                    request.address != null
+            ) {
 
-                break;
+                upstream.connect(
+                        new InetSocketAddress(
+                                request.address,
+                                request.port
+                        ),
+                        CONNECT_TIMEOUT_MS
+                );
 
-            } catch (IOException error) {
+            } else {
 
-                lastError = error;
-
-                try {
-                    candidate.close();
-                } catch (Exception ignored) {
-                }
+                throw new IOException(
+                        "Missing destination address"
+                );
             }
-        }
-
-        if (upstream == null) {
-
-            sendReply(
-                    output,
-                    REP_GENERAL_FAILURE,
-                    null,
-                    0
-            );
-
-            return;
-        }
-
-        try (Socket remote = upstream) {
 
             sendReply(
                     output,
                     REP_SUCCESS,
-                    remote.getLocalAddress(),
-                    remote.getLocalPort()
+                    upstream.getLocalAddress(),
+                    upstream.getLocalPort()
             );
 
             client.setSoTimeout(0);
-            remote.setSoTimeout(0);
+            upstream.setSoTimeout(0);
 
             relay(
                     client,
-                    remote
+                    upstream
             );
+
+        } catch (IOException error) {
+
+            try {
+
+                sendReply(
+                        output,
+                        REP_GENERAL_FAILURE,
+                        null,
+                        0
+                );
+
+            } catch (Exception ignored) {
+            }
+
+        } finally {
+
+            try {
+                upstream.close();
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -637,6 +639,9 @@ public final class LocalSocks5Server {
 
         try {
 
+            /*
+             * The UDP relay itself must bypass the VPN.
+             */
             if (
                     !vpnService.protect(
                             relaySocket
@@ -667,13 +672,13 @@ public final class LocalSocks5Server {
             );
 
             InetAddress clientAddress =
-                    controlSocket
-                            .getInetAddress();
+                    controlSocket.getInetAddress();
 
             executor.execute(
                     new Runnable() {
                         @Override
                         public void run() {
+
                             udpRelayLoop(
                                     relaySocket,
                                     clientAddress
@@ -684,8 +689,6 @@ public final class LocalSocks5Server {
 
             /*
              * Keep the SOCKS5 control connection alive.
-             * The UDP association exists while this socket
-             * remains open.
              */
             while (running) {
 
@@ -720,7 +723,9 @@ public final class LocalSocks5Server {
     ) {
 
         byte[] buffer =
-                new byte[MAX_UDP_PACKET_SIZE];
+                new byte[
+                        MAX_UDP_PACKET_SIZE
+                ];
 
         while (
                 running
@@ -808,6 +813,7 @@ public final class LocalSocks5Server {
                 data[position++] & 0xFF;
 
         String hostname = null;
+
         InetAddress destination = null;
 
         if (addressType == ATYP_IPV4) {
@@ -888,8 +894,10 @@ public final class LocalSocks5Server {
                             data,
                             position,
                             domainLength,
-                            java.nio.charset.StandardCharsets.UTF_8
-                    ).trim().toLowerCase();
+                            StandardCharsets.UTF_8
+                    )
+                            .trim()
+                            .toLowerCase();
 
             position += domainLength;
 
@@ -909,6 +917,9 @@ public final class LocalSocks5Server {
 
         position += 2;
 
+        /*
+         * Domain filtering happens before any resolution.
+         */
         if (hostname != null) {
 
             String category =
@@ -926,6 +937,13 @@ public final class LocalSocks5Server {
 
                 return;
             }
+        }
+
+        if (destination == null) {
+
+            if (hostname == null) {
+                return;
+            }
 
             try {
 
@@ -938,10 +956,6 @@ public final class LocalSocks5Server {
 
                 return;
             }
-        }
-
-        if (destination == null) {
-            return;
         }
 
         int payloadLength =
@@ -967,6 +981,10 @@ public final class LocalSocks5Server {
 
         try {
 
+            /*
+             * Protect BEFORE sending so the upstream UDP
+             * packet does not re-enter the VPN.
+             */
             if (
                     !vpnService.protect(
                             upstream
@@ -984,7 +1002,7 @@ public final class LocalSocks5Server {
                     );
 
             upstream.setSoTimeout(
-                    3000
+                    UDP_TIMEOUT_MS
             );
 
             upstream.send(
@@ -1051,15 +1069,22 @@ public final class LocalSocks5Server {
         int addressLength;
 
         if (addressType == ATYP_IPV4) {
+
             addressLength = 4;
-        } else if (addressType == ATYP_IPV6) {
+
+        } else if (
+                addressType == ATYP_IPV6
+        ) {
+
             addressLength = 16;
+
         } else {
+
             byte[] domain =
                     hostname == null
                             ? new byte[0]
                             : hostname.getBytes(
-                                    java.nio.charset.StandardCharsets.UTF_8
+                                    StandardCharsets.UTF_8
                             );
 
             addressLength =
@@ -1086,7 +1111,7 @@ public final class LocalSocks5Server {
 
             byte[] domain =
                     hostname.getBytes(
-                            java.nio.charset.StandardCharsets.UTF_8
+                            StandardCharsets.UTF_8
                     );
 
             result[position++] =
@@ -1141,45 +1166,6 @@ public final class LocalSocks5Server {
     }
 
 
-    private List<InetAddress> resolveAddresses(
-            SocksRequest request
-    ) {
-
-        List<InetAddress> addresses =
-                new ArrayList<>();
-
-        try {
-
-            if (request.hostname != null) {
-
-                InetAddress[] resolved =
-                        InetAddress.getAllByName(
-                                request.hostname
-                        );
-
-                for (
-                        InetAddress address :
-                        resolved
-                ) {
-                    addresses.add(address);
-                }
-
-            } else if (
-                    request.address != null
-            ) {
-
-                addresses.add(
-                        request.address
-                );
-            }
-
-        } catch (Exception ignored) {
-        }
-
-        return addresses;
-    }
-
-
     private void relay(
             Socket client,
             Socket remote
@@ -1190,6 +1176,7 @@ public final class LocalSocks5Server {
                         new Runnable() {
                             @Override
                             public void run() {
+
                                 copy(
                                         client,
                                         remote
@@ -1204,6 +1191,7 @@ public final class LocalSocks5Server {
                         new Runnable() {
                             @Override
                             public void run() {
+
                                 copy(
                                         remote,
                                         client
@@ -1217,14 +1205,20 @@ public final class LocalSocks5Server {
         remoteToClient.start();
 
         try {
+
             clientToRemote.join();
+
         } catch (InterruptedException ignored) {
+
             Thread.currentThread().interrupt();
         }
 
         try {
+
             remoteToClient.join();
+
         } catch (InterruptedException ignored) {
+
             Thread.currentThread().interrupt();
         }
     }
@@ -1253,9 +1247,11 @@ public final class LocalSocks5Server {
             int length;
 
             while (
-                    (length =
-                            input.read(buffer))
-                            != -1
+                    (
+                            length =
+                                    input.read(buffer)
+                    )
+                    != -1
             ) {
 
                 output.write(
@@ -1301,7 +1297,8 @@ public final class LocalSocks5Server {
 
         output.writeByte(0);
 
-        if (address instanceof Inet6Address) {
+        if (address != null
+                && address.getAddress().length == 16) {
 
             output.writeByte(
                     ATYP_IPV6
@@ -1333,9 +1330,7 @@ public final class LocalSocks5Server {
                 byte[] bytes =
                         address.getAddress();
 
-                if (
-                        bytes.length != 4
-                ) {
+                if (bytes.length != 4) {
 
                     output.write(
                             new byte[]{
@@ -1366,10 +1361,15 @@ public final class LocalSocks5Server {
     private static final class SocksRequest {
 
         final int command;
+
         final int addressType;
+
         final String hostname;
+
         final InetAddress address;
+
         final int port;
+
 
         SocksRequest(
                 int command,
@@ -1379,11 +1379,20 @@ public final class LocalSocks5Server {
                 int port
         ) {
 
-            this.command = command;
-            this.addressType = addressType;
-            this.hostname = hostname;
-            this.address = address;
-            this.port = port;
+            this.command =
+                    command;
+
+            this.addressType =
+                    addressType;
+
+            this.hostname =
+                    hostname;
+
+            this.address =
+                    address;
+
+            this.port =
+                    port;
         }
     }
 }
