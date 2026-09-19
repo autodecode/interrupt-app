@@ -14,12 +14,21 @@ public final class ProtectionController {
     private final ProtectionStateStore stateStore;
     private final ProtectionEventStore eventStore;
 
+
     private ProtectionController(
             Context context
     ) {
 
         this.context =
                 context.getApplicationContext();
+
+        /*
+         * Initialize the protection configuration before
+         * any protection decision can be evaluated.
+         */
+        ProtectionConfig.initialize(
+                this.context
+        );
 
         this.stateStore =
                 new ProtectionStateStore(
@@ -169,7 +178,7 @@ public final class ProtectionController {
             String eventId
     ) {
 
-        return eventStore.markConsumed(
+        return eventStore.markEventConsumed(
                 eventId
         );
     }
