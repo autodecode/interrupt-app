@@ -32,6 +32,7 @@ public final class InterruptVpnService extends VpnService {
 
     private volatile boolean running;
 
+
     @Override
     public int onStartCommand(
             Intent intent,
@@ -63,6 +64,7 @@ public final class InterruptVpnService extends VpnService {
         return START_STICKY;
     }
 
+
     private void startProtectionForeground() {
 
         createNotificationChannel();
@@ -89,6 +91,7 @@ public final class InterruptVpnService extends VpnService {
                 notification
         );
     }
+
 
     private void createNotificationChannel() {
 
@@ -118,11 +121,13 @@ public final class InterruptVpnService extends VpnService {
                         );
 
         if (manager != null) {
+
             manager.createNotificationChannel(
                     channel
             );
         }
     }
+
 
     private synchronized void startProtection() {
 
@@ -136,7 +141,9 @@ public final class InterruptVpnService extends VpnService {
                     ProtectionController
                             .getInstance(this);
 
-            if (!protectionController.isEnabled()) {
+            if (
+                    !protectionController.isEnabled()
+            ) {
 
                 stopSelf();
 
@@ -160,7 +167,8 @@ public final class InterruptVpnService extends VpnService {
                             )
                             .setMtu(
                                     VpnConfiguration.MTU
-                            );
+                            )
+                            .setBlocking(false);
 
             builder.addAddress(
                     VpnConfiguration.IPV4_ADDRESS,
@@ -180,6 +188,20 @@ public final class InterruptVpnService extends VpnService {
             builder.addRoute(
                     VpnConfiguration.IPV6_ROUTE,
                     VpnConfiguration.IPV6_ROUTE_PREFIX_LENGTH
+            );
+
+            /*
+             * HEV MapDNS lives on the VPN interface.
+             *
+             * Applications therefore send DNS requests to
+             * HEV instead of the physical network resolver.
+             */
+            builder.addDnsServer(
+                    VpnConfiguration.IPV4_DNS
+            );
+
+            builder.addDnsServer(
+                    VpnConfiguration.IPV6_DNS
             );
 
             vpnInterface =
@@ -220,6 +242,7 @@ public final class InterruptVpnService extends VpnService {
         }
     }
 
+
     private synchronized void stopProtection() {
 
         running = false;
@@ -247,6 +270,7 @@ public final class InterruptVpnService extends VpnService {
         protectionController = null;
     }
 
+
     @Override
     public void onDestroy() {
 
@@ -255,6 +279,7 @@ public final class InterruptVpnService extends VpnService {
         super.onDestroy();
     }
 
+
     @Override
     public void onRevoke() {
 
@@ -262,6 +287,7 @@ public final class InterruptVpnService extends VpnService {
 
         super.onRevoke();
     }
+
 
     @Override
     public IBinder onBind(
