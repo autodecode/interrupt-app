@@ -5,31 +5,36 @@ import android.net.VpnService;
 import android.os.ParcelFileDescriptor;
 
 import hev.htproxy.TProxyService;
-import hev.socks5.Socks5Service;
-
-import java.io.IOException;
 
 public final class HevTunnelController {
 
     private final Context context;
+    private final VpnService vpnService;
 
     private ParcelFileDescriptor vpnInterface;
+    private LocalSocks5Server socks5Server;
 
     private boolean running;
 
+
     public HevTunnelController(
-            Context context
+            VpnService vpnService
     ) {
 
-        if (context == null) {
+        if (vpnService == null) {
             throw new IllegalArgumentException(
-                    "Context cannot be null"
+                    "VpnService cannot be null"
             );
         }
 
+        this.vpnService =
+                vpnService;
+
         this.context =
-                context.getApplicationContext();
+                vpnService
+                        .getApplicationContext();
     }
+
 
     public synchronized boolean start(
             ParcelFileDescriptor vpnInterface
@@ -50,24 +55,24 @@ public final class HevTunnelController {
                             context
                     );
 
-            String socks5Config =
-                    context.getFilesDir()
-                            .toPath()
-                            .resolve("hev")
-                            .resolve("socks5.yml")
-                            .toString();
+            ProtectionController protectionController =
+                    ProtectionController.getInstance(
+                            context
+                    );
 
-            if (
-                    !Socks5Service.Socks5StartService(
-                            socks5Config
-                    )
-            ) {
+            socks5Server =
+                    new LocalSocks5Server(
+                            vpnService,
+                            protectionController
+                    );
+
+            if (!socks5Server.start()) {
+                socks5Server = null;
                 return false;
             }
 
             int tunFd =
-                    vpnInterface
-                            .getFd();
+                    vpnInterface.getFd();
 
             if (
                     !TProxyService.TProxyStartService(
@@ -76,8 +81,8 @@ public final class HevTunnelController {
                     )
             ) {
 
-                Socks5Service
-                        .Socks5StopService();
+                socks5Server.stop();
+                socks5Server = null;
 
                 return false;
             }
@@ -97,25 +102,26 @@ public final class HevTunnelController {
         }
     }
 
+
     public synchronized void stop() {
 
         if (
                 TProxyService.TProxyIsRunning()
         ) {
-            TProxyService
-                    .TProxyStopService();
+
+            TProxyService.TProxyStopService();
         }
 
-        if (
-                Socks5Service.Socks5IsRunning()
-        ) {
-            Socks5Service
-                    .Socks5StopService();
+        if (socks5Server != null) {
+
+            socks5Server.stop();
+            socks5Server = null;
         }
 
         vpnInterface = null;
         running = false;
     }
+
 
     public synchronized boolean isRunning() {
 
@@ -123,6 +129,8 @@ public final class HevTunnelController {
                 &&
                 TProxyService.TProxyIsRunning()
                 &&
-                Socks5Service.Socks5IsRunning();
+                socks5Server != null
+                &&
+                socks5Server.isRunning();
     }
 }
