@@ -219,7 +219,7 @@ public final class ProtectionController {
             String eventId
     ) {
 
-        return eventStore.markEventConsumed(
+        return eventStore.markConsumed(
                 eventId
         );
     }
