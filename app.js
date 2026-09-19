@@ -396,6 +396,8 @@ if(typeof value==="string")element.placeholder=value
 
 updateDynamicIntervention();
 updateProEntryPoints();
+ensureNativeProtectionUI();
+updateNativeProtectionUI();
 
 if($("screen-insights")?.classList.contains("screen-active"))renderInsights()
 }
@@ -407,6 +409,142 @@ if(!menu||!button)return;
 const open=typeof force==="boolean"?force:menu.hidden;
 menu.hidden=!open;
 button.setAttribute("aria-expanded",String(open))
+}
+
+function getNativeProtection(){
+return window.Capacitor?.Plugins?.InterruptProtection||null
+}
+
+async function getNativeProtectionStatus(){
+const plugin=getNativeProtection();
+
+if(!plugin||typeof plugin.getStatus!=="function")return null;
+
+try{
+return await plugin.getStatus()
+}catch(error){
+console.warn("Native Protection status failed:",error);
+return null
+}
+}
+
+async function updateNativeProtectionUI(){
+const card=$("nativeProtectionCard");
+
+if(!card)return;
+
+const plugin=getNativeProtection();
+
+if(!plugin){
+card.hidden=true;
+return
+}
+
+card.hidden=false;
+
+const status=await getNativeProtectionStatus();
+const enabled=!!status?.enabled;
+const running=!!status?.running;
+
+const button=$("nativeProtectionButton");
+const statusText=$("nativeProtectionStatus");
+
+if(statusText){
+statusText.textContent=
+enabled&&running
+?t("protection.androidActive","Protection is active.")
+:enabled
+?t("protection.androidStarting","Protection is enabled.")
+:t("protection.androidOff","Protection is off.")
+}
+
+if(button){
+button.textContent=enabled
+?t("protection.disable","TURN OFF PROTECTION")
+:t("protection.enable","TURN ON PROTECTION");
+button.disabled=false
+}
+
+card.classList.toggle(
+"protection-active",
+enabled&&running
+)
+}
+
+function ensureNativeProtectionUI(){
+if($("nativeProtectionCard"))return;
+if(!getNativeProtection())return;
+
+const homeContent=document.querySelector("#screen-home .home-content");
+
+if(!homeContent)return;
+
+const card=document.createElement("div");
+card.id="nativeProtectionCard";
+card.className="pro-card native-protection-card";
+
+const badge=document.createElement("div");
+badge.className="pro-card-badge";
+badge.textContent="PROTECTION";
+
+const title=document.createElement("h3");
+title.textContent=t(
+"protection.androidTitle",
+"INTERRUPT Protection"
+);
+
+const description=document.createElement("p");
+description.textContent=t(
+"protection.androidDescription",
+"Pause before the pattern becomes behavior."
+);
+
+const status=document.createElement("p");
+status.id="nativeProtectionStatus";
+status.className="native-protection-status";
+
+const button=document.createElement("button");
+button.id="nativeProtectionButton";
+button.type="button";
+button.className="secondary-button pro-button";
+button.textContent=t(
+"protection.enable",
+"TURN ON PROTECTION"
+);
+
+button.addEventListener("click",async()=>{
+const plugin=getNativeProtection();
+
+if(!plugin)return;
+
+const current=await getNativeProtectionStatus();
+
+button.disabled=true;
+
+try{
+if(current?.enabled){
+await plugin.disable()
+}else{
+await plugin.enable()
+}
+}catch(error){
+console.warn("Native Protection action failed:",error)
+}
+
+await updateNativeProtectionUI()
+});
+
+card.append(badge,title,description,status,button);
+
+const proCard=$("homeProCard");
+
+if(proCard){
+homeContent.insertBefore(card,proCard)
+}else{
+homeContent.appendChild(card)
+}
+
+updateNativeProtectionUI()
 }
 
 function updateProEntryPoints(){
@@ -2258,6 +2396,26 @@ getStats:getProtectionStats,
 inspect:inspectProtectionUrl,
 inspectCurrent:inspectCurrentProtection,
 recordEvent:recordProtectionEvent
+},
+
+nativeProtection:{
+getPlugin:getNativeProtection,
+getStatus:getNativeProtectionStatus,
+updateUI:updateNativeProtectionUI,
+enable:async()=>{
+const plugin=getNativeProtection();
+if(!plugin)return null;
+const result=await plugin.enable();
+await updateNativeProtectionUI();
+return result
+},
+disable:async()=>{
+const plugin=getNativeProtection();
+if(!plugin)return null;
+const result=await plugin.disable();
+await updateNativeProtectionUI();
+return result
+}
 }
 }
 }
@@ -2285,7 +2443,9 @@ ensureProStyles();
 await loadLanguage(savedLanguage);
 
 initProtection();
-updateProEntryPoints()
+ensureNativeProtectionUI();
+updateProEntryPoints();
+updateNativeProtectionUI()
 }
 
 document.addEventListener("DOMContentLoaded",initialize);
