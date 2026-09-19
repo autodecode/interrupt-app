@@ -4,13 +4,10 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -125,13 +122,8 @@ jobs:
           set -e
 
           for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-
-            test -f \
-              "native-build/tunnel-libs/$abi/libhev-socks5-tunnel.so"
-
-            test -f \
-              "native-build/server-libs/$abi/libhev-socks5-server.so"
-
+            test -f "native-build/tunnel-libs/$abi/libhev-socks5-tunnel.so"
+            test -f "native-build/server-libs/$abi/libhev-socks5-server.so"
           done
 
       - name: Install HEV libraries
@@ -139,9 +131,7 @@ jobs:
           set -e
 
           for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-
-            mkdir -p \
-              "android-native/src/main/jniLibs/$abi"
+            mkdir -p "android-native/src/main/jniLibs/$abi"
 
             cp \
               "native-build/tunnel-libs/$abi/libhev-socks5-tunnel.so" \
@@ -150,7 +140,6 @@ jobs:
             cp \
               "native-build/server-libs/$abi/libhev-socks5-server.so" \
               "android-native/src/main/jniLibs/$abi/"
-
           done
 
       - name: Install Capacitor
@@ -222,9 +211,22 @@ jobs:
             android-native/src/main/AndroidManifest.xml \
             android/app/src/main/AndroidManifest.xml
 
+          test -f \
+            android-native/src/main/java/com/interrupt/app/MainActivity.java
+
+          mkdir -p \
+            android/app/src/main/java/com/interrupt/app
+
+          cp \
+            android-native/src/main/java/com/interrupt/app/MainActivity.java \
+            android/app/src/main/java/com/interrupt/app/MainActivity.java
+
       - name: Verify native source
         run: |
           set -e
+
+          test -f \
+            android/app/src/main/java/com/interrupt/app/MainActivity.java
 
           test -f \
             android/app/src/main/java/com/interrupt/app/protection/InterruptVpnService.java
@@ -245,13 +247,11 @@ jobs:
             android/app/src/main/assets/hev/socks5.yml
 
           for abi in armeabi-v7a arm64-v8a x86 x86_64; do
-
             test -f \
               "android/app/src/main/jniLibs/$abi/libhev-socks5-tunnel.so"
 
             test -f \
               "android/app/src/main/jniLibs/$abi/libhev-socks5-server.so"
-
           done
 
       - name: Sync Capacitor
