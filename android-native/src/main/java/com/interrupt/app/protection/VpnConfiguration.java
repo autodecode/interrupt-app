@@ -43,30 +43,32 @@ public final class VpnConfiguration {
 
 
     /*
-     * DNS endpoints exposed inside the VPN.
+     * DNS endpoint exposed inside the VPN.
      *
-     * Applications send DNS queries to these addresses.
-     * The VPN service will intercept them and process them
-     * locally rather than allowing applications to bypass
-     * Protection through the physical interface.
+     * HEV MapDNS listens on this IPv4 address and port.
+     * We intentionally expose only the IPv4 MapDNS endpoint
+     * here because there is no IPv6 MapDNS listener in the
+     * current HEV configuration.
      */
     public static final String IPV4_DNS =
             "10.111.0.1";
 
 
-    public static final String IPV6_DNS =
-            "fd00:1:1:1::1";
+    /*
+     * No IPV6_DNS is advertised.
+     *
+     * Advertising an IPv6 DNS address without an actual
+     * resolver listening there would create a broken DNS path
+     * for applications choosing IPv6 DNS.
+     */
 
 
     /*
      * Upstream DNS resolver.
      *
-     * This is used by the native DNS forwarder after the
-     * Protection decision has been made.
-     *
-     * UDP DNS is only the first transport. DoH/DoT bypass
-     * handling is a separate layer and must not be confused
-     * with ordinary DNS forwarding.
+     * This value is retained for the native DNS forwarding
+     * layer. HEV MapDNS itself is responsible for hostname
+     * mapping in the current tunnel architecture.
      */
     public static final String UPSTREAM_DNS =
             "1.1.1.1";
