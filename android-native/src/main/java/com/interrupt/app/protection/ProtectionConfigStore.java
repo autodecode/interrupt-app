@@ -12,23 +12,14 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public final class ProtectionConfigStore {
 
-    /*
-     * Remote configuration endpoint.
-     *
-     * This will point to the official INTERRUPT configuration
-     * hosted by us. It is intentionally not user-configurable.
-     */
     private static final String CONFIG_URL =
             "https://raw.githubusercontent.com/autodecode/interrupt-app/main/config/protection.json";
-
 
     private static final String PREFS_NAME =
             "interrupt_protection_config";
@@ -44,10 +35,10 @@ public final class ProtectionConfigStore {
 
 
     /*
-     * These are only the bootstrap values.
+     * Bootstrap configuration.
      *
-     * Once the first valid remote configuration is downloaded,
-     * the cached remote configuration replaces them.
+     * These values are used until the first valid remote
+     * configuration has been downloaded successfully.
      */
     private static final String[] DEFAULT_GAMBLING_DOMAINS = {
             "superbet.ro",
@@ -143,9 +134,10 @@ public final class ProtectionConfigStore {
     }
 
 
-    public boolean refresh() {
+    public synchronized boolean refresh() {
 
-        HttpURLConnection connection = null;
+        HttpURLConnection connection =
+                null;
 
         try {
 
@@ -156,10 +148,22 @@ public final class ProtectionConfigStore {
                     (HttpURLConnection)
                             url.openConnection();
 
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
-            connection.setUseCaches(false);
+            connection.setRequestMethod(
+                    "GET"
+            );
+
+            connection.setConnectTimeout(
+                    10000
+            );
+
+            connection.setReadTimeout(
+                    10000
+            );
+
+            connection.setUseCaches(
+                    false
+            );
+
             connection.setRequestProperty(
                     "Accept",
                     "application/json"
@@ -176,14 +180,18 @@ public final class ProtectionConfigStore {
                 return false;
             }
 
+            String response;
 
-            InputStream inputStream =
-                    connection.getInputStream();
+            try (
+                    InputStream inputStream =
+                            connection.getInputStream()
+            ) {
 
-            String response =
-                    readResponse(
-                            inputStream
-                    );
+                response =
+                        readResponse(
+                                inputStream
+                        );
+            }
 
             if (
                     response == null
@@ -195,7 +203,9 @@ public final class ProtectionConfigStore {
 
 
             JSONObject config =
-                    new JSONObject(response);
+                    new JSONObject(
+                            response
+                    );
 
 
             int version =
@@ -219,15 +229,32 @@ public final class ProtectionConfigStore {
             }
 
 
+            /*
+             * Both supported categories are required.
+             *
+             * We do not accept a partial configuration because
+             * replacing only one category could silently disable
+             * protection from the other category.
+             */
             JSONArray gambling =
                     categories.optJSONArray(
-                            ProtectionConfig.CATEGORY_GAMBLING
+                            ProtectionConfig
+                                    .CATEGORY_GAMBLING
                     );
 
             JSONArray pornography =
                     categories.optJSONArray(
-                            ProtectionConfig.CATEGORY_PORNOGRAPHY
+                            ProtectionConfig
+                                    .CATEGORY_PORNOGRAPHY
                     );
+
+            if (
+                    gambling == null
+                    ||
+                    pornography == null
+            ) {
+                return false;
+            }
 
 
             Set<String> gamblingDomains =
@@ -242,8 +269,12 @@ public final class ProtectionConfigStore {
 
 
             /*
-             * Never replace a valid cached configuration
-             * with an empty or malformed configuration.
+             * A valid configuration must contain at least one
+             * usable domain across the supported categories.
+             *
+             * An empty configuration is rejected so a malformed
+             * remote file can never wipe the local protection
+             * rules.
              */
             if (
                     gamblingDomains.isEmpty()
@@ -254,33 +285,45 @@ public final class ProtectionConfigStore {
             }
 
 
-            saveDomains(
-                    KEY_GAMBLING_DOMAINS,
-                    gamblingDomains
-            );
+            /*
+             * Commit the complete configuration together.
+             *
+             * If writing fails, the previous cached configuration
+             * remains untouched.
+             */
+            boolean saved =
+                    preferences
+                            .edit()
+                            .putString(
+                                    KEY_GAMBLING_DOMAINS,
+                                    serializeDomains(
+                                            gamblingDomains
+                                    )
+                            )
+                            .putString(
+                                    KEY_PORNOGRAPHY_DOMAINS,
+                                    serializeDomains(
+                                            pornographyDomains
+                                    )
+                            )
+                            .putString(
+                                    KEY_CONFIG_VERSION,
+                                    String.valueOf(
+                                            version
+                                    )
+                            )
+                            .commit();
 
-            saveDomains(
-                    KEY_PORNOGRAPHY_DOMAINS,
-                    pornographyDomains
-            );
-
-            preferences
-                    .edit()
-                    .putString(
-                            KEY_CONFIG_VERSION,
-                            String.valueOf(version)
-                    )
-                    .apply();
-
-            return true;
+            return saved;
 
         } catch (Exception ignored) {
 
             /*
-             * Network failure is deliberately non-fatal.
+             * Network, parsing and storage failures are
+             * deliberately non-fatal.
              *
-             * The previously cached configuration remains
-             * active.
+             * The previous valid cached configuration
+             * remains active.
              */
             return false;
 
@@ -301,10 +344,8 @@ public final class ProtectionConfigStore {
             return Collections.emptySet();
         }
 
-
         Set<String> domains =
                 new HashSet<>();
-
 
         for (
                 int i = 0;
@@ -324,10 +365,12 @@ public final class ProtectionConfigStore {
                     );
 
             if (!normalized.isEmpty()) {
-                domains.add(normalized);
+
+                domains.add(
+                        normalized
+                );
             }
         }
-
 
         return domains;
     }
@@ -351,14 +394,13 @@ public final class ProtectionConfigStore {
             return Collections.emptySet();
         }
 
-
         Set<String> domains =
                 new HashSet<>();
 
-
         String[] entries =
-                value.split("\\n");
-
+                value.split(
+                        "\\n"
+                );
 
         for (String entry : entries) {
 
@@ -368,10 +410,12 @@ public final class ProtectionConfigStore {
                     );
 
             if (!normalized.isEmpty()) {
-                domains.add(normalized);
+
+                domains.add(
+                        normalized
+                );
             }
         }
-
 
         return Collections.unmodifiableSet(
                 domains
@@ -387,7 +431,6 @@ public final class ProtectionConfigStore {
         Set<String> normalized =
                 new HashSet<>();
 
-
         for (String domain : domains) {
 
             String value =
@@ -396,26 +439,31 @@ public final class ProtectionConfigStore {
                     );
 
             if (!value.isEmpty()) {
-                normalized.add(value);
+
+                normalized.add(
+                        value
+                );
             }
         }
 
-
-        saveDomains(
-                key,
-                normalized
-        );
+        preferences
+                .edit()
+                .putString(
+                        key,
+                        serializeDomains(
+                                normalized
+                        )
+                )
+                .commit();
     }
 
 
-    private void saveDomains(
-            String key,
+    private String serializeDomains(
             Set<String> domains
     ) {
 
         StringBuilder value =
                 new StringBuilder();
-
 
         for (String domain : domains) {
 
@@ -426,14 +474,7 @@ public final class ProtectionConfigStore {
             value.append(domain);
         }
 
-
-        preferences
-                .edit()
-                .putString(
-                        key,
-                        value.toString()
-                )
-                .apply();
+        return value.toString();
     }
 
 
@@ -443,7 +484,6 @@ public final class ProtectionConfigStore {
 
         StringBuilder response =
                 new StringBuilder();
-
 
         try (
                 BufferedReader reader =
@@ -459,13 +499,14 @@ public final class ProtectionConfigStore {
 
             while (
                     (line = reader.readLine())
-                    != null
+                            != null
             ) {
 
-                response.append(line);
+                response.append(
+                        line
+                );
             }
         }
-
 
         return response.toString();
     }
@@ -479,21 +520,20 @@ public final class ProtectionConfigStore {
             return "";
         }
 
-
         String normalized =
                 hostname
                         .trim()
                         .toLowerCase();
-
 
         while (
                 normalized.startsWith(".")
         ) {
 
             normalized =
-                    normalized.substring(1);
+                    normalized.substring(
+                            1
+                    );
         }
-
 
         while (
                 normalized.endsWith(".")
@@ -505,7 +545,6 @@ public final class ProtectionConfigStore {
                             normalized.length() - 1
                     );
         }
-
 
         return normalized;
     }
