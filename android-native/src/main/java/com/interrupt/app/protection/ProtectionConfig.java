@@ -1,60 +1,125 @@
 package com.interrupt.app.protection;
 
-import java.util.Arrays;
+import android.content.Context;
+
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 public final class ProtectionConfig {
 
+    /*
+     * Protection categories used by INTERRUPT.
+     */
+    public static final String CATEGORY_GAMBLING =
+            "gambling";
+
+    public static final String CATEGORY_PORNOGRAPHY =
+            "pornography";
+
+
+    private static volatile ProtectionConfigStore store;
+
+
     private ProtectionConfig() {
     }
 
-    /*
-     * Protection categories used by INTERRUPT.
-     *
-     * These names intentionally match the protection
-     * categories already used by the web application.
-     */
-    public static final String CATEGORY_GAMBLING = "gambling";
-    public static final String CATEGORY_PORNOGRAPHY = "pornography";
-
 
     /*
-     * Protection is enabled by default only for domains
-     * explicitly belonging to a configured category.
+     * Initializes the runtime configuration store.
      *
-     * The lists are kept separate so that the native layer
-     * can later receive/update them from the INTERRUPT app
-     * without changing the VPN engine.
+     * This must be called once by the native application
+     * before protection decisions are evaluated.
      */
-    private static final Set<String> GAMBLING_DOMAINS =
-            Collections.unmodifiableSet(
-                    new HashSet<>(Arrays.asList(
-                            "example-gambling.invalid"
-                    ))
+    public static void initialize(
+            Context context
+    ) {
+
+        if (context == null) {
+            throw new IllegalArgumentException(
+                    "Context cannot be null"
             );
+        }
+
+        if (store != null) {
+            return;
+        }
+
+        synchronized (
+                ProtectionConfig.class
+        ) {
+
+            if (store == null) {
+
+                store =
+                        new ProtectionConfigStore(
+                                context
+                        );
+            }
+        }
+    }
 
 
-    private static final Set<String> PORNOGRAPHY_DOMAINS =
-            Collections.unmodifiableSet(
-                    new HashSet<>(Arrays.asList(
-                            "example-pornography.invalid"
-                    ))
+    private static ProtectionConfigStore getStore() {
+
+        ProtectionConfigStore current =
+                store;
+
+        if (current == null) {
+
+            throw new IllegalStateException(
+                    "ProtectionConfig has not been initialized"
             );
+        }
+
+        return current;
+    }
+
+
+    /*
+     * Downloads the latest configuration.
+     *
+     * Failure is deliberately non-fatal.
+     * ProtectionConfigStore keeps using the last valid
+     * cached configuration when the network is unavailable.
+     */
+    public static boolean refresh() {
+
+        return getStore().refresh();
+    }
+
+
+    public static String getConfigVersion() {
+
+        return getStore()
+                .getConfigVersion();
+    }
 
 
     public static Set<String> getDomainsForCategory(
             String category
     ) {
 
-        if (CATEGORY_GAMBLING.equals(category)) {
-            return GAMBLING_DOMAINS;
+        if (
+                CATEGORY_GAMBLING.equals(
+                        category
+                )
+        ) {
+
+            return getStore()
+                    .getGamblingDomains();
         }
 
-        if (CATEGORY_PORNOGRAPHY.equals(category)) {
-            return PORNOGRAPHY_DOMAINS;
+
+        if (
+                CATEGORY_PORNOGRAPHY.equals(
+                        category
+                )
+        ) {
+
+            return getStore()
+                    .getPornographyDomains();
         }
+
 
         return Collections.emptySet();
     }
@@ -64,29 +129,9 @@ public final class ProtectionConfig {
             String hostname
     ) {
 
-        if (hostname == null) {
-            return false;
-        }
-
-
-        String normalized =
-                normalizeHostname(hostname);
-
-
-        if (normalized.isEmpty()) {
-            return false;
-        }
-
-
-        return matchesDomain(
-                normalized,
-                GAMBLING_DOMAINS
-        )
-                ||
-                matchesDomain(
-                        normalized,
-                        PORNOGRAPHY_DOMAINS
-                );
+        return getCategoryForDomain(
+                hostname
+        ) != null;
     }
 
 
@@ -100,21 +145,36 @@ public final class ProtectionConfig {
 
 
         String normalized =
-                normalizeHostname(hostname);
+                normalizeHostname(
+                        hostname
+                );
 
 
-        if (matchesDomain(
-                normalized,
-                GAMBLING_DOMAINS
-        )) {
+        if (normalized.isEmpty()) {
+            return null;
+        }
+
+
+        if (
+                matchesDomain(
+                        normalized,
+                        getStore()
+                                .getGamblingDomains()
+                )
+        ) {
+
             return CATEGORY_GAMBLING;
         }
 
 
-        if (matchesDomain(
-                normalized,
-                PORNOGRAPHY_DOMAINS
-        )) {
+        if (
+                matchesDomain(
+                        normalized,
+                        getStore()
+                                .getPornographyDomains()
+                )
+        ) {
+
             return CATEGORY_PORNOGRAPHY;
         }
 
@@ -131,10 +191,15 @@ public final class ProtectionConfig {
         for (String domain : domains) {
 
             if (
-                    hostname.equals(domain)
+                    hostname.equals(
+                            domain
+                    )
                     ||
-                    hostname.endsWith("." + domain)
+                    hostname.endsWith(
+                            "." + domain
+                    )
             ) {
+
                 return true;
             }
         }
@@ -149,12 +214,15 @@ public final class ProtectionConfig {
     ) {
 
         String normalized =
-                hostname.trim().toLowerCase();
+                hostname
+                        .trim()
+                        .toLowerCase();
 
 
         while (
                 normalized.startsWith(".")
         ) {
+
             normalized =
                     normalized.substring(1);
         }
@@ -163,6 +231,7 @@ public final class ProtectionConfig {
         while (
                 normalized.endsWith(".")
         ) {
+
             normalized =
                     normalized.substring(
                             0,
