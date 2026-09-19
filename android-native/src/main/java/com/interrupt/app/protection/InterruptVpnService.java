@@ -24,13 +24,34 @@ public final class InterruptVpnService extends VpnService {
     private static final int NOTIFICATION_ID =
             4101;
 
+    /*
+     * The service instance owns the actual runtime state.
+     */
+    private volatile boolean running;
+
+    /*
+     * The Capacitor plugin needs to query the runtime state
+     * without binding to the VPN service.
+     *
+     * This is deliberately separate from ProtectionController's
+     * "enabled" state:
+     *
+     * enabled = user requested Protection
+     * running = VPN + HEV tunnel are actually running
+     */
+    private static volatile boolean serviceRunning;
+
     private ParcelFileDescriptor vpnInterface;
 
     private HevTunnelController hevController;
 
     private ProtectionController protectionController;
 
-    private volatile boolean running;
+
+    public static boolean isRunning() {
+
+        return serviceRunning;
+    }
 
 
     @Override
@@ -145,6 +166,8 @@ public final class InterruptVpnService extends VpnService {
                     !protectionController.isEnabled()
             ) {
 
+                serviceRunning = false;
+
                 stopSelf();
 
                 return;
@@ -154,13 +177,15 @@ public final class InterruptVpnService extends VpnService {
              * The Capacitor plugin normally handles the VPN
              * permission request before starting this service.
              *
-             * Keep this check here as a safety guard in case
-             * the service is started through another path.
+             * Keep this check as a safety guard for any other
+             * possible service start path.
              */
             Intent prepareIntent =
                     VpnService.prepare(this);
 
             if (prepareIntent != null) {
+
+                serviceRunning = false;
 
                 stopSelf();
 
@@ -226,6 +251,8 @@ public final class InterruptVpnService extends VpnService {
 
             if (vpnInterface == null) {
 
+                serviceRunning = false;
+
                 stopSelf();
 
                 return;
@@ -254,6 +281,7 @@ public final class InterruptVpnService extends VpnService {
             }
 
             running = true;
+            serviceRunning = true;
 
         } catch (Exception error) {
 
@@ -267,6 +295,7 @@ public final class InterruptVpnService extends VpnService {
     private synchronized void stopProtection() {
 
         running = false;
+        serviceRunning = false;
 
         if (hevController != null) {
 
@@ -283,7 +312,9 @@ public final class InterruptVpnService extends VpnService {
         if (currentInterface != null) {
 
             try {
+
                 currentInterface.close();
+
             } catch (Exception ignored) {
             }
         }
