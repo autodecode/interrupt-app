@@ -558,7 +558,7 @@ public final class LocalSocks5Server {
             if (request.hostname != null) {
 
                 upstream.connect(
-                        new InetSocketAddress(
+                        InetSocketAddress.createUnresolved(
                                 request.hostname,
                                 request.port
                         ),
