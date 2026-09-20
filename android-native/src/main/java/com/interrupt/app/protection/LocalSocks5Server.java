@@ -16,10 +16,13 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public final class LocalSocks5Server {
 
@@ -77,12 +80,27 @@ public final class LocalSocks5Server {
     private static final int UDP_TIMEOUT_MS =
             3000;
 
+    /*
+     * Maximum time a protected TCP request may remain
+     * suspended while INTERRUPT waits for the user's choice.
+     */
+    private static final long PROTECTION_DECISION_TIMEOUT_SECONDS =
+            60;
+
     private final VpnService vpnService;
 
     private final ProtectionController protectionController;
 
     private final ExecutorService executor =
             Executors.newCachedThreadPool();
+
+    /*
+     * Pending protected TCP connections.
+     *
+     * The key is the ProtectionEvent ID.
+     */
+    private static final Map<String, PendingRequest> pendingRequests =
+            new ConcurrentHashMap<>();
 
     private volatile boolean running;
 
@@ -176,6 +194,18 @@ public final class LocalSocks5Server {
 
         running = false;
 
+        /*
+         * Release all suspended requests so no browser socket
+         * remains blocked when Protection is stopped.
+         */
+        for (PendingRequest pending :
+                pendingRequests.values()) {
+
+            pending.interrupt();
+        }
+
+        pendingRequests.clear();
+
         ServerSocket current =
                 serverSocket;
 
@@ -196,6 +226,44 @@ public final class LocalSocks5Server {
     public boolean isRunning() {
 
         return running;
+    }
+
+
+    /*
+     * Called by InterruptProtectionPlugin when the user chooses
+     * CONTINUE or INTERRUPT.
+     */
+    public static boolean resolvePendingRequest(
+            String eventId,
+            String action
+    ) {
+
+        if (eventId == null || action == null) {
+            return false;
+        }
+
+        PendingRequest pending =
+                pendingRequests.get(eventId);
+
+        if (pending == null) {
+            return false;
+        }
+
+        if ("continue".equalsIgnoreCase(action)) {
+
+            pending.continueRequest();
+
+            return true;
+        }
+
+        if ("interrupt".equalsIgnoreCase(action)) {
+
+            pending.interrupt();
+
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -495,10 +563,12 @@ public final class LocalSocks5Server {
     ) throws IOException {
 
         /*
-         * When HEV MapDNS is working correctly, a hostname
-         * request should arrive here as SOCKS5 ATYP_DOMAIN.
+         * Protected hostname:
          *
-         * Check the real hostname before any DNS resolution.
+         * 1. Create the protection event.
+         * 2. Keep the browser TCP connection open.
+         * 3. Notify the Capacitor layer.
+         * 4. Wait for CONTINUE or INTERRUPT.
          */
         if (request.hostname != null) {
 
@@ -510,10 +580,83 @@ public final class LocalSocks5Server {
 
             if (category != null) {
 
-                protectionController
-                        .recordBlockedDomain(
-                                request.hostname
+                ProtectionEvent event =
+                        protectionController
+                                .recordBlockedDomain(
+                                        request.hostname
+                                );
+
+                if (event == null) {
+
+                    sendReply(
+                            output,
+                            REP_GENERAL_FAILURE,
+                            null,
+                            0
+                    );
+
+                    return;
+                }
+
+                /*
+                 * Stop the handshake timeout while the request
+                 * is waiting for the user's decision.
+                 */
+                client.setSoTimeout(0);
+
+                PendingRequest pending =
+                        new PendingRequest(
+                                event.getId(),
+                                client,
+                                output,
+                                request
                         );
+
+                pendingRequests.put(
+                        event.getId(),
+                        pending
+                );
+
+                /*
+                 * Notify the Capacitor plugin.
+                 */
+                InterruptProtectionPlugin
+                        .notifyProtectionEvent(
+                                event
+                        );
+
+                boolean decided =
+                        pending.awaitDecision(
+                                PROTECTION_DECISION_TIMEOUT_SECONDS,
+                                TimeUnit.SECONDS
+                        );
+
+                pendingRequests.remove(
+                        event.getId()
+                );
+
+                if (!decided) {
+
+                    sendReply(
+                            output,
+                            REP_RULESET_DENIED,
+                            null,
+                            0
+                    );
+
+                    return;
+                }
+
+                if (pending.shouldContinue()) {
+
+                    connectAndRelay(
+                            client,
+                            output,
+                            request
+                    );
+
+                    return;
+                }
 
                 sendReply(
                         output,
@@ -526,23 +669,28 @@ public final class LocalSocks5Server {
             }
         }
 
+        connectAndRelay(
+                client,
+                output,
+                request
+        );
+    }
+
+
+    private void connectAndRelay(
+            Socket client,
+            DataOutputStream output,
+            SocksRequest request
+    ) throws IOException {
+
         Socket upstream =
                 new Socket();
 
         try {
 
             /*
-             * IMPORTANT:
-             *
-             * Protect the socket BEFORE connect().
-             *
-             * This prevents the upstream connection from
-             * being captured again by INTERRUPT's VPN.
-             *
-             * For hostname connections this also allows the
-             * socket's network context to be used for the
-             * hostname resolution rather than resolving the
-             * HEV MapDNS fake address and reconnecting to it.
+             * The upstream socket must be protected before
+             * connecting so its traffic bypasses INTERRUPT's VPN.
              */
             if (
                     !vpnService.protect(
@@ -639,9 +787,6 @@ public final class LocalSocks5Server {
 
         try {
 
-            /*
-             * The UDP relay itself must bypass the VPN.
-             */
             if (
                     !vpnService.protect(
                             relaySocket
@@ -687,9 +832,6 @@ public final class LocalSocks5Server {
                     }
             );
 
-            /*
-             * Keep the SOCKS5 control connection alive.
-             */
             while (running) {
 
                 try {
@@ -704,9 +846,6 @@ public final class LocalSocks5Server {
                 } catch (
                         SocketTimeoutException ignored
                 ) {
-                    /*
-                     * Normal keep-alive period.
-                     */
                 }
             }
 
@@ -918,7 +1057,8 @@ public final class LocalSocks5Server {
         position += 2;
 
         /*
-         * Domain filtering happens before any resolution.
+         * Protected UDP domains remain blocked.
+         * TCP is the interactive path for now.
          */
         if (hostname != null) {
 
@@ -981,10 +1121,6 @@ public final class LocalSocks5Server {
 
         try {
 
-            /*
-             * Protect BEFORE sending so the upstream UDP
-             * packet does not re-enter the VPN.
-             */
             if (
                     !vpnService.protect(
                             upstream
@@ -1297,8 +1433,11 @@ public final class LocalSocks5Server {
 
         output.writeByte(0);
 
-        if (address != null
-                && address.getAddress().length == 16) {
+        if (
+                address != null
+                &&
+                address.getAddress().length == 16
+        ) {
 
             output.writeByte(
                     ATYP_IPV6
@@ -1355,6 +1494,91 @@ public final class LocalSocks5Server {
         );
 
         output.flush();
+    }
+
+
+    private static final class PendingRequest {
+
+        private final String eventId;
+
+        private final Socket client;
+
+        private final DataOutputStream output;
+
+        private final SocksRequest request;
+
+        private final CountDownLatch decisionLatch =
+                new CountDownLatch(1);
+
+        private volatile String decision;
+
+
+        PendingRequest(
+                String eventId,
+                Socket client,
+                DataOutputStream output,
+                SocksRequest request
+        ) {
+
+            this.eventId =
+                    eventId;
+
+            this.client =
+                    client;
+
+            this.output =
+                    output;
+
+            this.request =
+                    request;
+        }
+
+
+        void continueRequest() {
+
+            decision =
+                    "continue";
+
+            decisionLatch.countDown();
+        }
+
+
+        void interrupt() {
+
+            decision =
+                    "interrupt";
+
+            decisionLatch.countDown();
+        }
+
+
+        boolean awaitDecision(
+                long timeout,
+                TimeUnit unit
+        ) {
+
+            try {
+
+                return decisionLatch.await(
+                        timeout,
+                        unit
+                );
+
+            } catch (InterruptedException error) {
+
+                Thread.currentThread().interrupt();
+
+                return false;
+            }
+        }
+
+
+        boolean shouldContinue() {
+
+            return "continue".equals(
+                    decision
+            );
+        }
     }
 
 
