@@ -603,7 +603,7 @@ panel.querySelectorAll("button").forEach(button=>button.disabled=true)
 try{
 await plugin.resolveEvent({
 eventId:event.id,
-continueRequest
+action:continueRequest?"continue":"interrupt"
 });
 
 nativeProtectionHandled.add(event.id);
