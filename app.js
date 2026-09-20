@@ -1,4 +1,4 @@
-const LANGUAGES={en:{file:"locales/en.json",flag:"🇬🇧",code:"EN"},ro:{file:"locales/ro.json",flag:"🇷🇴",code:"RO"},fr:{file:"locales/fr.json",flag:"🇫🇷",code:"FR"},de:{file:"locales/de.json",flag:"🇩🇪",code:"DE"},es:{file:"locales/es.json",flag:"🇪🇸",code:"ES"},it:{file:"locales/it.json",flag:"🇮🇹",code:"IT"}};
+const LANGUAGES={en:{file:"locales/en.json",flag:"🇬🇧",code:"EN"},ro:{file:"locales/ro.json",flag:"🇷🇴",code:"RO"},fr:{file:"locales/fr.json",flag:"🇫🇷",code:"FR"},de:{file:"locales/de.json",flag:"🇩🇪",code:"DE"},es:{file:"locales/es.json",flag:"ES"},it:{file:"locales/it.json",flag:"🇮🇹",code:"IT"}};
 const STORAGE={language:"interrupt_language",sessions:"interrupt_sessions"};
 const INTERVENTIONS=["nameIt","promise","wave","delay","fastForward","changeScene","actualNeed","breakChain","twoFutures","switch90","realityCheck"];
 
@@ -24,8 +24,20 @@ es:{gambling:"Apuestas",pornography:"Pornografía",socialMedia:"Redes sociales",
 it:{gambling:"Gioco d'azzardo",pornography:"Pornografia",socialMedia:"Social media",custom:"Personalizzato"}
 };
 
+const NATIVE_PROTECTION_COPY={
+en:{title:"We detected an urge.",text:"You were trying to open {host}.",interrupt:"INTERRUPT",continue:"CONTINUE"},
+ro:{title:"Am detectat un impuls.",text:"Încercai să deschizi {host}.",interrupt:"ÎNTRERUPE",continue:"CONTINUĂ"},
+fr:{title:"Nous avons détecté une envie.",text:"Vous essayiez d'ouvrir {host}.",interrupt:"INTERROMPRE",continue:"CONTINUER"},
+de:{title:"Wir haben einen Impuls erkannt.",text:"Du hast versucht, {host} zu öffnen.",interrupt:"UNTERBRECHEN",continue:"WEITER"},
+es:{title:"Detectamos un impulso.",text:"Intentabas abrir {host}.",interrupt:"INTERRUMPIR",continue:"CONTINUAR"},
+it:{title:"Abbiamo rilevato un impulso.",text:"Stavi cercando di aprire {host}.",interrupt:"INTERROMPI",continue:"CONTINUA"}
+};
+
 let translations={},englishTranslations={},currentLanguage="en";
 let proReturnScreen="home";
+let nativeProtectionListener=null;
+let nativeProtectionOverlay=null;
+const nativeProtectionHandled=new Set();
 
 let session={
 id:null,
@@ -108,6 +120,9 @@ style.textContent=`
 .pro-panel .pro-feature p{margin:0;opacity:.78;line-height:1.55}
 .pro-panel-footer{margin-top:20px}
 .pro-panel .pro-coming-soon{font-size:.82rem;opacity:.55;margin-top:14px}
+.native-protection-panel{width:min(100%,460px)}
+.native-protection-panel h2{margin:0 0 14px}
+.native-protection-panel .primary-button,.native-protection-panel .secondary-button{flex:1;min-width:130px}
 `;
 document.head.appendChild(style)
 }
@@ -465,10 +480,7 @@ button.textContent=enabled
 button.disabled=false
 }
 
-card.classList.toggle(
-"protection-active",
-enabled&&running
-)
+card.classList.toggle("protection-active",enabled&&running)
 }
 
 function ensureNativeProtectionUI(){
@@ -476,7 +488,6 @@ if($("nativeProtectionCard"))return;
 if(!getNativeProtection())return;
 
 const homeContent=document.querySelector("#screen-home .home-content");
-
 if(!homeContent)return;
 
 const card=document.createElement("div");
@@ -488,16 +499,10 @@ badge.className="pro-card-badge";
 badge.textContent="PROTECTION";
 
 const title=document.createElement("h3");
-title.textContent=t(
-"protection.androidTitle",
-"INTERRUPT Protection"
-);
+title.textContent=t("protection.androidTitle","INTERRUPT Protection");
 
 const description=document.createElement("p");
-description.textContent=t(
-"protection.androidDescription",
-"Pause before the pattern becomes behavior."
-);
+description.textContent=t("protection.androidDescription","Pause before the pattern becomes behavior.");
 
 const status=document.createElement("p");
 status.id="nativeProtectionStatus";
@@ -507,18 +512,13 @@ const button=document.createElement("button");
 button.id="nativeProtectionButton";
 button.type="button";
 button.className="secondary-button pro-button";
-button.textContent=t(
-"protection.enable",
-"TURN ON PROTECTION"
-);
+button.textContent=t("protection.enable","TURN ON PROTECTION");
 
 button.addEventListener("click",async()=>{
 const plugin=getNativeProtection();
-
 if(!plugin)return;
 
 const current=await getNativeProtectionStatus();
-
 button.disabled=true;
 
 try{
@@ -545,6 +545,193 @@ homeContent.appendChild(card)
 }
 
 updateNativeProtectionUI()
+}
+
+
+/* =========================================================
+   NATIVE PROTECTION EVENT BRIDGE
+   ========================================================= */
+
+function getNativeProtectionCopy(){
+return NATIVE_PROTECTION_COPY[currentLanguage]||NATIVE_PROTECTION_COPY.en
+}
+
+function removeNativeProtectionPrompt(){
+if(nativeProtectionOverlay){
+nativeProtectionOverlay.remove();
+nativeProtectionOverlay=null
+}
+}
+
+function startNativeProtectionSession(event){
+resetSession();
+
+session.protectionCategory=event.category||"custom";
+session.protectionDomain=event.hostname||event.host||event.domain||null;
+session.protectionMode=event.mode||"native";
+session.protectionEventId=event.id||null;
+
+const behavior=PROTECTION_BEHAVIOR[session.protectionCategory]||"other";
+
+session.behavior=behavior;
+
+showScreen("behavior");
+
+const button=document.querySelector(
+`#behaviorOptions .choice-button[data-behavior="${CSS.escape(behavior)}"]`
+);
+
+if(button){
+selectBehavior(button)
+}
+}
+
+async function resolveNativeProtectionEvent(event,continueRequest){
+const plugin=getNativeProtection();
+
+if(!plugin||typeof plugin.resolveEvent!=="function"){
+console.warn("Native Protection resolveEvent is unavailable");
+return
+}
+
+const panel=nativeProtectionOverlay?.querySelector(".native-protection-panel");
+
+if(panel){
+panel.querySelectorAll("button").forEach(button=>button.disabled=true)
+}
+
+try{
+await plugin.resolveEvent({
+eventId:event.id,
+continueRequest
+});
+
+nativeProtectionHandled.add(event.id);
+removeNativeProtectionPrompt();
+
+if(!continueRequest){
+startNativeProtectionSession(event)
+}
+}catch(error){
+console.warn("Native Protection event resolution failed:",error);
+
+if(panel){
+panel.querySelectorAll("button").forEach(button=>button.disabled=false)
+}
+}
+}
+
+function showNativeProtectionPrompt(event){
+if(!event?.id||event.type!=="blocked")return;
+if(nativeProtectionHandled.has(event.id))return;
+
+removeNativeProtectionPrompt();
+
+const copy=getNativeProtectionCopy();
+const host=event.hostname||event.host||event.domain||"this site";
+
+const overlay=document.createElement("div");
+overlay.id="nativeProtectionPrompt";
+overlay.className="pro-overlay native-protection-overlay";
+
+const panel=document.createElement("div");
+panel.className="pro-panel native-protection-panel";
+
+const header=document.createElement("div");
+header.className="pro-panel-header";
+
+const title=document.createElement("h2");
+title.textContent=copy.title;
+
+header.appendChild(title);
+
+const message=document.createElement("p");
+message.style.cssText="font-size:1.05rem;line-height:1.6;margin-top:0";
+message.textContent=copy.text.replace("{host}",host);
+
+const actions=document.createElement("div");
+actions.style.cssText="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px";
+
+const interruptButton=document.createElement("button");
+interruptButton.type="button";
+interruptButton.className="primary-button";
+interruptButton.textContent=copy.interrupt;
+
+const continueButton=document.createElement("button");
+continueButton.type="button";
+continueButton.className="secondary-button";
+continueButton.textContent=copy.continue;
+
+actions.append(interruptButton,continueButton);
+panel.append(header,message,actions);
+overlay.appendChild(panel);
+document.body.appendChild(overlay);
+
+nativeProtectionOverlay=overlay;
+
+interruptButton.addEventListener("click",()=>{
+resolveNativeProtectionEvent(event,false)
+});
+
+continueButton.addEventListener("click",()=>{
+resolveNativeProtectionEvent(event,true)
+})
+}
+
+function handleNativeProtectionEvent(event){
+if(!event?.id||event.type!=="blocked")return;
+
+if(nativeProtectionHandled.has(event.id))return;
+
+showNativeProtectionPrompt(event)
+}
+
+async function loadPendingNativeProtectionEvents(){
+const plugin=getNativeProtection();
+
+if(!plugin||typeof plugin.getPendingEvents!=="function")return;
+
+try{
+const result=await plugin.getPendingEvents();
+const events=Array.isArray(result)?result:result?.events||[];
+
+events.forEach(event=>{
+if(event?.id&&!nativeProtectionHandled.has(event.id)){
+handleNativeProtectionEvent(event)
+}
+})
+}catch(error){
+console.warn("Native Protection pending events failed:",error)
+}
+}
+
+async function initNativeProtectionBridge(){
+const plugin=getNativeProtection();
+
+if(!plugin)return;
+
+try{
+if(nativeProtectionListener?.remove){
+await nativeProtectionListener.remove()
+}
+
+if(typeof plugin.addListener==="function"){
+nativeProtectionListener=await plugin.addListener(
+"protectionEvent",
+handleNativeProtectionEvent
+)
+}
+}catch(error){
+console.warn("Native Protection listener failed:",error)
+}
+
+await loadPendingNativeProtectionEvents()
+}
+
+function handleNativeProtectionResume(){
+if(document.visibilityState==="visible"){
+loadPendingNativeProtectionEvents()
+}
 }
 
 function updateProEntryPoints(){
@@ -1093,42 +1280,12 @@ renderIntervention(session.intervention)
 
 function getPersonalHistoryText(recommendation,intervention,before,after){
 const languageTexts={
-en:{
-title:"PERSONAL HISTORY",
-last:`Last time, this type of urge dropped from ${before} to ${after} with ${intervention}.`,
-repeat:`${intervention} has repeatedly reduced this type of urge for you.`,
-similar:`You have reduced a similar urge with ${intervention} before.`
-},
-ro:{
-title:"ISTORIC PERSONAL",
-last:`Data trecută, acest tip de impuls a scăzut de la ${before} la ${after} cu ${intervention}.`,
-repeat:`${intervention} a redus în mod repetat acest tip de impuls pentru tine.`,
-similar:`Ai redus un impuls similar cu ${intervention} și înainte.`
-},
-fr:{
-title:"HISTORIQUE PERSONNEL",
-last:`La dernière fois, ce type d'envie est passé de ${before} à ${after} avec ${intervention}.`,
-repeat:`${intervention} a réduit à plusieurs reprises ce type d'envie pour vous.`,
-similar:`Vous avez déjà réduit une envie similaire avec ${intervention}.`
-},
-de:{
-title:"PERSÖNLICHER VERLAUF",
-last:`Beim letzten Mal ist dieser Drang mit ${intervention} von ${before} auf ${after} gesunken.`,
-repeat:`${intervention} hat diesen Drang bei dir wiederholt reduziert.`,
-similar:`Du hast einen ähnlichen Drang schon einmal mit ${intervention} reduziert.`
-},
-es:{
-title:"HISTORIAL PERSONAL",
-last:`La última vez, este tipo de impulso bajó de ${before} a ${after} con ${intervention}.`,
-repeat:`${intervention} ha reducido este tipo de impulso varias veces.`,
-similar:`Ya has reducido un impulso similar con ${intervention}.`
-},
-it:{
-title:"STORICO PERSONALE",
-last:`L'ultima volta, questo tipo di impulso è sceso da ${before} a ${after} con ${intervention}.`,
-repeat:`${intervention} ha ridotto più volte questo tipo di impulso.`,
-similar:`Hai già ridotto un impulso simile con ${intervention}.`
-}
+en:{title:"PERSONAL HISTORY",last:`Last time, this type of urge dropped from ${before} to ${after} with ${intervention}.`,repeat:`${intervention} has repeatedly reduced this type of urge for you.`,similar:`You have reduced a similar urge with ${intervention} before.`},
+ro:{title:"ISTORIC PERSONAL",last:`Data trecută, acest tip de impuls a scăzut de la ${before} la ${after} cu ${intervention}.`,repeat:`${intervention} a redus în mod repetat acest tip de impuls pentru tine.`,similar:`Ai redus un impuls similar cu ${intervention} și înainte.`},
+fr:{title:"HISTORIQUE PERSONNEL",last:`La dernière fois, ce type d'envie est passé de ${before} à ${after} avec ${intervention}.`,repeat:`${intervention} a réduit à plusieurs reprises ce type d'envie pour vous.`,similar:`Vous avez déjà réduit une envie similaire avec ${intervention}.`},
+de:{title:"PERSÖNLICHER VERLAUF",last:`Beim letzten Mal ist dieser Drang mit ${intervention} von ${before} auf ${after} gesunken.`,repeat:`${intervention} hat diesen Drang bei dir wiederholt reduziert.`,similar:`Du hast einen ähnlichen Drang schon einmal mit ${intervention} reduziert.`},
+es:{title:"HISTORIAL PERSONAL",last:`La última vez, este tipo de impulso bajó de ${before} a ${after} con ${intervention}.`,repeat:`${intervention} ha reducido este tipo de impulso varias veces.`,similar:`Ya has reducido un impulso similar con ${intervention}.`},
+it:{title:"STORICO PERSONALE",last:`L'ultima volta, questo tipo di impulso è sceso da ${before} a ${after} con ${intervention}.`,repeat:`${intervention} ha ridotto più volte questo tipo di impulso.`,similar:`Hai già ridotto un impulso simile con ${intervention}.`}
 };
 
 const text=languageTexts[currentLanguage]||languageTexts.en;
@@ -1799,11 +1956,6 @@ const cutoff=Date.now()-days*86400000;
 return getEngineHistory().filter(item=>new Date(item.completedAt||item.startedAt||0).getTime()>=cutoff)
 }
 
-
-/* -------------------------------------------------
-   ADAPTIVE ANALYTICS
-------------------------------------------------- */
-
 function getInsightStats(history){
 if(!Array.isArray(history)||!history.length)return{};
 return INTERRUPT_ADAPTIVE.buildStats(history,{})
@@ -1817,12 +1969,7 @@ const stats=getInsightStats(history);
 const scored=INTERVENTIONS
 .map(intervention=>({
 intervention,
-score:INTERRUPT_ADAPTIVE.scoreIntervention(
-intervention,
-stats,
-[],
-5
-),
+score:INTERRUPT_ADAPTIVE.scoreIntervention(intervention,stats,[],5),
 stats:stats[intervention]||null
 }))
 .filter(item=>item.stats)
@@ -1845,12 +1992,7 @@ contextRelevance:best.stats.contextRelevance,
 reliability:best.stats.reliability,
 confidence:best.stats.confidence,
 last:best.stats.last,
-lastSuccessful:best.stats.successful
-.sort(
-(a,b)=>
-new Date(b.completedAt||b.startedAt||0)-
-new Date(a.completedAt||a.startedAt||0)
-)[0]||null
+lastSuccessful:best.stats.successful.sort((a,b)=>new Date(b.completedAt||b.startedAt||0)-new Date(a.completedAt||a.startedAt||0))[0]||null
 }
 }
 
@@ -1915,12 +2057,7 @@ title.textContent=copy.title;
 box.appendChild(title);
 
 const summary=document.createElement("p");
-summary.textContent=copy.summary(
-stats.protectedSessions,
-stats.protectedAttempts,
-stats.successRate,
-stats.reduction
-);
+summary.textContent=copy.summary(stats.protectedSessions,stats.protectedAttempts,stats.successRate,stats.reduction);
 box.appendChild(summary);
 
 if(stats.categories.length){
@@ -1960,17 +2097,14 @@ const history=getEngineHistory();
 const total=sessions.length;
 const interrupted=sessions.filter(item=>item.outcome==="interrupted").length;
 
-let totalBefore=0;
-let totalAfter=0;
+let totalBefore=0,totalAfter=0;
 
 sessions.forEach(item=>{
 totalBefore+=Number(item.intensityBefore)||0;
 totalAfter+=Number(item.intensityAfter)||0
 });
 
-const reduction=totalBefore>0
-?Math.round((totalBefore-totalAfter)/totalBefore*100)
-:0;
+const reduction=totalBefore>0?Math.round((totalBefore-totalAfter)/totalBefore*100):0;
 
 const recentHistory=getRecentHistory(30);
 const recentBest=getInsightBest(recentHistory);
@@ -1988,7 +2122,6 @@ if($("insightBest"))$("insightBest").textContent=overallBest?interventionTitle(o
 if($("insightTrigger"))$("insightTrigger").textContent=commonTrigger?getLabel("trigger",commonTrigger.value):"—";
 
 const recent=$("recentSessions");
-
 if(!recent)return;
 
 recent.innerHTML="";
@@ -2012,125 +2145,79 @@ const empty=document.createElement("p");
 empty.textContent=t("insights.empty","Not enough data yet.");
 recent.appendChild(empty);
 
-if(hasFeature("advancedContext")){
-renderProtectionInsights(recent)
-}
+if(hasFeature("advancedContext"))renderProtectionInsights(recent);
 
 return
 }
 
 if(recentBest){
-const reductionText=recentBest.recencyWeightedImpact>0
-?`−${recentBest.recencyWeightedImpact.toFixed(1)}`
-:recentBest.recencyWeightedImpact.toFixed(1);
+const reductionText=recentBest.recencyWeightedImpact>0?`−${recentBest.recencyWeightedImpact.toFixed(1)}`:recentBest.recencyWeightedImpact.toFixed(1);
 
-recent.appendChild(
-createInsightSection(
+recent.appendChild(createInsightSection(
 t("insights.recent","RECENT PERFORMANCE"),
-t(
-"insights.recentText",
-`${interventionTitle(recentBest.intervention)} has been your strongest recent approach, with an average reduction of ${reductionText}.`,
-{
+t("insights.recentText",`${interventionTitle(recentBest.intervention)} has been your strongest recent approach, with an average reduction of ${reductionText}.`,{
 name:interventionTitle(recentBest.intervention),
 reduction:reductionText
-}
-)
-)
-)
+})
+))
 }
 
 if(hasFeature("longTermInsights")){
 if(overallBest){
-const reductionText=overallBest.averageImpact>0
-?`−${overallBest.averageImpact.toFixed(1)}`
-:overallBest.averageImpact.toFixed(1);
+const reductionText=overallBest.averageImpact>0?`−${overallBest.averageImpact.toFixed(1)}`:overallBest.averageImpact.toFixed(1);
 
-recent.appendChild(
-createInsightSection(
+recent.appendChild(createInsightSection(
 t("insights.learning","WHAT INTERRUPT IS LEARNING"),
-t(
-"insights.overallText",
-`${interventionTitle(overallBest.intervention)} has the strongest overall reduction in your recorded history: ${reductionText}.`,
-{
+t("insights.overallText",`${interventionTitle(overallBest.intervention)} has the strongest overall reduction in your recorded history: ${reductionText}.`,{
 name:interventionTitle(overallBest.intervention),
 reduction:reductionText
-}
-)
-)
-)
+})
+))
 }
 }else{
-recent.appendChild(
-createProGate(
+recent.appendChild(createProGate(
 t("insights.bestOverall","Overall performance"),
 t("insights.proOverall","Unlock long-term performance insights from your history.")
-)
-)
+))
 }
 
 if(hasFeature("deepPatterns")){
 if(pattern){
 const patternText=pattern.averageImpact>0
-?t(
-"insights.patternPositive",
-`${patternIntervention?interventionTitle(patternIntervention):"—"} has shown a positive result when this type of urge is ${pattern.intensityBand} intensity.`,
-{
+?t("insights.patternPositive",`${patternIntervention?interventionTitle(patternIntervention):"—"} has shown a positive result when this type of urge is ${pattern.intensityBand} intensity.`,{
 intervention:patternIntervention?interventionTitle(patternIntervention):"—",
 behavior:getLabel("behavior",pattern.behavior),
 expectation:getLabel("expectation",pattern.expectation),
 band:pattern.intensityBand
-}
-)
-:t(
-"insights.patternMixed",
-`${patternIntervention?interventionTitle(patternIntervention):"—"} has shown a mixed result when this type of urge is ${pattern.intensityBand} intensity.`,
-{
+})
+:t("insights.patternMixed",`${patternIntervention?interventionTitle(patternIntervention):"—"} has shown a mixed result when this type of urge is ${pattern.intensityBand} intensity.`,{
 intervention:patternIntervention?interventionTitle(patternIntervention):"—",
 behavior:getLabel("behavior",pattern.behavior),
 expectation:getLabel("expectation",pattern.expectation),
 band:pattern.intensityBand
-}
-);
+});
 
-recent.appendChild(
-createInsightSection(
-t("insights.pattern","YOUR STRONGEST PATTERN"),
-patternText
-)
-)
+recent.appendChild(createInsightSection(t("insights.pattern","YOUR STRONGEST PATTERN"),patternText))
 }else{
-recent.appendChild(
-createInsightSection(
+recent.appendChild(createInsightSection(
 t("insights.pattern","YOUR STRONGEST PATTERN"),
 t("insights.noPattern","Not enough repeated context yet. INTERRUPT will learn as you use it more.")
-)
-)
+))
 }
 }else{
-recent.appendChild(
-createProGate(
+recent.appendChild(createProGate(
 t("insights.pattern","YOUR STRONGEST PATTERN"),
 t("insights.proPattern","Unlock deeper patterns across behavior, expectation and intensity.")
-)
-)
+))
 }
 
 const facts=document.createElement("div");
 facts.className="insights-facts";
 
 [
-[
-t("insights.commonBehavior","Most common behavior"),
-commonBehavior?getLabel("behavior",commonBehavior.value):"—"
-],
-[
-t("insights.commonExpectation","Most common expectation"),
-commonExpectation?getLabel("expectation",commonExpectation.value):"—"
-],
-[
-t("insights.commonTrigger","Most common trigger"),
-commonTrigger?getLabel("trigger",commonTrigger.value):"—"
-]
+[t("insights.commonBehavior","Most common behavior"),commonBehavior?getLabel("behavior",commonBehavior.value):"—"],
+[t("insights.commonExpectation","Most common expectation"),commonExpectation?getLabel("expectation",commonExpectation.value):"—"],
+[t("insights.commonTrigger","Most common trigger"),commonTrigger?getLabel("trigger",commonTrigger.value):"—"]
 ].forEach(([label,value])=>{
 const row=document.createElement("div");
 row.className="recent-session";
@@ -2150,12 +2237,10 @@ recent.appendChild(facts);
 if(hasFeature("advancedContext")){
 renderProtectionInsights(recent)
 }else{
-recent.appendChild(
-createProGate(
+recent.appendChild(createProGate(
 t("insights.proTitle","INTERRUPT Pro"),
 t("insights.proProtection","Unlock advanced Protection learning and context patterns.")
-)
-)
+))
 }
 
 const title=document.createElement("h3");
@@ -2167,10 +2252,7 @@ const row=document.createElement("div");
 row.className="recent-session";
 
 const difference=Number(item.intensityBefore)-Number(item.intensityAfter);
-const change=
-difference>0?`−${difference}`:
-difference<0?`+${Math.abs(difference)}`:
-"0";
+const change=difference>0?`−${difference}`:difference<0?`+${Math.abs(difference)}`:"0";
 
 row.innerHTML=`
 <div class="recent-session-main">
@@ -2221,6 +2303,9 @@ toggleLanguageMenu(false)
 document.addEventListener("click",event=>{
 if(!event.target.closest(".language-wrapper"))toggleLanguageMenu(false)
 });
+
+document.addEventListener("visibilitychange",handleNativeProtectionResume);
+window.addEventListener("focus",handleNativeProtectionResume);
 
 $("startButton").addEventListener("click",()=>{
 resetSession();
@@ -2402,6 +2487,16 @@ nativeProtection:{
 getPlugin:getNativeProtection,
 getStatus:getNativeProtectionStatus,
 updateUI:updateNativeProtectionUI,
+getPendingEvents:async()=>{
+const plugin=getNativeProtection();
+if(!plugin?.getPendingEvents)return null;
+return plugin.getPendingEvents()
+},
+resolveEvent:async(eventId,continueRequest)=>{
+const plugin=getNativeProtection();
+if(!plugin?.resolveEvent)return null;
+return plugin.resolveEvent({eventId,continueRequest})
+},
 enable:async()=>{
 const plugin=getNativeProtection();
 if(!plugin)return null;
@@ -2445,7 +2540,8 @@ await loadLanguage(savedLanguage);
 initProtection();
 ensureNativeProtectionUI();
 updateProEntryPoints();
-updateNativeProtectionUI()
+updateNativeProtectionUI();
+await initNativeProtectionBridge()
 }
 
 document.addEventListener("DOMContentLoaded",initialize);
