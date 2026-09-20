@@ -12,6 +12,10 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import org.json.JSONObject;
+
+import java.util.List;
+
 @CapacitorPlugin(
         name = "InterruptProtection"
 )
@@ -20,6 +24,26 @@ public class InterruptProtectionPlugin extends Plugin {
     private static final int VPN_REQUEST_CODE = 4102;
 
     private PluginCall pendingEnableCall;
+
+    private static volatile InterruptProtectionPlugin instance;
+
+
+    @Override
+    public void load() {
+        super.load();
+        instance = this;
+    }
+
+
+    @Override
+    protected void handleOnDestroy() {
+
+        if (instance == this) {
+            instance = null;
+        }
+
+        super.handleOnDestroy();
+    }
 
 
     @PluginMethod
@@ -50,6 +74,187 @@ public class InterruptProtectionPlugin extends Plugin {
 
 
     @PluginMethod
+    public void getPendingEvents(
+            PluginCall call
+    ) {
+
+        ProtectionController controller =
+                ProtectionController.getInstance(
+                        getContext()
+                );
+
+        List<JSONObject> events =
+                controller.getUnconsumedEvents();
+
+        org.json.JSONArray array =
+                new org.json.JSONArray();
+
+        for (JSONObject event : events) {
+            array.put(event);
+        }
+
+        JSObject result =
+                new JSObject();
+
+        result.put(
+                "events",
+                array
+        );
+
+        call.resolve(result);
+    }
+
+
+    @PluginMethod
+    public void resolveEvent(
+            PluginCall call
+    ) {
+
+        String eventId =
+                call.getString(
+                        "eventId"
+                );
+
+        String action =
+                call.getString(
+                        "action"
+                );
+
+        if (
+                eventId == null
+                ||
+                eventId.trim().isEmpty()
+        ) {
+
+            call.reject(
+                    "Missing protection event ID"
+            );
+
+            return;
+        }
+
+        if (
+                action == null
+                ||
+                (
+                        !"continue".equalsIgnoreCase(
+                                action
+                        )
+                        &&
+                        !"interrupt".equalsIgnoreCase(
+                                action
+                        )
+                )
+        ) {
+
+            call.reject(
+                    "Invalid protection action"
+            );
+
+            return;
+        }
+
+        boolean resolved =
+                LocalSocks5Server.resolvePendingRequest(
+                        eventId,
+                        action
+                );
+
+        if (!resolved) {
+
+            call.reject(
+                    "Protection event is no longer pending"
+            );
+
+            return;
+        }
+
+        ProtectionController controller =
+                ProtectionController.getInstance(
+                        getContext()
+                );
+
+        controller.markEventConsumed(
+                eventId
+        );
+
+        JSObject result =
+                new JSObject();
+
+        result.put(
+                "eventId",
+                eventId
+        );
+
+        result.put(
+                "action",
+                action.toLowerCase()
+        );
+
+        result.put(
+                "resolved",
+                true
+        );
+
+        call.resolve(result);
+    }
+
+
+    /*
+     * Called by LocalSocks5Server when a protected request
+     * is suspended and requires a user decision.
+     */
+    public static void notifyProtectionEvent(
+            ProtectionEvent event
+    ) {
+
+        if (event == null) {
+            return;
+        }
+
+        InterruptProtectionPlugin plugin =
+                instance;
+
+        if (plugin == null) {
+            return;
+        }
+
+        JSObject data =
+                new JSObject();
+
+        data.put(
+                "id",
+                event.getId()
+        );
+
+        data.put(
+                "type",
+                event.getType()
+        );
+
+        data.put(
+                "category",
+                event.getCategory()
+        );
+
+        data.put(
+                "hostname",
+                event.getHostname()
+        );
+
+        data.put(
+                "timestamp",
+                event.getTimestamp()
+        );
+
+        plugin.notifyListeners(
+                "protectionEvent",
+                data
+        );
+    }
+
+
+    @PluginMethod
     public void enable(
             PluginCall call
     ) {
@@ -73,10 +278,6 @@ public class InterruptProtectionPlugin extends Plugin {
 
         controller.enable();
 
-        /*
-         * Android requires explicit VPN consent the first
-         * time the application attempts to establish the VPN.
-         */
         Intent prepareIntent =
                 VpnService.prepare(
                         activity
@@ -133,10 +334,6 @@ public class InterruptProtectionPlugin extends Plugin {
                         InterruptVpnService.class
                 );
 
-        /*
-         * The service performs its complete cleanup from
-         * onDestroy(), including HEV and the TUN interface.
-         */
         context.stopService(
                 intent
         );
