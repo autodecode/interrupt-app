@@ -199,8 +199,7 @@ public final class InterruptVpnService extends VpnService {
                             )
                             .setMtu(
                                     VpnConfiguration.MTU
-                            )
-                            .setBlocking(false);
+                            );
 
             /*
              * TUN IPv4 address.
