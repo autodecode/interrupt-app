@@ -2495,7 +2495,10 @@ return plugin.getPendingEvents()
 resolveEvent:async(eventId,continueRequest)=>{
 const plugin=getNativeProtection();
 if(!plugin?.resolveEvent)return null;
-return plugin.resolveEvent({eventId,continueRequest})
+return plugin.resolveEvent({
+eventId,
+action:continueRequest?"continue":"interrupt"
+})
 },
 enable:async()=>{
 const plugin=getNativeProtection();
