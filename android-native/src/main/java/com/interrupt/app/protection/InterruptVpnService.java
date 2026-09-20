@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.IBinder;
@@ -24,21 +25,8 @@ public final class InterruptVpnService extends VpnService {
     private static final int NOTIFICATION_ID =
             4101;
 
-    /*
-     * The service instance owns the actual runtime state.
-     */
     private volatile boolean running;
 
-    /*
-     * The Capacitor plugin needs to query the runtime state
-     * without binding to the VPN service.
-     *
-     * This is deliberately separate from ProtectionController's
-     * "enabled" state:
-     *
-     * enabled = user requested Protection
-     * running = VPN + HEV tunnel are actually running
-     */
     private static volatile boolean serviceRunning;
 
     private ParcelFileDescriptor vpnInterface;
@@ -173,13 +161,6 @@ public final class InterruptVpnService extends VpnService {
                 return;
             }
 
-            /*
-             * The Capacitor plugin normally handles the VPN
-             * permission request before starting this service.
-             *
-             * Keep this check as a safety guard for any other
-             * possible service start path.
-             */
             Intent prepareIntent =
                     VpnService.prepare(this);
 
@@ -200,6 +181,38 @@ public final class InterruptVpnService extends VpnService {
                             .setMtu(
                                     VpnConfiguration.MTU
                             );
+
+            /*
+             * INTERRUPT itself must bypass its own VPN.
+             *
+             * HEV/TProxy runs inside this application process
+             * and creates native upstream sockets. Java
+             * VpnService.protect() cannot protect those native
+             * HEV sockets individually.
+             *
+             * Excluding the application UID prevents the
+             * tunnel's own traffic from being routed back into
+             * the TUN interface and creating a VPN loop.
+             *
+             * This does NOT exclude Chrome, Superbet, or any
+             * other application from the VPN.
+             */
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+                try {
+
+                    builder.addDisallowedApplication(
+                            getPackageName()
+                    );
+
+                } catch (PackageManager.NameNotFoundException error) {
+
+                    throw new IllegalStateException(
+                            "Unable to exclude INTERRUPT from its own VPN",
+                            error
+                    );
+                }
+            }
 
             /*
              * TUN IPv4 address.
